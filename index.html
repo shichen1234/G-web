@@ -331,7 +331,7 @@ input.addEventListener("blur", () => {
       const hours = beijingTime.getHours();
       const minutes = padZero(beijingTime.getMinutes());
       const seconds = padZero(beijingTime.getSeconds());
-      const formatted = `${year}年${month}月${date}日 ${padZero(hours)}时${minutes}分${seconds}秒`;
+      const formatted = `${year}.${month}.${date} ${padZero(hours)}:${minutes}:${seconds}`;
       document.getElementById('beijingTime').textContent = formatted;
       // 问候语逻辑
       const greetingEl = document.getElementById('greetingMessage');
