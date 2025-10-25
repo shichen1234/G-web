@@ -5,6 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bing-new</title>
   <style>
+/* ...existing code... */
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 640px;
+    margin: 0 auto;                    /* 保持水平居中容器 */
+  transform: translateX(-12px);      /* 向左微移，使输入框视觉居中；按需调整数值 */
+}
+
+#engineSwitch {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  margin-right: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+#engineSwitch:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.engine-icon {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+}
+
+/* 调整搜索框样式以适应新布局 */
+form input[type="text"] {
+  margin-left: 0;
+  flex: 1;
+}
     html, body {
       margin: 0;
       padding: 0;
@@ -33,7 +70,7 @@
     }
     .bing-logo {
       display: block;
-      width: 64px;
+      width: 140px; /* 大图标统一放大，按需调整（例如 120px / 160px） */
       height: auto;
       margin: 0 auto 20px auto;
       filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.4));
@@ -80,11 +117,14 @@
     form button:hover:enabled {
       background-color: #ddd;
     }
-    form button svg {
+        form button svg {
       width: 20px;
       height: 20px;
       fill: none;
+      fill: #333; /* 把图标填充为深色，确保在白色按钮上可见 */
     }
+    /* 可选：让按钮内 SVG 使用按钮文字颜色 */
+    form button { color: #333; }
     .wallpaper-change-wrapper {
       position: fixed;
       bottom: 30px;
@@ -219,6 +259,10 @@
   transform: scale(1.1);
   opacity: 1;
 }
+/* 将搜索按钮向右移动一些 */
+.search-container button[type="submit"] {
+  margin-left: 12px; /* 根据需要调整为 8px / 16px 等 */
+}
   </style>
 </head>
 <body>
@@ -237,19 +281,59 @@
   <div class="content">
     <img src="bing-logo.png" alt="Bing Logo" class="bing-logo">
     <form action="https://www.bing.com/search" method="GET" target="_blank">
-      <input type="text" name="q" id="searchInput" placeholder="Search Bing..." required autocomplete="off">
-      <button type="submit" aria-label="Search" id="searchBtn" disabled>
-        <svg viewBox="0 0 24 24">
-          <path d="M10 6l6 6-6 6" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-    </form>
+  <div class="search-container">
+    <button type="button" id="engineSwitch" title="切换搜索引擎">
+      <img src="bing-logo-small.png" alt="搜索引擎" class="engine-icon">
+    </button>
+    <input type="text" name="q" id="searchInput" placeholder="搜索..." autocomplete="off">
+    <button type="submit" id="searchBtn" disabled>
+      <svg viewBox="0 0 24 24">
+        <path d="M15.5 14h-.8l-.3-.3c1-1.1 1.6-2.6 1.6-4.2C16 5.9 13.1 3 9.5 3S3 5.9 3 9.5 5.9 16 9.5 16c1.6 0 3.1-.6 4.2-1.6l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0C7 14 5 12 5 9.5S7 5 9.5 5 14 7 14 9.5 12 14 9.5 14z"/>
+      </svg>
+    </button>
+  </div>
+</form>
     <ul id="suggestionList"></ul>
   </div>
   <div class="wallpaper-change-wrapper"><label for="videoUpload" class="wallpaper-btn">更改壁纸</label>
     <input type="file" id="videoUpload" accept="video/mp4,image/*">
   </div>
   <script>
+// ...existing code...
+
+// 搜索引擎切换逻辑
+const engines = [
+  { name: 'bing', url: 'https://www.bing.com/search', param: 'q', icon: 'bing-logo-small.png', largeIcon: 'bing-logo.png' },
+  { name: 'google', url: 'https://www.google.com/search', param: 'q', icon: 'google-logo-small.png', largeIcon: 'google-logo.png' },
+  { name: 'baidu', url: 'https://www.baidu.com/s', param: 'wd', icon: 'baidu-logo-small.png', largeIcon: 'baidu-logo.png' },
+  { name: 'sogou', url: 'https://www.sogou.com/web', param: 'query', icon: 'sogou-logo-small.png', largeIcon: 'sogou-logo.png' }
+];
+
+let currentEngineIndex = 0;
+const engineSwitch = document.getElementById('engineSwitch');
+const searchForm = document.querySelector('form');
+const searchInput = document.getElementById('searchInput');
+
+engineSwitch.addEventListener('click', () => {
+  currentEngineIndex = (currentEngineIndex + 1) % engines.length;
+  const engine = engines[currentEngineIndex];
+  
+  // 更新表单
+  searchForm.action = engine.url;
+  searchInput.name = engine.param;
+  
+  // 更新左侧小图标
+  const engineIcon = engineSwitch.querySelector('.engine-icon');
+  engineIcon.src = engine.icon;
+  engineIcon.alt = engine.name;
+  
+  // 更新页面顶部的大 logo（class="bing-logo"）
+  const bigLogo = document.querySelector('.bing-logo');
+  if (bigLogo) {
+    bigLogo.src = engine.largeIcon;
+    bigLogo.alt = engine.name + ' Logo';
+  }
+});
     // IndexedDB 背景视频存储
     const DB_NAME = "WallpaperDB";
     const DB_STORE_NAME = "Videos";
