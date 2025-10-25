@@ -203,9 +203,28 @@
   color: transparent;
   pointer-events: none;
 }
+/* ✅ 右下角图标样式 */
+#biliIcon {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;        /* 缩小尺寸 */
+  height: auto;
+  opacity: 0.8;       /* 半透明一点 */
+  cursor: pointer;
+  z-index: 50;        /* 显示在视频上面 */
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+#biliIcon:hover {
+  transform: scale(1.1);
+  opacity: 1;
+}
   </style>
 </head>
 <body>
+  <a href="https://space.bilibili.com/702430325" target="_blank">
+  <img id="biliIcon" src="2025102514322810.png" alt="bilibili"  title="作者主页"/>
+</a>
 <img id="bgImage" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-2;display:none;" />
   <video id="bgVideo" autoplay muted loop poster="poster.jpg">
     <source src="video3.mp4" type="video/mp4">
@@ -301,7 +320,6 @@
     bgImage.style.display = "none";
     bgVideo.style.display = "block";
     bgVideo.src = videoURL;
-    bgVideo.loop = true; // ✅ 同样修复
     bgVideo.load();
     bgVideo.play();
     await saveVideoToIndexedDB(file);
