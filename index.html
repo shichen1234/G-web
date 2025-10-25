@@ -300,7 +300,6 @@ form input[type="text"] {
   </div>
   <script>
 // ...existing code...
-
 // 搜索引擎切换逻辑
 const engines = [
   { name: 'bing', url: 'https://www.bing.com/search', param: 'q', icon: 'bing-logo-small.png', largeIcon: 'bing-logo.png' },
@@ -314,26 +313,48 @@ const engineSwitch = document.getElementById('engineSwitch');
 const searchForm = document.querySelector('form');
 const searchInput = document.getElementById('searchInput');
 
-engineSwitch.addEventListener('click', () => {
-  currentEngineIndex = (currentEngineIndex + 1) % engines.length;
-  const engine = engines[currentEngineIndex];
-  
-  // 更新表单
+function applyEngine(index, save = false) {
+  index = Number(index) || 0;
+  if (index < 0 || index >= engines.length) index = 0;
+  const engine = engines[index];
+
+  // 更新表单与输入名
   searchForm.action = engine.url;
   searchInput.name = engine.param;
-  
+
   // 更新左侧小图标
   const engineIcon = engineSwitch.querySelector('.engine-icon');
-  engineIcon.src = engine.icon;
-  engineIcon.alt = engine.name;
-  
-  // 更新页面顶部的大 logo（class="bing-logo"）
+  if (engineIcon) {
+    engineIcon.src = engine.icon;
+    engineIcon.alt = engine.name;
+  }
+
+  // 更新页面顶部大图标
   const bigLogo = document.querySelector('.bing-logo');
   if (bigLogo) {
     bigLogo.src = engine.largeIcon;
     bigLogo.alt = engine.name + ' Logo';
   }
+
+  currentEngineIndex = index;
+  if (save) {
+    localStorage.setItem('selectedEngineIndex', String(index));
+  }
+}
+
+engineSwitch.addEventListener('click', () => {
+  const next = (currentEngineIndex + 1) % engines.length;
+  applyEngine(next, true); // 点击时保存
 });
+
+// 页面加载时恢复上次选择（若有）
+const saved = localStorage.getItem('selectedEngineIndex');
+if (saved !== null) {
+  applyEngine(parseInt(saved, 10), false);
+} else {
+  applyEngine(0, false);
+}
+// ...existing code...
     // IndexedDB 背景视频存储
     const DB_NAME = "WallpaperDB";
     const DB_STORE_NAME = "Videos";
