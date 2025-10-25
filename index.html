@@ -212,24 +212,8 @@ form input[type="text"] {
   transition: background-color 0.3s ease;
 }
 
-/* 新增：天气（左侧，与星期同一行） */
-#weather {
-  position: fixed;
-  top: 65px;              /* 与 #weekDay 同一行 */
-  left: 20px;             /* 在问候语下方（问候在 left:20px, top:15px） */
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
-  background: rgba(0, 0, 0, 0);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  user-select: none;
-  z-index: 20;
-  transition: background-color 0.3s ease;
-}
-#weekDay:hover,
-#weather:hover {
+/* ✅ 悬停效果 */
+#weekDay:hover {
   background: rgba(0, 0, 0, 0.6);
 }
 /* ✅ 问候语样式（左上角） */
@@ -294,7 +278,6 @@ form input[type="text"] {
   <div id="greetingMessage">问候加载中...</div>
   <div id="beijingTime">北京时间加载中...</div>
   <div id="weekDay">星期加载中...</div>
-  <div id="weather">天气加载中...</div>
   <div class="content">
     <img src="bing-logo.png" alt="Bing Logo" class="bing-logo">
     <form action="https://www.bing.com/search" method="GET" target="_blank">
@@ -419,7 +402,7 @@ if (saved !== null) {
   } else if (file.type.startsWith("image/")) {
     bgVideo.style.display = "none";
     bgImage.src = fileURL;
-    bgImage.style.display = "block";
+    bgImage
   }
 }
       };
@@ -548,77 +531,6 @@ document.getElementById('weekDay').textContent = weekDays[beijingTime.getDay()];
       }
       greetingEl.textContent = greeting;
     }
-
-    // 新增：天气获取（使用 Open-Meteo，无需 API Key）
-function weatherCodeToText(code) {
-  // 带表情的映射
-  const map = {
-    0:  '☀️  晴朗',
-    1:  '🌤️  主要晴朗',
-    2:  '⛅  间多云',
-    3:  '☁️  多云',
-    45: '🌫️  雾',
-    48: '🌫️  冻雾',
-    51: '🌦️  毛毛雨',
-    53: '🌦️  小雨',
-    55: '🌧️  大雨',
-    61: '🌧️  小雨',
-    63: '🌧️  中雨',
-    65: '🌧️  大雨',
-    71: '❄️  小雪',
-    73: '❄️  中雪',
-    75: '❄️  大雪',
-    80: '🌦️  阵雨',
-    81: '⛈️  强阵雨',
-    95: '⛈️  雷暴'
-  };
-  return map[code] || '🌥️  多云';
-}
-
-async function fetchWeatherByCoords(lat, lon) {
-  try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('fetch failed');
-    const data = await res.json();
-    if (data && data.current_weather) {
-      const t = data.current_weather.temperature;
-      const code = data.current_weather.weathercode;
-      const text = weatherCodeToText(code);
-      document.getElementById('weather').textContent = `${text} · ${t}°C`;
-    }
-  } catch (e) {
-    document.getElementById('weather').textContent = '⚠️ 天气获取失败';
-  }
-}
-
-function updateWeather() {
-  const weatherEl = document.getElementById('weather');
-  weatherEl.textContent = '天气加载中...';
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude),
-      err => {
-        // 定位失败或拒绝：使用北京作为回退
-        fetchWeatherByCoords(39.9042, 116.4074);
-      },
-      { timeout: 5000 }
-    );
-  } else {
-    // 不支持定位则回退北京
-    fetchWeatherByCoords(39.9042, 116.4074);
-  }
-}
-
-// 在页面加载时调用，并每 10 分钟刷新一次
-window.addEventListener('DOMContentLoaded', () => {
-  loadVideoFromIndexedDB();
-  updateBeijingTime();
-  setInterval(updateBeijingTime, 1000);
-
-  updateWeather();
-  setInterval(updateWeather, 10 * 60 * 1000); // 每 10 分钟刷新
-});
   </script>
 </body>
 </html>
