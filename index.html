@@ -248,17 +248,35 @@ form input[type="text"] {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 40px;        /* 缩小尺寸 */
+  width: 40px;
   height: auto;
-  opacity: 0.8;       /* 半透明一点 */
+  opacity: 0.8;
   cursor: pointer;
-  z-index: 50;        /* 显示在视频上面 */
+  z-index: 50;
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
 #biliIcon:hover {
   transform: scale(1.1);
   opacity: 1;
 }
+
+/* 新增：右下角额外图标，位于 bilibili 图标左侧 */
+#extraIcon {
+    position: fixed;
+    bottom: 20px;
+    right: 70px; /* 距离右侧 70px -> 位于 biliIcon（right:20px, width:40px）左侧 */
+    width: 40px;
+    height: auto;
+    opacity: 0.8;
+    cursor: pointer;
+    z-index: 50;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+  #extraIcon:hover {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+
 /* 将搜索按钮向右移动一些 */
 .search-container button[type="submit"] {
   margin-left: 12px; /* 根据需要调整为 8px / 16px 等 */
@@ -266,8 +284,11 @@ form input[type="text"] {
   </style>
 </head>
 <body>
+  <!-- 可把额外图标图片放到和 index.html 同目录，示例文件名 2025102523114053.png -->
+  <a href="https://www.youtube.com/@shichenshi12324" target="_blank">
+  <img id="extraIcon" src="2025102523114053.png" alt="youtube" title="作者油管主页" /></a>
   <a href="https://space.bilibili.com/702430325" target="_blank">
-  <img id="biliIcon" src="2025102514322810.png" alt="bilibili"  title="作者主页"/>
+  <img id="biliIcon" src="2025102514322810.png" alt="bilibili"  title="作者B站主页"/>
 </a>
 <img id="bgImage" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-2;display:none;" />
   <video id="bgVideo" autoplay muted loop poster="poster.jpg">
