@@ -428,44 +428,57 @@ if (saved !== null) {
           const fileURL = URL.createObjectURL(file);
 
           if (file.type && file.type.startsWith("video/")) {
-            // 视频
+            // 视频：不要在 onloadeddata 里立即 revoke，改为在 ended 或页面卸载时 revoke
             try {
+              // 若之前有旧 objectURL，先撤销（防止泄露）
+              if (bgVideo.dataset.objectUrl) {
+                try { URL.revokeObjectURL(bgVideo.dataset.objectUrl); } catch (e) {}
+              }
               bgImage.style.display = "none";
               bgVideo.style.display = "block";
               bgVideo.src = fileURL;
+              bgVideo.dataset.objectUrl = fileURL; // 保存引用，稍后撤销
               bgVideo.load();
-              bgVideo.play().catch(()=>{}); // 某些浏览器需用户交互才能 autoplay
-              // 在视频元数据加载完成后释放 objectURL（可选）
-              bgVideo.onloadeddata = () => {
-                URL.revokeObjectURL(fileURL);
-              };
+              bgVideo.play().catch(()=>{});
+              // 在播放结束时撤销 objectURL
+              bgVideo.addEventListener('ended', function onEnded() {
+                if (bgVideo.dataset.objectUrl) {
+                  try { URL.revokeObjectURL(bgVideo.dataset.objectUrl); } catch(e){}
+                  delete bgVideo.dataset.objectUrl;
+                }
+                bgVideo.removeEventListener('ended', onEnded);
+              });
             } catch (err) {
               console.error('播放视频出错', err);
-              URL.revokeObjectURL(fileURL);
+              try { URL.revokeObjectURL(fileURL); } catch(e){}
             }
           } else if (file.type && file.type.startsWith("image/")) {
-            // 图片
+            // 图片：图片可以在 onload 后撤销 objectURL（保持原行为）
             try {
+              if (bgImage.dataset.objectUrl) {
+                try { URL.revokeObjectURL(bgImage.dataset.objectUrl); } catch (e) {}
+              }
               bgVideo.pause();
               bgVideo.style.display = "none";
               bgImage.src = fileURL;
+              bgImage.dataset.objectUrl = fileURL;
               bgImage.style.display = "block";
-              // 当图片加载完成后释放 objectURL
               bgImage.onload = () => {
-                URL.revokeObjectURL(fileURL);
+                try { URL.revokeObjectURL(fileURL); } catch(e){}
+                delete bgImage.dataset.objectUrl;
               };
               bgImage.onerror = () => {
                 console.error('图片加载失败');
-                URL.revokeObjectURL(fileURL);
+                try { URL.revokeObjectURL(fileURL); } catch(e){}
+                delete bgImage.dataset.objectUrl;
               };
             } catch (err) {
               console.error('显示图片出错', err);
-              URL.revokeObjectURL(fileURL);
+              try { URL.revokeObjectURL(fileURL); } catch(e){}
             }
           } else {
-            // 非法类型，清理并忽略
             console.warn('IndexedDB 中存储的数据不是图片或视频', file);
-            URL.revokeObjectURL(fileURL);
+            try { URL.revokeObjectURL(fileURL); } catch(e){}
           }
         };
         request.onerror = function(e) {
