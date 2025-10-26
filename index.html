@@ -243,39 +243,41 @@ form input[type="text"] {
   color: transparent;
   pointer-events: none;
 }
-/* ✅ 右下角图标样式 */
+/* ✅ 右下角图标样式（改为悬停显示） */
 #biliIcon {
   position: fixed;
   bottom: 20px;
   right: 20px;
   width: 40px;
   height: auto;
-  opacity: 0.8;
+  opacity: 0;                 /* 默认透明 */
   cursor: pointer;
   z-index: 50;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  pointer-events: auto;       /* 保持可触发悬停 */
 }
 #biliIcon:hover {
   transform: scale(1.1);
-  opacity: 1;
+  opacity: 1;                 /* 悬停时出现 */
 }
 
-/* 新增：右下角额外图标，位于 bilibili 图标左侧 */
+/* 右下角额外图标，位于 biliIcon 左侧（同样悬停显示） */
 #extraIcon {
-    position: fixed;
-    bottom: 20px;
-    right: 70px; /* 距离右侧 70px -> 位于 biliIcon（right:20px, width:40px）左侧 */
-    width: 40px;
-    height: auto;
-    opacity: 0.8;
-    cursor: pointer;
-    z-index: 50;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-  }
-  #extraIcon:hover {
-    transform: scale(1.1);
-    opacity: 1;
-  }
+  position: fixed;
+  bottom: 20px;
+  right: 70px;
+  width: 40px;
+  height: auto;
+  opacity: 0;                 /* 默认透明 */
+  cursor: pointer;
+  z-index: 50;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  pointer-events: auto;
+}
+#extraIcon:hover {
+  transform: scale(1.1);
+  opacity: 1;                 /* 悬停时出现 */
+}
 
 /* 将搜索按钮向右移动一些 */
 .search-container button[type="submit"] {
@@ -403,30 +405,65 @@ if (saved !== null) {
       store.put(file, DB_KEY);
     }
     async function loadVideoFromIndexedDB() {
-      const db = await openDatabase();
-      const tx = db.transaction(DB_STORE_NAME, "readonly");
-      const store = tx.objectStore(DB_STORE_NAME);
-      const request = store.get(DB_KEY);
-      request.onsuccess = function (e) {
-        const file = e.target.result;
-        if (file) {
-  const bgVideo = document.getElementById("bgVideo");
-  const bgImage = document.getElementById("bgImage");
-  const fileURL = URL.createObjectURL(file);
+      try {
+        const db = await openDatabase();
+        const tx = db.transaction(DB_STORE_NAME, "readonly");
+        const store = tx.objectStore(DB_STORE_NAME);
+        const request = store.get(DB_KEY);
+        request.onsuccess = function (e) {
+          const file = e.target.result;
+          if (!file) return;
+          const bgVideo = document.getElementById("bgVideo");
+          const bgImage = document.getElementById("bgImage");
+          const fileURL = URL.createObjectURL(file);
 
-  if (file.type.startsWith("video/")) {
-    bgImage.style.display = "none";
-    bgVideo.style.display = "block";
-    bgVideo.src = fileURL;
-    bgVideo.load();
-    bgVideo.play();
-  } else if (file.type.startsWith("image/")) {
-    bgVideo.style.display = "none";
-    bgImage.src = fileURL;
-    bgImage
-  }
-}
-      };
+          if (file.type && file.type.startsWith("video/")) {
+            // 视频
+            try {
+              bgImage.style.display = "none";
+              bgVideo.style.display = "block";
+              bgVideo.src = fileURL;
+              bgVideo.load();
+              bgVideo.play().catch(()=>{}); // 某些浏览器需用户交互才能 autoplay
+              // 在视频元数据加载完成后释放 objectURL（可选）
+              bgVideo.onloadeddata = () => {
+                URL.revokeObjectURL(fileURL);
+              };
+            } catch (err) {
+              console.error('播放视频出错', err);
+              URL.revokeObjectURL(fileURL);
+            }
+          } else if (file.type && file.type.startsWith("image/")) {
+            // 图片
+            try {
+              bgVideo.pause();
+              bgVideo.style.display = "none";
+              bgImage.src = fileURL;
+              bgImage.style.display = "block";
+              // 当图片加载完成后释放 objectURL
+              bgImage.onload = () => {
+                URL.revokeObjectURL(fileURL);
+              };
+              bgImage.onerror = () => {
+                console.error('图片加载失败');
+                URL.revokeObjectURL(fileURL);
+              };
+            } catch (err) {
+              console.error('显示图片出错', err);
+              URL.revokeObjectURL(fileURL);
+            }
+          } else {
+            // 非法类型，清理并忽略
+            console.warn('IndexedDB 中存储的数据不是图片或视频', file);
+            URL.revokeObjectURL(fileURL);
+          }
+        };
+        request.onerror = function(e) {
+          console.error('读取 IndexedDB 失败', e);
+        };
+      } catch (e) {
+        console.error('loadVideoFromIndexedDB 出错', e);
+      }
     }
     window.addEventListener("DOMContentLoaded", () => {
       loadVideoFromIndexedDB();
