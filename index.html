@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>G-web</title>
+  <title>Bing-new</title>
   <!-- 添加在其他 meta 标签之后 -->
   <!-- 预加载大图标 -->
   <link rel="preload" href="bing-logo.png" as="image">
@@ -746,14 +746,51 @@ async function getWeatherByCity(cityName) {
 
     if (data.status === "1" && data.lives?.length > 0) {
       const info = data.lives[0];
+      const emoji = getWeatherEmoji(info.weather); // 获取对应的天气表情
       document.getElementById("weather-text").textContent =
-        `${info.city} | ${info.weather} ${info.temperature}℃`;
+        `${info.city} | ${emoji} ${info.weather} ${info.temperature}℃`;
     } else {
       document.getElementById("weather-text").textContent = "天气加载失败";
     }
   } catch (e) {
     console.error(e);
     document.getElementById("weather-text").textContent = "天气加载失败";
+  }
+}
+// 根据天气描述返回对应的表情符号
+// 根据天气类型返回相应的天气表情符号
+function getWeatherEmoji(weatherType) {
+  switch (weatherType) {
+    case '晴':
+      return '☀️';
+    case '多云':
+      return '🌤️';
+    case '阴':
+      return '☁️';
+    case '雾':
+      return '🌫️';
+    case '雷阵雨':
+      return '⛈️';
+    case '小雨':
+      return '🌧️';
+    case '中雨':
+      return '🌧️';
+    case '大雨':
+      return '🌧️';
+    case '暴雨':
+      return '🌧️';
+    case '小雪':
+      return '❄️';
+    case '中雪':
+      return '❄️';
+    case '大雪':
+      return '❄️';
+    case '暴雪':
+      return '❄️';
+    case '雨夹雪':
+      return '🌧️❄️';
+    default:
+      return '🌥️'; // 默认使用云朵表情
   }
 }
 
@@ -797,6 +834,21 @@ window.addEventListener("load", () => {
     getWeatherByCity(DEFAULT_CITY);
   }
 });
-  </script>
+window.addEventListener('message', (e) => {
+  if (e.origin !== 'chrome-extension://<YOUR_EXT_ID>' && e.origin !== 'https://your-extension-host-if-any') {
+    // 只接受你知道的来源，或在开发时先放开
+    // return;
+  }
+  const data = e.data;
+  if (!data) return;
+  if (data.type === 'location') {
+    // 使用 data.coords.latitude / longitude
+    console.log('Received location from parent:', data.coords);
+    // 在页面上显示或调用天气 API...
+  } else if (data.type === 'location-error') {
+    console.warn('Location error:', data.message);
+  }
+});
+</script>
 </body>
 </html>
