@@ -739,7 +739,15 @@ document.getElementById('weekDay').textContent = weekDays[beijingTime.getDay()];
     "b3f49d42ce662b594efe056a6ca1e6b9",
     "d98f0d58791bf561fe75eee62c389317",
     "867f79bcb2fbe85a9bda69db602290de"];// ← 替换为你的高德 Web 服务 key
-    let currentIndex = 0;
+    let currentIndex = Math.floor(Math.random() * AMAP_KEYS.length);
+    function getCurrentKey() {
+  return AMAP_KEYS[currentKeyIndex];
+}
+
+function nextKey() {
+  currentKeyIndex = (currentKeyIndex + 1) % AMAP_KEYS.length;
+}
+    // 当请求失败时自动切换
 const DEFAULT_CITY = "北京";
 
 // 根据城市名获取天气
