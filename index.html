@@ -734,16 +734,18 @@ document.getElementById('weekDay').textContent = weekDays[beijingTime.getDay()];
       }
       greetingEl.textContent = greeting;
     }
-    const AMAP_KEY = "3d6743c0066c22bf4a5390818b39df2e";
-    29c9bcf986d664194a1ef9afd509c3de;
-    b3f49d42ce662b594efe056a6ca1e6b9;
-    d98f0d58791bf561fe75eee62c389317;
-    867f79bcb2fbe85a9bda69db602290de;// ← 替换为你的高德 Web 服务 key
+    const AMAP_KEY = ["3d6743c0066c22bf4a5390818b39df2e",
+    "29c9bcf986d664194a1ef9afd509c3de",
+    "b3f49d42ce662b594efe056a6ca1e6b9",
+    "d98f0d58791bf561fe75eee62c389317",
+    "867f79bcb2fbe85a9bda69db602290de"];// ← 替换为你的高德 Web 服务 key
+    let currentIndex = 0;
 const DEFAULT_CITY = "北京";
 
 // 根据城市名获取天气
 async function getWeatherByCity(cityName) {
   try {
+    const key = keys[currentIndex];
     const url = `https://restapi.amap.com/v3/weather/weatherInfo?key=${AMAP_KEY}&city=${cityName}&extensions=base`;
     const res = await fetch(url);
     const data = await res.json();
