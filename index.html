@@ -326,7 +326,7 @@ form input[type="text"] {
 /* ✅ 问候语样式（左上角） */
 #greetingMessage {
   position: fixed;
-  top: 15px;
+  top: 65px;
   left: 20px;
   font-size: 16px;
   color: rgba(255, 255, 255, 0.9);
@@ -392,7 +392,7 @@ form input[type="text"] {
 }
 #weather {
   position: absolute;
-  top: 65px; /* 调整位置，使其在问候语下方 */
+  top: 15px; /* 调整位置，使其在问候语下方 */
   left: 20px;
   font-size: 16px;
   color: white;
@@ -734,26 +734,12 @@ document.getElementById('weekDay').textContent = weekDays[beijingTime.getDay()];
       }
       greetingEl.textContent = greeting;
     }
-    const AMAP_KEY = ["3d6743c0066c22bf4a5390818b39df2e",
-    "29c9bcf986d664194a1ef9afd509c3de",
-    "b3f49d42ce662b594efe056a6ca1e6b9",
-    "d98f0d58791bf561fe75eee62c389317",
-    "867f79bcb2fbe85a9bda69db602290de"];// ← 替换为你的高德 Web 服务 key
-    let currentIndex = Math.floor(Math.random() * AMAP_KEYS.length);
-    function getCurrentKey() {
-  return AMAP_KEYS[currentKeyIndex];
-}
-
-function nextKey() {
-  currentKeyIndex = (currentKeyIndex + 1) % AMAP_KEYS.length;
-}
-    // 当请求失败时自动切换
+    const AMAP_KEY = "3d6743c0066c22bf4a5390818b39df2e"; // ← 替换为你的高德 Web 服务 key
 const DEFAULT_CITY = "北京";
 
 // 根据城市名获取天气
 async function getWeatherByCity(cityName) {
   try {
-    const key = keys[currentIndex];
     const url = `https://restapi.amap.com/v3/weather/weatherInfo?key=${AMAP_KEY}&city=${cityName}&extensions=base`;
     const res = await fetch(url);
     const data = await res.json();
