@@ -6,6 +6,18 @@
   <title>G-web</title>
   <!-- 添加在其他 meta 标签之后 -->
   <!-- 预加载大图标 -->
+   <video id="preloadSmile" preload="auto" style="display:none;">
+  <source src="./小猫/微笑.webm" type="video/webm">
+</video>
+<video id="preloadSmile" preload="auto" style="display:none;">
+  <source src="./小猫/待机主要动作.webm" type="video/webm">
+</video>
+<video id="preloadSmile" preload="auto" style="display:none;">
+  <source src="./小猫/忧愁.webm" type="video/webm">
+</video>
+<video id="preloadBlush" preload="auto" style="display:none;">
+  <source src="./小猫/脸红.webm" type="video/webm">
+</video>
   <link rel="preload" href="bing-logo.png" as="image">
   <link rel="preload" href="google-logo.png" as="image">
   <link rel="preload" href="baidu-logo.png" as="image">
@@ -15,6 +27,98 @@
   <link rel="preload" href="baidu-logo-small.png" as="image">
   <link rel="preload" href="sogou-logo-small.png" as="image">
   <style>
+    .bubble-paw {
+  position: absolute;
+  right: -12px;
+  bottom: -12px;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
+  transform: rotate(-15deg);
+  opacity: 0.9;
+}
+    #catSpeechBubble {
+  position: fixed;
+  bottom: 220px; /* 小猫盒子高度 + 间距 */
+  left: 190px;
+  background: #fff;
+  color: #333;
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 20px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  max-width: 240px;
+  opacity: 0;
+  transform: scale(0.3);
+  transform-origin: left bottom;
+  pointer-events: none;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: none;
+}
+
+.bubble-tail {
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  position: absolute;
+  bottom: -6px;
+  left: 16px; /* ← 控制水平位置，靠近左下角 */
+  clip-path: polygon(0 0, 100% 0, 0 100%); /* 左下角三角形 */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 0;
+}
+
+.bubble-text {
+  white-space: nowrap;
+}
+
+/* 动画触发类 */
+#catSpeechBubble.show {
+  animation: bubblePop 0.4s ease-out forwards, bubbleFadeOut 1s ease-in forwards 3s;
+}
+
+@keyframes bubblePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bubbleFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+    #catBox {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 200px;        /* 可根据需求调整大小 */
+  height: 200px;
+  background:transparent;  /* 半透明方框 */
+  border-radius: 16px;
+  overflow: hidden;
+  z-index: 40;
+}
+
+#catBox video {
+  width: 100%;
+  height: 100%;
+ object-fit: contain;
+}
 /* ...existing code... */
  /* 媒体控件样式（左下角） */
   #mediaWidget {
@@ -428,11 +532,32 @@ form input[type="text"] {
   <div id="greetingMessage">问候加载中...</div>
   <div id="beijingTime">北京时间加载中...</div>
   <div id="weekDay">星期加载中...</div>
+  <div id="catBox">
+   <video id="catTransition" muted playsinline style="
+  position: fixed;
+  bottom: -15px;
+  left: 20px;
+  width: 200px;
+  height: auto;
+  z-index: 45;
+  pointer-events: none;
+  display: none;
+  object-fit: contain;
+">
+</video> 
+<video id="catVideo" autoplay muted loop playsinline disablePictureInPicture>
+  <source src="./小猫/待机主要动作.webm" type="video/mp4">
+</video>
+</div>
+<div id="catSpeechBubble">
+  <div class="bubble-tail"></div>
+  <img src="./小猫/猫爪.png" alt="paw" class="bubble-paw" />
+   <span class="bubble-text"></span>
+</div>
   <!-- 天气组件 -->
 <div id="weather" class="hover-box">
   <div id="weather-text">正在获取天气...</div>
 </div>
-
   <div class="content">
     <img src="bing-logo.png" alt="Bing Logo" class="bing-logo">
     <form action="https://www.bing.com/search" method="GET" target="_blank">
@@ -454,6 +579,300 @@ form input[type="text"] {
     <input type="file" id="videoUpload" accept="video/mp4,image/*">
   </div>
   <script>
+    let hasShownInitialTip = false;
+    let bubbleLocked = false;
+    let bubbleDisabled = false;
+    let clickCount = 0;
+    let catVisible = true;
+let clickTimer = null;
+let isLocked = false; // 🔒 是否处于冷却状态
+// B站图标悬停
+document.getElementById("weather").addEventListener("mouseenter", () => {
+ const weatherInfo = document.getElementById("weather-text").textContent.trim();
+
+let replies = [];
+
+if (weatherInfo.includes("晴") || weatherInfo.includes("多云")) {
+  replies = ["天气真好喵～出去晒晒太阳吧！", "阳光暖暖的，小猫都想打滚了～"];
+} else if (weatherInfo.includes("阴") || weatherInfo.includes("雾")) {
+  replies = ["今天灰灰的喵～适合窝在家里～", "雾蒙蒙的，小猫都看不清路啦～"];
+} else if (
+  weatherInfo.includes("雨") ||
+  weatherInfo.includes("雷阵雨") ||
+  weatherInfo.includes("雨夹雪")
+) {
+  replies = ["下雨啦喵～记得带伞别淋湿了～", "雨声好治愈，小猫要蜷起来睡觉～"];
+} else if (weatherInfo.includes("雪")) {
+  replies = ["下雪啦喵～想和你一起踩雪花～", "雪花飘飘，小猫变成雪球啦～"];
+} else {
+  replies = ["外面的天气好神秘喵～", "不管什么天气，小猫都陪着你～"];
+}
+
+const reply = replies[Math.floor(Math.random() * replies.length)];
+showBubble(reply);
+
+});
+
+document.getElementById("biliIcon").addEventListener("mouseenter", () => {
+  const biliReplies = [
+    "这是作者B站主页哦~",
+    "B站也有我的小窝喔，偷偷告诉你~",
+    "你居然找到了我的B站入口，好眼力！"
+  ];
+  const reply = biliReplies[Math.floor(Math.random() * biliReplies.length)];
+  showBubble(reply);
+});
+
+// 油管图标悬停
+document.getElementById("extraIcon").addEventListener("mouseenter", () => {
+  const youtubeReplies = [
+    "这是作者油管主页哦~",
+    "YouTube 也藏着我的身影喔~",
+    "偷偷告诉你，这里是我的油管传送门！"
+  ];
+  const reply = youtubeReplies[Math.floor(Math.random() * youtubeReplies.length)];
+  showBubble(reply);
+});
+    document.getElementById("beijingTime").addEventListener("mouseenter", () => {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const beijingTime = new Date(utc + 8 * 3600000);
+
+  const year = beijingTime.getFullYear();
+  const month = beijingTime.getMonth() + 1;
+  const date = beijingTime.getDate();
+  const hours = beijingTime.getHours();
+
+  let timeGreeting = "";
+  if (hours >= 6 && hours <= 10) {
+    timeGreeting = "清晨的阳光真温柔～";
+  } else if (hours >= 11 && hours <= 13) {
+    timeGreeting = "中午啦，记得吃饭哦～";
+  } else if (hours >= 14 && hours <= 17) {
+    timeGreeting = "下午时光，适合小憩一下～";
+  } else {
+    timeGreeting = "夜深了，早点休息吧～";
+  }
+
+  showBubble(`现在是${month}月${date}日｜${timeGreeting}`);
+});
+document.getElementById("weekDay").addEventListener("mouseenter", () => {
+  const weekText = document.getElementById("weekDay").textContent.trim();
+  showBubble(`今天是${weekText}，要加油哦！`);
+});
+
+const bubble = document.getElementById("catSpeechBubble");
+const bubbleText = bubble.querySelector(".bubble-text");
+const searchInput = document.getElementById("searchInput");
+const greetingEl = document.getElementById("greetingMessage");
+
+// 通用弹出函数
+let bubbleTimeout = null;
+function playCatTransition(type, callback) {
+  const transitionVideo = document.getElementById("catTransition");
+  transitionVideo.style.display = "block";
+
+  if (type === "open") {
+    transitionVideo.src = "./小猫/展开.webm";
+  } else if (type === "close") {
+    transitionVideo.src = "./小猫/闭合.webm";
+  }
+
+  transitionVideo.load();
+  transitionVideo.play().catch(() => {});
+
+  transitionVideo.onended = () => {
+    transitionVideo.style.display = "none";
+    transitionVideo.onended = null;
+    if (typeof callback === "function") callback();
+  };
+}
+function playCatTransition(type, callback) {
+  const transitionVideo = document.getElementById("catTransition");
+  transitionVideo.style.display = "block";
+
+  if (type === "open") {
+    transitionVideo.src = "./小猫/展开.webm";
+  } else if (type === "close") {
+    transitionVideo.src = "./小猫/闭合.webm";
+  }
+
+  transitionVideo.load();
+  transitionVideo.play().catch(() => {});
+
+  transitionVideo.onended = () => {
+    transitionVideo.style.display = "none";
+    transitionVideo.onended = null;
+    if (typeof callback === "function") callback();
+  };
+}
+function showBubble(message, lock = false, force = false) {
+if (bubbleDisabled && !force) return; // 禁用状态下仅允许强制显示
+  if (bubbleLocked) return;
+
+  bubble.classList.remove("show");
+  void bubble.offsetWidth;
+
+  bubbleText.textContent = message;
+  bubble.classList.add("show");
+
+  if (lock) bubbleLocked = true;
+
+  if (bubbleTimeout) clearTimeout(bubbleTimeout);
+  bubbleTimeout = setTimeout(() => {
+    bubble.classList.remove("show");
+    bubbleLocked = false;
+  }, 4000);
+}
+
+// 搜索框点击触发
+searchInput.addEventListener("focus", () => {
+  const prompts = [
+    "今天要搜索什么呀？",
+    "想找点什么呢～",
+    "输入关键词，小猫来帮你找！"
+  ];
+  const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+  showBubble(randomPrompt);
+});
+
+// 问候语悬停触发
+greetingEl.addEventListener("mouseenter", () => {
+  const greetingText = greetingEl.textContent.trim();
+
+  const replies = {
+    "早上好": ["早上好呀！", "新的一天开始啦～", "早安早安，今天也要元气满满！"],
+    "中午好": ["中午好呀～", "午饭时间到啦，吃饱才有力气喵！", "中午好，来休息一下吧～"],
+    "下午好": ["下午好呀！", "下午时光最适合发呆了～", "继续加油，离下班不远啦！"],
+    "晚上好": ["晚上好呀～", "辛苦啦，今晚早点休息哦～", "夜晚是属于放松的时间～"],
+    "默认": ["你好呀～", "喵～你来啦！", "嘿嘿，在想什么呢？"]
+  };
+
+  let matchedKey = Object.keys(replies).find(key => greetingText.includes(key));
+  if (!matchedKey) matchedKey = "默认";
+
+  const options = replies[matchedKey];
+  const reply = options[Math.floor(Math.random() * options.length)];
+
+  showBubble(reply);
+});
+document.addEventListener("keydown", (event) => {
+  if (event.altKey && event.code === "KeyC") {
+    const catVideo = document.getElementById("catVideo");
+
+    if (catVisible) {
+      bubbleDisabled = true;
+
+      // 播放闭合动画，结束后再隐藏小猫
+      playCatTransition("close", () => {
+        if (catVideo) catVideo.style.display = "none";
+        catVisible = false;
+        showBubble("小猫先躲起来啦～", true, true);
+        localStorage.setItem("catVisible", "false");
+      });
+    } else {
+      // ✅ 先显示小猫容器（但暂时隐藏内容）
+      if (catVideo) {
+        catVideo.style.display = "block";
+        catVideo.style.visibility = "visible"; // ✅ 立即显示
+      }
+
+      // 播放展开动画，结束后再让小猫可见
+      playCatTransition("open", () => {
+        if (catVideo) catVideo.style.visibility = "visible";
+        catVisible = true;
+        bubbleDisabled = false;
+        showBubble("小猫回来啦喵～", true);
+        localStorage.setItem("catVisible", "true");
+      });
+    }
+  }
+});
+
+    document.addEventListener("DOMContentLoaded", () => {
+  const catVideo = document.getElementById("catVideo");
+  const standbySrc = "./小猫/待机主要动作.webm";
+  const reactionVideos = ["./小猫/微笑.webm", "./小猫/脸红.webm", "./小猫/待机次要动作.webm", "./小猫/忧愁.webm"];
+
+  if (catVideo) {
+    // 初始状态标记为待机
+    catVideo.dataset.state = "standby";
+
+    catVideo.play().catch(() => {
+      document.addEventListener("click", () => catVideo.play(), { once: true });
+    });
+
+catVideo.addEventListener("click", () => {
+  if (catVideo.dataset.state !== "standby" || isLocked) return;
+
+  // 🧠 点击频率统计
+  clickCount++;
+  if (clickTimer) clearTimeout(clickTimer);
+  clickTimer = setTimeout(() => {
+    clickCount = 0;
+  }, 2000);
+
+  // 🌀 触发头晕逻辑
+  if (clickCount >= 8) {
+    isLocked = true; // 🔒 进入冷却状态
+    const dizzyReplies = [
+      "喵呜呜……有点晕了喵～",
+      "别戳啦，小猫要转圈圈了～",
+      "喵……让我缓缓……@_@"
+    ];
+    const dizzy = dizzyReplies[Math.floor(Math.random() * dizzyReplies.length)];
+    showBubble(dizzy);
+
+    // 播放忧愁视频
+    catVideo.pause();
+    catVideo.loop = false;
+    catVideo.src = "./小猫/忧愁.webm";
+    catVideo.load();
+    catVideo.play().catch(() => {});
+
+    catVideo.onended = () => {
+      catVideo.loop = true;
+      catVideo.src = standbySrc;
+      catVideo.load();
+      catVideo.play().catch(() => {});
+      catVideo.onended = null;
+    };
+
+    // 🔓 3 秒后解除锁定
+    setTimeout(() => {
+      isLocked = false;
+      clickCount = 0;
+    }, 3000);
+
+    return;
+  }
+
+  // 🐱 正常“喵”回应
+  const meowReplies = ["喵~", "喵呜~", "喵喵喵？"];
+  const meow = meowReplies[Math.floor(Math.random() * meowReplies.length)];
+  showBubble(meow);
+
+  // 🎬 播放反应视频
+  const reaction = reactionVideos[Math.floor(Math.random() * reactionVideos.length)];
+  catVideo.pause();
+  catVideo.loop = false;
+  catVideo.src = reaction;
+  catVideo.load();
+  catVideo.play().catch(() => {});
+
+  catVideo.onended = () => {
+    catVideo.loop = true;
+    catVideo.src = standbySrc;
+    catVideo.load();
+    catVideo.play().catch(() => {});
+    catVideo.onended = null;
+  };
+});
+
+  }
+});
+
+    
 // ...existing code...
 // 搜索引擎切换逻辑
 const engines = [
@@ -466,7 +885,6 @@ const engines = [
 let currentEngineIndex = 0;
 const engineSwitch = document.getElementById('engineSwitch');
 const searchForm = document.querySelector('form');
-const searchInput = document.getElementById('searchInput');
 
 function applyEngine(index, save = false) {
   index = Number(index) || 0;
@@ -500,6 +918,13 @@ function applyEngine(index, save = false) {
 engineSwitch.addEventListener('click', () => {
   const next = (currentEngineIndex + 1) % engines.length;
   applyEngine(next, true); // 点击时保存
+  const engineReplies = [
+    "换个搜索引擎试试喵～看看谁更聪明！",
+    "小猫也想知道哪个搜索结果更好喵～",
+    "咕噜咕噜～切换成功喵！"
+  ];
+  const reply = engineReplies[Math.floor(Math.random() * engineReplies.length)];
+  showBubble(reply);
 });
 
 // 页面加载时恢复上次选择（若有）
@@ -614,7 +1039,26 @@ if (saved !== null) {
       loadVideoFromIndexedDB();
       updateBeijingTime();
       setInterval(updateBeijingTime, 1000);
-    });
+      const savedVisible = localStorage.getItem("catVisible");
+  if (savedVisible === "false") {
+    const catVideo = document.getElementById("catVideo");
+    if (catVideo) catVideo.style.display = "none";
+    catVisible = false;
+    bubbleDisabled = true;
+  } else {
+    if (catVisible) {
+  playCatTransition("open", () => {
+    const catVideo = document.getElementById("catVideo");
+    if (catVideo) catVideo.style.display = "block";
+  });
+}
+    catVisible = true;
+    bubbleDisabled = false;
+  }
+   if (catVisible && !hasShownInitialTip) {
+    showBubble("喵喵！！（你好！！）", false, true);
+    hasShownInitialTip = true;
+}});
     document.getElementById("videoUpload").addEventListener("change", async function(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -631,6 +1075,7 @@ if (saved !== null) {
     bgVideo.load();
     bgVideo.play();
     await saveVideoToIndexedDB(file);
+    
   } else if (file.type.startsWith("image/")) {
     // 🖼️ 图片模式
     const imageURL = URL.createObjectURL(file);
@@ -641,7 +1086,14 @@ if (saved !== null) {
     await saveVideoToIndexedDB(file); // 同样保存到 IndexedDB，下次加载
   } else {
     alert("请上传有效的 MP4 视频或图片文件。");
-  }
+  }// 🐱 小猫评价
+  const wallpaperComments = [
+    "哇~新壁纸好漂亮喵！",
+    "小猫喜欢这个背景～很有感觉喵！",
+    "换了新壁纸，气氛都不一样了喵～"
+  ];
+  const comment = wallpaperComments[Math.floor(Math.random() * wallpaperComments.length)];
+  showBubble(comment);
 });
     // 搜索建议（点击自动填充 + 自动搜索）
     function getBaiduSuggest(query, callback) {
@@ -848,6 +1300,16 @@ window.addEventListener('message', (e) => {
   } else if (data.type === 'location-error') {
     console.warn('Location error:', data.message);
   }
+  /* ✅ 页面加载后自动播放小猫视频（防止某些浏览器静音策略问题） */
+window.addEventListener("DOMContentLoaded", () => {
+  const catVideo = document.getElementById("catVideo");
+  if (catVideo) {
+    catVideo.play().catch(() => {
+      console.warn("自动播放被阻止，等待用户交互后再播放。");
+      document.addEventListener("click", () => catVideo.play(), { once: true });
+    });
+  }
+});
 });
 </script>
 </body>
