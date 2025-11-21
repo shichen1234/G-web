@@ -6,6 +6,189 @@ let hasShownInitialTip = false;
 let clickTimer = null;
 let isLocked = false; // 🔒 是否处于冷却状态
 // B站图标悬停
+document.addEventListener("DOMContentLoaded", () => {
+  const modal = document.getElementById("wallpaperModal");
+  const grid = document.querySelector(".wallpaper-grid");
+  const closeBtn = document.getElementById("closeModal");
+  const videoUpload = document.getElementById("videoUpload");
+  const bgImage = document.getElementById("bgImage");
+  const bgVideo = document.getElementById("bgVideo");
+
+  // 动态插入 1.jpg ~ 18.jpg
+  for (let i = 1; i <= 9; i++) {
+    const img = document.createElement("img");
+    img.src = `wallpapers/${i}.jpg`;
+    img.alt = `壁纸${i}`;
+    img.loading = "lazy";
+    img.addEventListener("click", () => {
+      bgVideo.style.display = "none";
+      bgImage.style.display = "block";
+      bgImage.src = img.src;
+      modal.style.display = "none";
+      localStorage.setItem("wallpaperType", "preset");
+      localStorage.setItem("wallpaper", img.src);
+      deleteVideoFromIndexedDB().catch(()=>{});
+      
+      // ✅ 新增：选择壁纸后弹出小猫评论
+      const wallpaperComments = [
+        "哇~新壁纸好漂亮喵！",
+        "小猫喜欢这个背景～很有感觉喵！",
+        "换了新壁纸，气氛都不一样了喵～"
+      ];
+      const comment = wallpaperComments[Math.floor(Math.random() * wallpaperComments.length)];
+      showBubble(comment);
+    });
+    grid.appendChild(img);
+  }
+
+  // ✅ 新增：动态插入 1.mp4 ~ 5.mp4 视频
+  for (let i = 1; i <= 2; i++) {
+    const videoSrc = `wallpapers/${i}.mp4`;
+
+    // 缩略图 video 元素
+    const thumb = document.createElement("video");
+    thumb.src = videoSrc;
+    thumb.preload = "metadata";
+    thumb.muted = true;
+    thumb.style.width = "100%";
+    thumb.style.height = "80px";
+    thumb.style.objectFit = "cover";
+    thumb.style.borderRadius = "8px";
+    thumb.style.cursor = "pointer";
+    thumb.disablePictureInPicture = true;
+    if (thumb.controlsList) thumb.controlsList.add("nodownload");
+
+    // 包装容器与下方标签（悬停变灰效果由 CSS 控制）
+    const tile = document.createElement("div");
+    tile.className = "video-tile";
+    const label = document.createElement("div");
+    label.className = "video-label";
+    label.textContent = "动态";
+
+    // 点击即刻应用背景（不等 fetch/IndexedDB 完成）
+    tile.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      // 立即显示视频背景（直接使用相对路径）
+      bgImage.style.display = "none";
+      bgVideo.style.display = "block";
+      bgVideo.poster = ""; // 清除 poster，避免显示海报
+      bgVideo.src = videoSrc;
+      bgVideo.load();
+
+      // canplay 时尝试 play
+      const onCanPlay = () => {
+        bgVideo.play().catch(()=>{});
+        bgVideo.removeEventListener("canplay", onCanPlay);
+      };
+      bgVideo.addEventListener("canplay", onCanPlay, { once: true });
+
+      // 若加载失败，则回退到默认图片并打印错误（不阻塞用户）
+      const onError = () => {
+        console.error("预设视频加载失败：", videoSrc);
+        bgVideo.style.display = "none";
+        bgImage.style.display = "block";
+        bgImage.src = "wallpapers/1.jpg";
+        bgVideo.removeEventListener("error", onError);
+      };
+      bgVideo.addEventListener("error", onError, { once: true });
+
+      // 记录为预设背景（路径），并尝试删除 IndexedDB 中上传的视频
+      localStorage.setItem("wallpaperType", "preset");
+      localStorage.setItem("wallpaper", videoSrc);
+      deleteVideoFromIndexedDB().catch(()=>{});
+
+      modal.style.display = "none";
+      showBubble(  "哇~新壁纸好漂亮喵！",
+        "小猫喜欢这个背景～很有感觉喵！",
+        "换了新壁纸，气氛都不一样了喵～");
+
+      // 后台异步尝试 fetch 并保存到 IndexedDB（仅做缓存，不影响当前显示）
+      (async () => {
+        try {
+          const resp = await fetch(videoSrc);
+          if (resp.ok) {
+            const blob = await resp.blob();
+            await saveVideoToIndexedDB(blob);
+          } else {
+            console.warn("fetch 返回非 OK:", resp.status, videoSrc);
+          }
+        } catch (err) {
+          console.warn("后台 fetch/保存预设视频失败（可忽略）：", err);
+        }
+      })();
+    });
+
+    tile.appendChild(thumb);
+    tile.appendChild(label);
+    const grid = document.querySelector(".dynamic-grid") || document.querySelector(".wallpaper-grid");
+    grid?.appendChild(tile);
+  }
+
+  // 添加"加号"区域
+  const addBox = document.createElement("div");
+  addBox.className = "add-wallpaper";
+  addBox.textContent = "+";
+  addBox.addEventListener("click", () => {
+    videoUpload.click();
+  });
+  grid.appendChild(addBox);
+
+  // 关闭弹窗
+  closeBtn?.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  // 打开弹窗
+  const openBtn = document.getElementById("openWallpaperModal");
+  if (openBtn) {
+    openBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      modal.style.display = "flex";
+    });
+  }
+
+  // 文件选择后
+  videoUpload.addEventListener("change", async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      if (file.type.startsWith("image/")) {
+        bgVideo.style.display = "none";
+        bgImage.style.display = "block";
+        bgImage.src = result;
+        localStorage.setItem("wallpaperType", "upload");
+        localStorage.setItem("wallpaper", result);
+        deleteVideoFromIndexedDB().catch(()=>{});
+      } else if (file.type.startsWith("video/")) {
+        bgImage.style.display = "none";
+        bgVideo.style.display = "block";
+        bgVideo.src = result;
+        bgVideo.play().catch(() => {});
+        localStorage.setItem("wallpaperType", "upload");
+        localStorage.setItem("wallpaper", result);
+        deleteVideoFromIndexedDB().catch(()=>{});
+      } else {
+        alert("请上传有效的 MP4 视频或图片文件。");
+      }
+      modal.style.display = "none";
+
+      // ✅ 上传壁纸后的小猫评论
+      const wallpaperComments = [
+        "哇~新壁纸好漂亮喵！",
+        "小猫喜欢这个背景～很有感觉喵！",
+        "换了新壁纸，气氛都不一样了喵～"
+      ];
+      const comment = wallpaperComments[Math.floor(Math.random() * wallpaperComments.length)];
+      showBubble(comment);
+    };
+    reader.readAsDataURL(file);
+    event.target.value = "";
+  });
+});
+
 document.getElementById("weather").addEventListener("mouseenter", () => {
  const weatherInfo = document.getElementById("weather-text").textContent.trim();
 
@@ -345,10 +528,10 @@ catVideo.addEventListener("click", () => {
 // ...existing code...
 // 搜索引擎切换逻辑
 const engines = [
-  { name: 'bing', url: 'https://www.bing.com/search', param: 'q', icon: 'bing-logo-small.png', largeIcon: 'bing-logo.png' },
-  { name: 'google', url: 'https://www.google.com/search', param: 'q', icon: 'google-logo-small.png', largeIcon: 'google-logo.png' },
-  { name: 'baidu', url: 'https://www.baidu.com/s', param: 'wd', icon: 'baidu-logo-small.png', largeIcon: 'baidu-logo.png' },
-  { name: 'sogou', url: 'https://www.sogou.com/web', param: 'query', icon: 'sogou-logo-small.png', largeIcon: 'sogou-logo.png' }
+  { name: 'bing', url: 'https://www.bing.com/search', param: 'q', icon: 'logo/bing-logo-small.png', largeIcon: 'logo/bing-logo.png' },
+  { name: 'google', url: 'https://www.google.com/search', param: 'q', icon: 'logo/google-logo-small.png', largeIcon: 'logo/google-logo.png' },
+  { name: 'baidu', url: 'https://www.baidu.com/s', param: 'wd', icon: 'logo/baidu-logo-small.png', largeIcon: 'logo/baidu-logo.png' },
+  { name: 'sogou', url: 'https://www.sogou.com/web', param: 'query', icon: 'logo/sogou-logo-small.png', largeIcon: 'logo/sogou-logo.png' }
 ];
 
 let currentEngineIndex = 0;
@@ -436,75 +619,98 @@ if (saved !== null) {
         const tx = db.transaction(DB_STORE_NAME, "readonly");
         const store = tx.objectStore(DB_STORE_NAME);
         const request = store.get(DB_KEY);
-        request.onsuccess = function (e) {
-          const file = e.target.result;
-          if (!file) return;
-          const bgVideo = document.getElementById("bgVideo");
-          const bgImage = document.getElementById("bgImage");
-          const fileURL = URL.createObjectURL(file);
 
-          if (file.type && file.type.startsWith("video/")) {
-            // 视频：不要在 onloadeddata 里立即 revoke，改为在 ended 或页面卸载时 revoke
-            try {
-              // 若之前有旧 objectURL，先撤销（防止泄露）
-              if (bgVideo.dataset.objectUrl) {
-                try { URL.revokeObjectURL(bgVideo.dataset.objectUrl); } catch (e) {}
-              }
-              bgImage.style.display = "none";
-              bgVideo.style.display = "block";
-              bgVideo.src = fileURL;
-              bgVideo.dataset.objectUrl = fileURL; // 保存引用，稍后撤销
-              bgVideo.load();
-              bgVideo.play().catch(()=>{});
-              // 在播放结束时撤销 objectURL
-              bgVideo.addEventListener('ended', function onEnded() {
+        return new Promise((resolve, reject) => {
+          request.onsuccess = function (e) {
+            const file = e.target.result;
+            if (!file) {
+              resolve(null); // 未找到，显式返回 null
+              return;
+            }
+
+            const bgVideo = document.getElementById("bgVideo");
+            const bgImage = document.getElementById("bgImage");
+            const fileURL = URL.createObjectURL(file);
+
+            if (file.type && file.type.startsWith("video/")) {
+              try {
                 if (bgVideo.dataset.objectUrl) {
-                  try { URL.revokeObjectURL(bgVideo.dataset.objectUrl); } catch(e){}
-                  delete bgVideo.dataset.objectUrl;
+                  try { URL.revokeObjectURL(bgVideo.dataset.objectUrl); } catch (e) {}
                 }
-                bgVideo.removeEventListener('ended', onEnded);
-              });
-            } catch (err) {
-              console.error('播放视频出错', err);
-              try { URL.revokeObjectURL(fileURL); } catch(e){}
-            }
-          } else if (file.type && file.type.startsWith("image/")) {
-            // 图片：图片可以在 onload 后撤销 objectURL（保持原行为）
-            try {
-              if (bgImage.dataset.objectUrl) {
-                try { URL.revokeObjectURL(bgImage.dataset.objectUrl); } catch (e) {}
+                bgImage.style.display = "none";
+                bgVideo.style.display = "block";
+                bgVideo.src = fileURL;
+                bgVideo.dataset.objectUrl = fileURL;
+                bgVideo.load();
+                bgVideo.play().catch(()=>{});
+                bgVideo.addEventListener('ended', function onEnded() {
+                  if (bgVideo.dataset.objectUrl) {
+                    try { URL.revokeObjectURL(bgVideo.dataset.objectUrl); } catch(e){}
+                    delete bgVideo.dataset.objectUrl;
+                  }
+                  bgVideo.removeEventListener('ended', onEnded);
+                });
+                resolve(file); // ✅ 找到时返回 file
+              } catch (err) {
+                console.error('播放视频出错', err);
+                try { URL.revokeObjectURL(fileURL); } catch(e){}
+                resolve(null);
               }
-              bgVideo.pause();
-              bgVideo.style.display = "none";
-              bgImage.src = fileURL;
-              bgImage.dataset.objectUrl = fileURL;
-              bgImage.style.display = "block";
-              bgImage.onload = () => {
+            } else if (file.type && file.type.startsWith("image/")) {
+              try {
+                if (bgImage.dataset.objectUrl) {
+                  try { URL.revokeObjectURL(bgImage.dataset.objectUrl); } catch (e) {}
+                }
+                bgVideo.pause();
+                bgVideo.style.display = "none";
+                bgImage.src = fileURL;
+                bgImage.dataset.objectUrl = fileURL;
+                bgImage.style.display = "block";
+                bgImage.onload = () => {
+                  try { URL.revokeObjectURL(fileURL); } catch(e){}
+                  delete bgImage.dataset.objectUrl;
+                };
+                bgImage.onerror = () => {
+                  console.error('图片加载失败');
+                  try { URL.revokeObjectURL(fileURL); } catch(e){}
+                  delete bgImage.dataset.objectUrl;
+                };
+                resolve(file); // ✅ 找到时返回 file
+              } catch (err) {
+                console.error('显示图片出错', err);
                 try { URL.revokeObjectURL(fileURL); } catch(e){}
-                delete bgImage.dataset.objectUrl;
-              };
-              bgImage.onerror = () => {
-                console.error('图片加载失败');
-                try { URL.revokeObjectURL(fileURL); } catch(e){}
-                delete bgImage.dataset.objectUrl;
-              };
-            } catch (err) {
-              console.error('显示图片出错', err);
+                resolve(null);
+              }
+            } else {
+              console.warn('IndexedDB 中存储的数据不是图片或视频', file);
               try { URL.revokeObjectURL(fileURL); } catch(e){}
+              resolve(null);
             }
-          } else {
-            console.warn('IndexedDB 中存储的数据不是图片或视频', file);
-            try { URL.revokeObjectURL(fileURL); } catch(e){}
-          }
-        };
-        request.onerror = function(e) {
-          console.error('读取 IndexedDB 失败', e);
-        };
+          };
+
+          request.onerror = function(e) {
+            console.error('读取 IndexedDB 失败', e);
+            reject(e);
+          };
+        });
       } catch (e) {
         console.error('loadVideoFromIndexedDB 出错', e);
+        return null;
       }
     }
-    window.addEventListener("DOMContentLoaded", () => {
+    // 删除 IndexedDB 中已保存的壁纸（当用户选择预设或使用 Base64 存储时调用）
+function deleteVideoFromIndexedDB() {
+  return openDatabase().then(db => {
+    const tx = db.transaction(DB_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(DB_STORE_NAME);
+    store.delete(DB_KEY);
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject();
+    });
+  }).catch(() => {});
+}
+window.addEventListener("DOMContentLoaded", () => {
       loadVideoFromIndexedDB();
       updateBeijingTime();
       setInterval(updateBeijingTime, 1000);
@@ -532,30 +738,47 @@ if (saved !== null) {
   const file = event.target.files[0];
   if (!file) return;
 
-  const bgVideo = document.getElementById("bgVideo");
   const bgImage = document.getElementById("bgImage");
+  const bgVideo = document.getElementById("bgVideo");
+  const modal = document.getElementById("wallpaperModal");
 
+  // ✅ 立即创建本地 URL，不等待 IndexedDB
+  const fileURL = URL.createObjectURL(file);
+
+  // ✅ 检测文件类型
   if (file.type.startsWith("video/")) {
-    // 🎥 视频模式
-    const videoURL = URL.createObjectURL(file);
+    // 视频文件：立即显示
     bgImage.style.display = "none";
     bgVideo.style.display = "block";
-    bgVideo.src = videoURL;
+    bgVideo.poster = ""; // 清除 poster
+    bgVideo.src = fileURL;
     bgVideo.load();
-    bgVideo.play();
-    await saveVideoToIndexedDB(file);
+    
+    bgVideo.addEventListener("canplay", () => {
+      bgVideo.play().catch(() => {});
+    }, { once: true });
     
   } else if (file.type.startsWith("image/")) {
-    // 🖼️ 图片模式
-    const imageURL = URL.createObjectURL(file);
-    bgVideo.pause();
+    // 图片文件：立即显示
     bgVideo.style.display = "none";
-    bgImage.src = imageURL;
     bgImage.style.display = "block";
-    await saveVideoToIndexedDB(file); // 同样保存到 IndexedDB，下次加载
-  } else {
-    alert("请上传有效的 MP4 视频或图片文件。");
-  }// 🐱 小猫评价
+    bgImage.src = fileURL;
+  }
+
+  modal.style.display = "none";
+
+  // ✅ 后台异步保存到 IndexedDB（不阻塞 UI）
+  saveVideoToIndexedDB(file).then(() => {
+    // 清除 localStorage，表示使用 IndexedDB 中的数据
+    localStorage.removeItem("wallpaperType");
+    localStorage.removeItem("wallpaper");
+    console.log("背景已保存到本地存储");
+  }).catch((err) => {
+    console.error("保存失败:", err);
+    // 即使保存失败，也不影响当前显示
+  });
+
+  // ✅ 选择背景后弹出小猫评论
   const wallpaperComments = [
     "哇~新壁纸好漂亮喵！",
     "小猫喜欢这个背景～很有感觉喵！",
@@ -563,6 +786,9 @@ if (saved !== null) {
   ];
   const comment = wallpaperComments[Math.floor(Math.random() * wallpaperComments.length)];
   showBubble(comment);
+
+  // 重置 input
+  event.target.value = "";
 });
     // 搜索建议（点击自动填充 + 自动搜索）
     function getBaiduSuggest(query, callback) {
@@ -731,7 +957,7 @@ async function getWeatherByCoords(lat, lon) {
       throw new Error("地理位置解析失败");
     }
   } catch (e) {
-    console.warn("定位失败，使用默认城市天气", e);
+    console.warn("定位失败，使用默认城市", e);
     getWeatherByCity(DEFAULT_CITY);
   }
 }
@@ -779,4 +1005,63 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+});
+
+// 页面加载时的统一初始化
+document.addEventListener("DOMContentLoaded", async () => {
+  const bgImage = document.getElementById("bgImage");
+  const bgVideo = document.getElementById("bgVideo");
+  
+  const wallpaperType = localStorage.getItem("wallpaperType");
+  const wallpaperPath = localStorage.getItem("wallpaper");
+  
+  // 尝试从 IndexedDB 加载
+  let loadedFromDB = false;
+  if (!wallpaperType || wallpaperType === "upload") {
+    try {
+      const file = await loadVideoFromIndexedDB();
+      if (file) {
+        loadedFromDB = true;
+        // loadVideoFromIndexedDB 已经设置了 DOM 并返回 file
+      }
+    } catch (err) {
+      console.log("没有保存的视频/图片，使用默认背景");
+    }
+  }
+  
+  // 如果已从 IndexedDB 加载成功，直接返回（已显示）
+  if (loadedFromDB) return;
+  
+  // 加载预设壁纸（图片或视频）
+  if (wallpaperType === "preset" && wallpaperPath) {
+    if (wallpaperPath.includes(".mp4")) {
+      bgImage.style.display = "none";
+      bgVideo.style.display = "block";
+      bgVideo.poster = "";
+      bgVideo.src = wallpaperPath;
+      bgVideo.load();
+      bgVideo.addEventListener("canplay", () => { bgVideo.play().catch(()=>{}); }, { once: true });
+      bgVideo.addEventListener("error", () => {
+        console.error("视频加载失败:", wallpaperPath);
+        bgVideo.style.display = "none";
+        bgImage.style.display = "block";
+        bgImage.src = "wallpapers/1.jpg";
+      }, { once: true });
+      return;
+    } else {
+      bgVideo.style.display = "none";
+      bgImage.style.display = "block";
+      bgImage.src = wallpaperPath;
+      return;
+    }
+  }
+
+  // 最后兜底：设置内置默认背景（当既没有 IndexedDB 文件也没有 preset 时）
+  // 这里使用扩展包内的 video3.mp4（或你希望的默认图片）
+  bgImage.style.display = "none";
+  bgVideo.style.display = "block";
+  bgVideo.poster = "poster.jpg";
+  bgVideo.src = "video3.mp4";
+  bgVideo.load();
+  bgVideo.addEventListener("canplay", () => { bgVideo.play().catch(()=>{}); }, { once: true });
 });

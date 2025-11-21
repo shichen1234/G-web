@@ -7,6 +7,63 @@
   <!-- 添加在其他 meta 标签之后 -->
   <!-- 预加载大图标 -->
   <style>
+    #closeModal {
+  position: absolute;
+  top: -30px;       /* 距离弹窗顶部 */
+  right: -30px;     /* 距离弹窗右侧 */
+  font-size: 24px; /* 字体大小 */
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+    .modal {
+  display: none; /* 默认隐藏 */
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  position: relative;
+  max-width: 800px;
+  width: 90%;
+}
+.wallpaper-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+.wallpaper-grid img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.wallpaper-grid img:hover { transform: scale(1.05); }
+.add-wallpaper {
+  width: 100%;        /* 占满格子宽度 */
+  height: 80px;    
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ccc;
+  color: #333;
+  font-size: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.add-wallpaper:hover {
+  transform: scale(1.05);
+}
   #catShadow {
   position: fixed;
   bottom: 20px;
@@ -508,20 +565,88 @@ form input[type="text"] {
 #weather-text {
   pointer-events: none;
 }
+
+/* ✅ 禁止选中所有背景和图标元素 */
+#bgImage, #bgVideo, #biliIcon, #extraIcon, .bing- {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* ✅ 禁用搜索引擎图标的右键菜单 */
+#engineSwitch img {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: auto;
+}
+
+/* ✅ 移除视频画中画和下载选项 */
+#bgVideo {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ✅ 弹窗内的视频也禁用画中画 */
+.wallpaper-grid video {
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: auto;
+}
+/* 视频缩略图及下方标签 */
+.video-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: auto;
+}
+.video-tile video {
+  display: block;
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: transform 180ms ease; /* 只保留缩放过渡 */
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: auto;
+}
+/* 悬停效果：取消变灰/变暗，改为与图片一样放大 */
+.video-tile:hover video {
+  filter: none;                 /* 取消灰度和亮度处理 */
+  transform: scale(1.05);       /* 与图片 hover 一致的放大比例 */
+}
+/* 将“动态”文字放在视频正下方 */
+.video-label {
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+  user-select: none;
+  -webkit-user-select: none;
+  margin-top: -2px; /* 视觉上紧贴视频 */
+}
   </style>
+
+  <!-- ...existing head 内容... -->
 </head>
 <body>
   <!-- 可把额外图标图片放到和 index.html 同目录，示例文件名 2025102523114053.png -->
   <a href="https://www.youtube.com/@shichenshi12324" target="_blank">
-  <img id="extraIcon" src="2025102523114053.png" alt="youtube" title="作者油管主页" /></a>
+  <img id="extraIcon" src="logo/2025102523114053.png" alt="youtube" title="作者油管主页" style="user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;" /></a>
   <a href="https://space.bilibili.com/702430325" target="_blank">
-  <img id="biliIcon" src="2025102514322810.png" alt="bilibili"  title="作者B站主页"/>
+  <img id="biliIcon" src="logo/2025102514322810.png" alt="bilibili" title="作者B站主页" style="user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;"/>
 </a>
-<img id="bgImage" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-2;display:none;" />
-  <video id="bgVideo" autoplay muted loop poster="poster.jpg">
-    <source src="video3.mp4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
+<img id="bgImage" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-2;display:none;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;" />
+<video id="bgVideo" muted loop poster="poster.jpg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-1;display:none;user-select:none;-webkit-user-select:none;" disablePictureInPicture controlsList="nodownload">
+  <source src="video3.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
   <!-- ✅ 新增问候语和北京时间显示 -->
    
   <div id="greetingMessage">问候加载中...</div>
@@ -555,11 +680,11 @@ form input[type="text"] {
   <div id="weather-text">正在获取天气...</div>
 </div>
   <div class="content">
-    <img src="bing-logo.png" alt="Bing Logo" class="bing-logo">
+    <img src="logo/   bing-logo.png" alt="Bing Logo" class="bing-logo">
     <form action="https://www.bing.com/search" method="GET" target="_blank">
   <div class="search-container">
     <button type="button" id="engineSwitch">
-      <img src="bing-logo-small.png" alt="搜索引擎" class="engine-icon">
+      <img src="logo/bing-logo-small.png" alt="搜索引擎" class="engine-icon">
     </button>
     <input type="text" name="q" id="searchInput" placeholder="搜索..." autocomplete="off">
     <button type="submit" id="searchBtn" disabled>
@@ -571,9 +696,19 @@ form input[type="text"] {
 </form>
     <ul id="suggestionList"></ul>
   </div>
-  <div class="wallpaper-change-wrapper"><label for="videoUpload" class="wallpaper-btn">更改壁纸</label>
-    <input type="file" id="videoUpload" accept="video/mp4,image/*">
+  <div class="wallpaper-change-wrapper">
+  <!-- 改成普通按钮，不再直接绑定 input -->
+  <button type="button" class="wallpaper-btn" id="openWallpaperModal">更改壁纸</button>
+  
+  <!-- 保留原来的 input，供加号区域调用 -->
+  <input type="file" id="videoUpload" accept="video/mp4,image/*" style="display:none;">
+</div>
+<div id="wallpaperModal" class="modal">
+  <div class="modal-content">
+    <span id="closeModal" style="cursor:pointer;font-size:20px;">×</span>
+    <div class="wallpaper-grid"></div>
   </div>
+</div>
  <script src="main.js"></script>
 </body>
 </html>
