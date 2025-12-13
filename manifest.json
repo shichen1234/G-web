@@ -1,0 +1,47 @@
+{
+  "manifest_version": 3,
+  "name": "G-web",
+  "version": "1.3",
+  "description": "更改新标签页为个人定制页面，还有一个可爱的私人猫猫（可通过 Alt+C 开启/关闭）",
+  "icons": {
+    "16": "icon1.png",
+    "48": "icon1.png",
+    "128": "icon1.png"
+  },
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["main.js",
+        "index.html",
+        "video3.mp4",
+        "poster.jpg",
+        "icon1.png",
+        "bing-logo.png",
+        "google-logo.png",
+        "baidu-logo.png",
+        "sogou-logo.png",
+        "bing-logo-small.png",
+        "google-logo-small.png",
+        "baidu-logo-small.png",
+        "sogou-logo-small.png",
+        "2025102523114053.png",
+        "2025102514322810.png",
+        "小猫/*.webm",
+        "小猫/*.png"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": ["https://suggestion.baidu.com/*"],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none';"
+  }
+}

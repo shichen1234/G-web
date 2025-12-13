@@ -6,6 +6,126 @@ let hasShownInitialTip = false;
 let clickTimer = null;
 let isLocked = false; // 🔒 是否处于冷却状态
 // B站图标悬停
+document.addEventListener("DOMContentLoaded", function () {
+  const engines = [
+    {
+      name: "Bing",
+      url: "https://www.bing.com/search",
+      param: "q",
+      smallLogo: "logo/bing-logo-small.png",
+      bigLogo: "logo/bing-logo.png",
+      placeholder: "通过bing搜索..."
+    },
+    {
+      name: "Google",
+      url: "https://www.google.com/search",
+      param: "q",
+      smallLogo: "logo/google-logo-small.png",
+      bigLogo: "logo/google-logo.png",
+      placeholder: "Google 搜索..."
+    },
+    {
+      name: "百度",
+      url: "https://www.baidu.com/s",
+      param: "wd",
+      smallLogo: "logo/baidu-logo-small.png",
+      bigLogo: "logo/baidu-logo.png",
+      placeholder: "百度一下..."
+    },
+    {
+      name: "搜狗",
+      url: "https://www.sogou.com/web",
+      param: "query",                 // 搜狗必须是 query
+      extraParams: "ie=utf-8",        // 防止中文乱码
+      smallLogo: "logo/sogou-logo-small.png",
+      bigLogo: "logo/sogou-logo.png",
+      placeholder: "搜狗搜索..."
+    }
+    // 继续加你想要的……
+  ];
+
+  let current = parseInt(localStorage.getItem("currentEngine") || "0", 10);
+  if (isNaN(current) || current >= engines.length) current = 0;
+
+  let isSwitching = false;
+  const engineSwitch   = document.getElementById("engineSwitch");
+  const engineIcon     = engineSwitch.querySelector(".engine-icon");
+  const searchForm     = document.querySelector("form");
+  const searchInput    = document.getElementById("searchInput");
+  const bigLogo        = document.querySelector(".bing-logo");
+  let hiddenInput      = null;  // 全局保存隐藏 input
+
+  // 统一应用引擎配置
+  function applyEngine(idx) {
+    const eng = engines[idx];
+    searchForm.querySelectorAll('input[type="hidden"]').forEach(el => el.remove());
+    // 创建新的隐藏 input（关键！）
+    hiddenInput = document.createElement("input");
+    hiddenInput.type = "hidden";
+    hiddenInput.name = eng.param;
+    hiddenInput.value = searchInput.value.trim();
+    searchForm.appendChild(hiddenInput);
+
+    // 更新界面
+    bigLogo.src = eng.bigLogo;
+    bigLogo.alt = eng.name + " Logo";
+    engineIcon.src = eng.smallLogo;
+    searchInput.placeholder = eng.placeholder;
+    searchForm.action = eng.url;
+    // 额外参数（如搜狗的 ie=utf-8）
+    if (eng.extraParams) {
+      const extra = document.createElement("input");
+      extra.type = "hidden";
+      extra.name = "ie";
+      extra.value = "utf-8";
+      searchForm.appendChild(extra);
+    }
+
+    // 实时同步输入内容
+    searchInput.oninput = () => {
+      hiddenInput.value = searchInput.value.trim();
+    };
+  }
+
+  // 页面加载时恢复上次选择
+  applyEngine(current);
+
+  // 切换引擎
+function switchEngine(e) {
+  e.stopPropagation();
+  if (isSwitching) return;
+  isSwitching = true;
+
+  // 小 logo 先淡出
+  engineIcon.classList.remove("fade-in");
+  engineIcon.classList.add("fade-out");
+
+  setTimeout(() => {
+    // 切换索引
+    current = (current + 1) % engines.length;
+    localStorage.setItem("currentEngine", current);
+
+    // 应用新引擎（会更新 engineIcon.src）
+    applyEngine(current);
+engineIcon.classList.add("fade-in");
+    // 小 logo 淡入
+    engineIcon.classList.remove("fade-out");
+    engineIcon.classList.add("fade-in");
+  }, 200);
+
+  // 大 logo 原有动画（保持你原来的）
+  bigLogo.style.opacity = 0;
+  setTimeout(() => {
+    bigLogo.style.opacity = 1;
+  }, 320);
+
+  setTimeout(() => {
+    isSwitching = false;
+  }, 600);
+}
+  engineSwitch.removeEventListener("click", switchEngine);
+  engineSwitch.addEventListener("click", switchEngine);
+});
 document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("wallpaperModal");
   const grid = document.querySelector(".wallpaper-grid");
@@ -15,7 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const bgVideo = document.getElementById("bgVideo");
 
   // 动态插入 1.jpg ~ 18.jpg
-  for (let i = 1; i <= 9; i++) {
+  for (let i = 1; i <= 16; i++) {
     const img = document.createElement("img");
     img.src = `wallpapers/${i}.jpg`;
     img.alt = `壁纸${i}`;
@@ -24,7 +144,11 @@ document.addEventListener("DOMContentLoaded", () => {
       bgVideo.style.display = "none";
       bgImage.style.display = "block";
       bgImage.src = img.src;
-      modal.style.display = "none";
+      modal.classList.remove("show");
+setTimeout(() => {
+  modal.style.display = "none";
+}, 350); // 与 CSS 动画时间一致
+
       localStorage.setItem("wallpaperType", "preset");
       localStorage.setItem("wallpaper", img.src);
       deleteVideoFromIndexedDB().catch(()=>{});
@@ -42,88 +166,101 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ✅ 新增：动态插入 1.mp4 ~ 5.mp4 视频
-  for (let i = 1; i <= 2; i++) {
-    const videoSrc = `wallpapers/${i}.mp4`;
+// ✅ 新增：动态插入 1.mp4 ~ 7.mp4 视频
+// ✅ 新增：动态插入 1.mp4 ~ 7.mp4 视频
+for (let i = 1; i <= 7; i++) {
+  const videoSrc = `wallpapers/${i}.mp4`;
+  const posterSrc = `wallpapers/fengmian/${i}.png`;  // 修改：使用 fengmian 文件夹下的 .png 图片作为缩略图
 
-    // 缩略图 video 元素
-    const thumb = document.createElement("video");
-    thumb.src = videoSrc;
-    thumb.preload = "metadata";
-    thumb.muted = true;
-    thumb.style.width = "100%";
-    thumb.style.height = "80px";
-    thumb.style.objectFit = "cover";
-    thumb.style.borderRadius = "8px";
-    thumb.style.cursor = "pointer";
-    thumb.disablePictureInPicture = true;
-    if (thumb.controlsList) thumb.controlsList.add("nodownload");
+  // 缩略图 video 元素
+  const thumb = document.createElement("div");
+  thumb.className = "lazy-video-thumb";
+  thumb.dataset.video = videoSrc;
+  thumb.dataset.poster = posterSrc; // 视频封面图
+  thumb.style.position = "relative";
+  thumb.style.width = "100%";
+  thumb.style.height = "80px";
+  thumb.style.borderRadius = "8px";
+  thumb.style.cursor = "pointer";
 
-    // 包装容器与下方标签（悬停变灰效果由 CSS 控制）
-    const tile = document.createElement("div");
-    tile.className = "video-tile";
-    const label = document.createElement("div");
-    label.className = "video-label";
-    label.textContent = "动态";
+  const img = document.createElement("img");
+  img.src = posterSrc;
+  img.style.width = "100%";
+  img.style.height = "100%";
+  img.style.objectFit = "cover";
+  img.style.borderRadius = "8px";
 
-    // 点击即刻应用背景（不等 fetch/IndexedDB 完成）
-    tile.addEventListener("click", async (e) => {
-      e.stopPropagation();
-      // 立即显示视频背景（直接使用相对路径）
-      bgImage.style.display = "none";
-      bgVideo.style.display = "block";
-      bgVideo.poster = ""; // 清除 poster，避免显示海报
-      bgVideo.src = videoSrc;
-      bgVideo.load();
+  thumb.appendChild(img);
 
-      // canplay 时尝试 play
-      const onCanPlay = () => {
-        bgVideo.play().catch(()=>{});
-        bgVideo.removeEventListener("canplay", onCanPlay);
-      };
-      bgVideo.addEventListener("canplay", onCanPlay, { once: true });
+  // 包装容器与下方标签（悬停变灰效果由 CSS 控制）
+  const tile = document.createElement("div");
+  tile.className = "video-tile";
+  const label = document.createElement("div");
+  label.className = "video-label";
+  label.textContent = "动态";
 
-      // 若加载失败，则回退到默认图片并打印错误（不阻塞用户）
-      const onError = () => {
-        console.error("预设视频加载失败：", videoSrc);
-        bgVideo.style.display = "none";
-        bgImage.style.display = "block";
-        bgImage.src = "wallpapers/1.jpg";
-        bgVideo.removeEventListener("error", onError);
-      };
-      bgVideo.addEventListener("error", onError, { once: true });
+  // 点击即刻应用背景（不等 fetch/IndexedDB 完成）
+  tile.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    // 立即显示视频背景（直接使用相对路径）
+    bgImage.style.display = "none";
+    bgVideo.style.display = "block";
+    bgVideo.poster = ""; // 清除 poster，避免显示海报
+    bgVideo.src = videoSrc;
+    bgVideo.load();
 
-      // 记录为预设背景（路径），并尝试删除 IndexedDB 中上传的视频
-      localStorage.setItem("wallpaperType", "preset");
-      localStorage.setItem("wallpaper", videoSrc);
-      deleteVideoFromIndexedDB().catch(()=>{});
+    // canplay 时尝试 play
+    const onCanPlay = () => {
+      bgVideo.play().catch(()=>{});
+      bgVideo.removeEventListener("canplay", onCanPlay);
+    };
+    bgVideo.addEventListener("canplay", onCanPlay, { once: true });
 
+    // 若加载失败，则回退到默认图片并打印错误（不阻塞用户）
+    const onError = () => {
+      console.error("预设视频加载失败：", videoSrc);
+      bgVideo.style.display = "none";
+      bgImage.style.display = "block";
+      bgImage.src = "wallpapers/1.jpg";
+      bgVideo.removeEventListener("error", onError);
+    };
+    bgVideo.addEventListener("error", onError, { once: true });
+
+    // 记录为预设背景（路径），并尝试删除 IndexedDB 中上传的视频
+    localStorage.setItem("wallpaperType", "preset");
+    localStorage.setItem("wallpaper", videoSrc);
+    deleteVideoFromIndexedDB().catch(()=>{});
+
+    modal.classList.remove("show");
+    setTimeout(() => {
       modal.style.display = "none";
-      showBubble(  "哇~新壁纸好漂亮喵！",
-        "小猫喜欢这个背景～很有感觉喵！",
-        "换了新壁纸，气氛都不一样了喵～");
+    }, 350); // 与 CSS 动画时间一致
 
-      // 后台异步尝试 fetch 并保存到 IndexedDB（仅做缓存，不影响当前显示）
-      (async () => {
-        try {
-          const resp = await fetch(videoSrc);
-          if (resp.ok) {
-            const blob = await resp.blob();
-            await saveVideoToIndexedDB(blob);
-          } else {
-            console.warn("fetch 返回非 OK:", resp.status, videoSrc);
-          }
-        } catch (err) {
-          console.warn("后台 fetch/保存预设视频失败（可忽略）：", err);
+    showBubble(  "哇~新壁纸好漂亮喵！",
+      "小猫喜欢这个背景～很有感觉喵！",
+      "换了新壁纸，气氛都不一样了喵～");
+
+    // 后台异步尝试 fetch 并保存到 IndexedDB（仅做缓存，不影响当前显示）
+    (async () => {
+      try {
+        const resp = await fetch(videoSrc);
+        if (resp.ok) {
+          const blob = await resp.blob();
+          await saveVideoToIndexedDB(blob);
+        } else {
+          console.warn("fetch 返回非 OK:", resp.status, videoSrc);
         }
-      })();
-    });
+      } catch (err) {
+        console.warn("后台 fetch/保存预设视频失败（可忽略）：", err);
+      }
+    })();
+  });
 
-    tile.appendChild(thumb);
-    tile.appendChild(label);
-    const grid = document.querySelector(".dynamic-grid") || document.querySelector(".wallpaper-grid");
-    grid?.appendChild(tile);
-  }
-
+  tile.appendChild(thumb);
+  tile.appendChild(label);
+  const grid = document.querySelector(".dynamic-grid") || document.querySelector(".wallpaper-grid");
+  grid?.appendChild(tile);
+}
   // 添加"加号"区域
   const addBox = document.createElement("div");
   addBox.className = "add-wallpaper";
@@ -135,7 +272,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 关闭弹窗
   closeBtn?.addEventListener("click", () => {
-    modal.style.display = "none";
+    modal.classList.remove("show");
+setTimeout(() => {
+  modal.style.display = "none";
+}, 350); // 与 CSS 动画时间一致
+
   });
 
   // 打开弹窗
@@ -144,6 +285,11 @@ document.addEventListener("DOMContentLoaded", () => {
     openBtn.addEventListener("click", (e) => {
       e.preventDefault();
       modal.style.display = "flex";
+      requestAnimationFrame(() => {
+    modal.classList.add("show");
+        requestAnimationFrame(() => {
+    });
+  });
     });
   }
 
@@ -174,6 +320,10 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("请上传有效的 MP4 视频或图片文件。");
       }
       modal.style.display = "none";
+modal.classList.remove("show");
+setTimeout(() => {
+  modal.style.display = "none";
+}, 350); // 与 CSS 动画时间一致
 
       // ✅ 上传壁纸后的小猫评论
       const wallpaperComments = [
@@ -523,70 +673,6 @@ catVideo.addEventListener("click", () => {
 
   }
 });
-
-    
-// ...existing code...
-// 搜索引擎切换逻辑
-const engines = [
-  { name: 'bing', url: 'https://www.bing.com/search', param: 'q', icon: 'logo/bing-logo-small.png', largeIcon: 'logo/bing-logo.png' },
-  { name: 'google', url: 'https://www.google.com/search', param: 'q', icon: 'logo/google-logo-small.png', largeIcon: 'logo/google-logo.png' },
-  { name: 'baidu', url: 'https://www.baidu.com/s', param: 'wd', icon: 'logo/baidu-logo-small.png', largeIcon: 'logo/baidu-logo.png' },
-  { name: 'sogou', url: 'https://www.sogou.com/web', param: 'query', icon: 'logo/sogou-logo-small.png', largeIcon: 'logo/sogou-logo.png' }
-];
-
-let currentEngineIndex = 0;
-const engineSwitch = document.getElementById('engineSwitch');
-const searchForm = document.querySelector('form');
-
-function applyEngine(index, save = false) {
-  index = Number(index) || 0;
-  if (index < 0 || index >= engines.length) index = 0;
-  const engine = engines[index];
-
-  // 更新表单与输入名
-  searchForm.action = engine.url;
-  searchInput.name = engine.param;
-
-  // 更新左侧小图标
-  const engineIcon = engineSwitch.querySelector('.engine-icon');
-  if (engineIcon) {
-    engineIcon.src = engine.icon;
-    engineIcon.alt = engine.name;
-  }
-
-  // 更新页面顶部大图标
-  const bigLogo = document.querySelector('.bing-logo');
-  if (bigLogo) {
-    bigLogo.src = engine.largeIcon;
-    bigLogo.alt = engine.name + ' Logo';
-  }
-
-  currentEngineIndex = index;
-  if (save) {
-    localStorage.setItem('selectedEngineIndex', String(index));
-  }
-}
-
-engineSwitch.addEventListener('click', () => {
-  const next = (currentEngineIndex + 1) % engines.length;
-  applyEngine(next, true); // 点击时保存
-  const engineReplies = [
-    "换个搜索引擎试试喵～看看谁更聪明！",
-    "小猫也想知道哪个搜索结果更好喵～",
-    "咕噜咕噜～切换成功喵！"
-  ];
-  const reply = engineReplies[Math.floor(Math.random() * engineReplies.length)];
-  showBubble(reply);
-});
-
-// 页面加载时恢复上次选择（若有）
-const saved = localStorage.getItem('selectedEngineIndex');
-if (saved !== null) {
-  applyEngine(parseInt(saved, 10), false);
-} else {
-  applyEngine(0, false);
-}
-// ...existing code...
     // IndexedDB 背景视频存储
     const DB_NAME = "WallpaperDB";
     const DB_STORE_NAME = "Videos";
@@ -765,7 +851,11 @@ window.addEventListener("DOMContentLoaded", () => {
     bgImage.src = fileURL;
   }
 
+  modal.classList.remove("show");
+setTimeout(() => {
   modal.style.display = "none";
+}, 350); // 与 CSS 动画时间一致
+
 
   // ✅ 后台异步保存到 IndexedDB（不阻塞 UI）
   saveVideoToIndexedDB(file).then(() => {
@@ -804,14 +894,68 @@ window.addEventListener("DOMContentLoaded", () => {
     }const input = document.getElementById('searchInput');
     const button = document.getElementById('searchBtn');
     const suggestionList = document.getElementById('suggestionList');
+    input.addEventListener("input", async () => {
+  const query = input.value.trim();
+  if (!query) {
+    suggestionList.style.display = "none";
+    return;
+  }
+chrome.runtime.sendMessage({ type: "baiduSuggest", q: input.value }, (res) => {
+  // res 就是后台返回的联想数组
+  renderSuggestions(res);
+});
+  // 调用后台代理
+  const res = await chrome.runtime.sendMessage({ type: "baiduSuggest", q: query });
+  renderSuggestions(res);
+});
+
+function renderSuggestions(suggestions) {
+  const input = document.getElementById("searchInput");
+  const suggestionList = document.getElementById("suggestionList");
+  const form = document.querySelector("form");
+
+  suggestionList.innerHTML = "";
+  if (!suggestions || !suggestions.length) {
+    suggestionList.style.display = "none";
+    return;
+  }
+
+  suggestions.forEach(s => {
+    const li = document.createElement("li");
+    li.textContent = s;
+
+    // ✅ 封装统一的触发逻辑
+    const triggerSearch = () => {
+      input.value = s;   
+  const hidden = form.querySelector('input[type="hidden"]');
+  if (hidden) hidden.value = s.trim();              // 填入搜索框
+      suggestionList.style.display = "none";
+      form.submit();                    // 自动提交，相当于按下回车
+      // 或者：document.getElementById("searchBtn").click();
+    };
+
+    // 鼠标点击（包括大多数触控板点击）
+    li.addEventListener("click", triggerSearch);
+
+    // 触控板轻触 / 触屏
+    li.addEventListener("pointerdown", e => {
+      if (e.pointerType === "touch") triggerSearch();
+    });
+
+    li.addEventListener("touchstart", triggerSearch, { passive: true });
+
+    suggestionList.appendChild(li);
+  });
+
+  suggestionList.style.display = "block";
+}
     input.addEventListener('input', () => {
       const query = input.value.trim();
       button.disabled = query === "";
-      if (query === "") {
-        suggestionList.style.display = "none";
-        suggestionList.innerHTML = "";
-        return;
-      }
+     if (!query) {
+    suggestionList.style.display = "none";
+    return;
+  }
       getBaiduSuggest(query, (data) => {
         suggestionList.innerHTML = "";
         if (!data || !data.s) {
