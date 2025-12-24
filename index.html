@@ -23,6 +23,34 @@
   cursor: pointer;
   transition: color 0.2s ease;
 }
+#mediaWidget {
+  position: fixed;
+  right: 20px;           /* 靠右对齐，与 biliIcon 对齐 */
+  bottom: 80px;          /* biliIcon 在 bottom:20px，所以 20 + 40 + 20 ≈ 80px */
+  width: 320px;
+  max-width: calc(100vw - 40px);
+  /* 其余样式你已经写得很完整，不用改 */
+  transform: translateY(110%);
+  opacity: 0;
+  transition: transform 360ms cubic-bezier(.2,.9,.2,1), opacity 300ms ease;
+  z-index: 9999;
+  pointer-events: auto;
+}
+
+#mediaWidget.visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 小屏幕适配 */
+@media (max-width: 480px) {
+  #mediaWidget {
+    width: calc(100vw - 40px);
+    left: 20px;
+    right: 20px;
+  }
+}
     .modal {
   display: none; /* 默认隐藏 */
   position: fixed;
@@ -87,6 +115,97 @@
 .add-wallpaper:hover {
   transform: scale(1.05);
 }
+/* 快捷栏 添加按钮 样式 */
+#quickPanel .addWrapper { width: 48px; height: 48px; margin-top:10px; }
+#quickPanel .addBtn {
+  width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.04); color:#fff; border: 1px dashed rgba(255,255,255,0.08); cursor:pointer; font-size:20px;
+}
+#quickPanel .addBtn:hover { transform: translateY(-2px); background: rgba(255,255,255,0.06); }
+
+/* 自定义图标：容器与齿轮/弹层样式 🔧 */
+#quickPanel .icons .iconWrapper { position: relative; width:48px; height:48px; margin-top:10px; display:inline-block; border-radius:12px; overflow:visible; }
+#quickPanel .icons .iconWrapper img { width:48px; height:48px; border-radius:12px; display:block; }
+#quickPanel .icons .iconSettings { position:absolute; right:-6px; bottom:-10px; width:20px; height:20px; padding:0; border:none; background:rgba(0,0,0,0.35); border-radius:50%; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(.9); transition:opacity .16s ease, transform .16s ease; pointer-events:none; }
+#quickPanel .icons .iconSettings img { width:14px; height:14px; display:block; object-fit:contain; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
+#quickPanel .icons .iconWrapper:hover .iconSettings { opacity:1; transform:scale(1); pointer-events:auto; }
+
+/* 图标上的操作按钮（覆盖式） */
+#quickPanel .icons .iconActions { position:absolute; right:-6px; bottom:-6px; display:flex; gap:8px; align-items:center; pointer-events:auto; z-index:200; }
+#quickPanel .icons .iconActions.hidden { display:none; opacity:0; transform:translateY(6px); transition:opacity .12s ease, transform .12s ease; }
+#quickPanel .icons .iconActions.show { display:flex; opacity:1; transform:translateY(0); }
+#quickPanel .icons .iconActions button { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0; border:none; cursor:pointer; box-shadow: 0 6px 16px rgba(2,6,23,0.45); transition: transform .12s ease, box-shadow .12s ease; }
+#quickPanel .icons .iconActions button svg { width:16px; height:16px; }
+#quickPanel .icons .iconActions .delBtn { background: linear-gradient(180deg,#ff6b6b,#e04b4b); color:#fff; }
+#quickPanel .icons .iconActions .delBtn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(224,75,75,0.28); }
+#quickPanel .icons .iconActions .cancelBtn { background:#fff; color:#222; border:1px solid rgba(0,0,0,0.06); }
+#quickPanel .icons .iconActions .cancelBtn:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.2); }
+
+/* Popover 挂载到 body，使用 fixed 定位，显示在图标右侧（更紧凑 & 美化） */
+#quickPanel .icons .iconPopover {
+  /* 默认作为浮动 popover（被覆盖时会被 override） */
+  position:fixed; left:0; top:0;
+  min-width: 120px; max-width: 220px;
+  background: linear-gradient(180deg,#0b0f13,#0f1720);
+  color:#fff; padding:6px 8px; border-radius:10px;
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow:0 10px 30px rgba(2,6,23,0.6);
+  transform-origin:left center;
+  opacity:0; visibility:hidden; transform:translateX(-6px) scale(.98);
+  transition:opacity .18s ease, transform .18s ease, visibility .18s;
+  z-index:200000; display:flex; gap:8px; align-items:center; font-size:13px;
+}
+
+/* 覆盖式遮罩：直接覆盖在图标上（用于 .overlay） */
+#quickPanel .icons .iconWrapper .iconPopover.overlay {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: auto !important;
+  max-width: none !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+  background: rgba(0,0,0,0.36) !important; /* 透明遮罩 */
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  opacity:0; visibility:hidden; transform:none; transition:opacity .12s ease;
+  z-index: 60 !important; /* 确保覆盖同层图标 */
+}
+#quickPanel .icons .iconWrapper .iconPopover.overlay.show { opacity:1; visibility:visible; }
+#quickPanel .icons .iconWrapper .iconPopover.overlay button { min-width: 56px; height:40px; border-radius:9px; font-weight:700; display:flex; align-items:center; gap:8px; padding:6px 10px; justify-content:center; color: #fff; }
+#quickPanel .icons .iconWrapper .iconPopover.overlay button svg { width:16px; height:16px; fill: currentColor; }
+#quickPanel .icons .iconWrapper .iconPopover.overlay .delBtn { background: linear-gradient(180deg,#ff6b6b,#e04b4b); color:#fff; }
+#quickPanel .icons .iconWrapper .iconPopover.overlay .cancelBtn { background: linear-gradient(180deg,#ff6b6b,#e04b4b); color:#fff; }
+#quickPanel .icons .iconWrapper .iconPopover.overlay button:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,0.28); }
+
+/* 垂直排列按钮（上/下） */
+#quickPanel .icons .iconWrapper .iconPopover.overlay { flex-direction: column !important; justify-content: center !important; gap: 8px !important; }
+
+/* 当某个遮罩打开时：禁止并淡化没有被遮罩的图标（按 wrapper 判断），保持被遮罩图标和遮罩本身不被变暗 */
+#quickPanel .icons.overlay-open .iconWrapper:not(.has-overlay) { pointer-events: none; opacity: 0.72; }
+#quickPanel .icons .iconWrapper.has-overlay a { pointer-events: none; }
+#quickPanel .icons .iconWrapper.has-overlay .iconPopover.overlay { pointer-events: auto; z-index: 80 !important; }
+
+/* 仅被遮罩禁用的单个图标（用于禁止下方图标点击） */
+#quickPanel .icons a.icon-disabled { pointer-events: none; opacity: 0.5; }
+#quickPanel .icons a.icon-disabled:hover { transform: none; }
+
+/* 取消按钮（次要） */
+#quickPanel .icons .iconPopover .cancelBtn { background: linear-gradient(180deg,#ff6b6b,#e04b4b); color:#fff; border: none; box-shadow: 0 6px 14px rgba(224,75,75,0.22); }
+#quickPanel .icons .iconPopover .cancelBtn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(224,75,75,0.26); }
+
+/* 当在左侧显示时，箭头方向改为右侧 */
+#quickPanel .icons .iconPopover[data-side="left"]::before { right: -6px; left: auto; }
+
+/* 表单在添加图标弹窗中的简单样式 */
+#addIconModal .form-row{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+#addIconModal input[type="text"], #addIconModal input[type="file"]{ padding:8px; border:1px solid #ddd; border-radius:6px; width:100%; box-sizing:border-box; }
+#addIconModal button{ padding:8px 12px; border-radius:6px; border: none; background: #0b74de; color:#fff; cursor:pointer; }
+#addIconModal button#cancelNewIcon{ background:#ddd; color:#333; }
   #catShadow {
   position: fixed;
   bottom: 20px;
@@ -197,9 +316,9 @@
 /* ...existing code... */
  /* 媒体控件样式（左下角） */
   #mediaWidget {
-    position: fixed;
-    left: 20px;
-    bottom: 20px;
+    position: absolute;
+    right:25px;
+    bottom: 80px;
     width: 300px;
     max-width: calc(100vw - 40px);
     background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.35));
@@ -215,7 +334,7 @@
     transition: transform 360ms cubic-bezier(.2,.9,.2,1), opacity 300ms ease;
     z-index: 9999;
     pointer-events: auto;
-    color: #fff;
+    color: #ffffff;
     font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
   }
   #mediaWidget.visible {
@@ -250,49 +369,72 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  #mediaWidget .controls {
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-top:8px;
-  }
-  #mediaWidget button {
-    background: rgba(255,255,255,0.06);
-    border: none;
-    padding: 6px;
-    border-radius: 8px;
-    backdrop-filter: none;
-    cursor: pointer;
-  }
-  #mediaWidget button:active { transform: scale(0.98); }
-  #mediaWidget input[type="range"] {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 6px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 6px;
-    outline: none;
-  }
-  #mediaWidget input[type="range"]::-webkit-slider-thumb{
-    -webkit-appearance:none;
-    width:12px;height:12px;border-radius:50%;
-    background: white;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.5);
-  }
-  #mediaWidget .time {
-    font-size:11px;
-    opacity:0.9;
-    margin-left:6px;
-    min-width:44px;
-    text-align:right;
-  }
+/* 声波容器 */
+.music-wave {
+  display: flex;
+  align-items: flex-end; /* 让波纹底部对齐 */
+  height: 20px;          /* 波纹的最大高度 */
+  gap: 4px;              /* 条纹之间的间距 */
+  margin-top: 6px;       /* 距离上方文字的距离 */
+  opacity: 0.8;
+}
 
+/* 每一个波纹条 */
+.music-wave span {
+  width: 3px;            /* 条纹宽度 */
+  background-color: #fff;
+  border-radius: 1px;
+  height: 3px;           /* 默认高度（静止时） */
+  transition: height 0.2s ease; /* 暂停时平滑回落 */
+}
+
+/* 当添加了 .playing 类时，触发动画 */
+.music-wave.playing span {
+  animation: wave-animation 1s infinite ease-in-out;
+}
+
+/* 定义跳动动画 */
+@keyframes wave-animation {
+  0%, 100% { height: 3px; }
+  50% { height: 20px; } /* 跳到的最高高度 */
+}
+
+/* 给每一根条纹设置不同的延迟，制造错落感 */
+.music-wave.playing span:nth-child(1) { animation-duration: 0.9s; animation-delay: 0.0s; }
+.music-wave.playing span:nth-child(2) { animation-duration: 1.3s; animation-delay: 0.2s; }
+.music-wave.playing span:nth-child(3) { animation-duration: 0.7s; animation-delay: 0.4s; }
+.music-wave.playing span:nth-child(4) { animation-duration: 1.1s; animation-delay: 0.6s; }
+.music-wave.playing span:nth-child(5) { animation-duration: 1.5s; animation-delay: 0.8s; }
+.music-wave.playing span:nth-child(6) { animation-duration: 0.8s; animation-delay: 1.0s; }
+.music-wave.playing span:nth-child(7) { animation-duration: 1.2s; animation-delay: 1.2s; }
+.music-wave.playing span:nth-child(8) { animation-duration: 0.6s; animation-delay: 1.4s; }
+.music-wave.playing span:nth-child(9) { animation-duration: 1.0s; animation-delay: 0.1s; }
+.music-wave.playing span:nth-child(10) { animation-duration: 1.4s; animation-delay: 0.3s; }
+.music-wave.playing span:nth-child(11) { animation-duration: 0.9s; animation-delay: 0.5s; }
+.music-wave.playing span:nth-child(12) { animation-duration: 1.3s; animation-delay: 0.7s; }
+.music-wave.playing span:nth-child(13) { animation-duration: 0.7s; animation-delay: 0.9s; }
+.music-wave.playing span:nth-child(14) { animation-duration: 1.1s; animation-delay: 1.1s; }
+.music-wave.playing span:nth-child(15) { animation-duration: 1.5s; animation-delay: 1.3s; }
+.music-wave.playing span:nth-child(16) { animation-duration: 0.8s; animation-delay: 0.0s; }
+.music-wave.playing span:nth-child(17) { animation-duration: 1.2s; animation-delay: 0.2s; }
+.music-wave.playing span:nth-child(18) { animation-duration: 0.6s; animation-delay: 0.4s; }
+.music-wave.playing span:nth-child(19) { animation-duration: 1.0s; animation-delay: 0.6s; }
+.music-wave.playing span:nth-child(20) { animation-duration: 1.4s; animation-delay: 0.8s; }
+.music-wave.playing span:nth-child(21) { animation-duration: 0.9s; animation-delay: 1.0s; }
+.music-wave.playing span:nth-child(22) { animation-duration: 1.3s; animation-delay: 1.2s; }
+.music-wave.playing span:nth-child(23) { animation-duration: 0.7s; animation-delay: 1.4s; }
+.music-wave.playing span:nth-child(24) { animation-duration: 1.1s; animation-delay: 0.1s; }
+.music-wave.playing span:nth-child(25) { animation-duration: 1.5s; animation-delay: 0.3s; }
+.music-wave.playing span:nth-child(26) { animation-duration: 0.8s; animation-delay: 0.5s; }
+.music-wave.playing span:nth-child(27) { animation-duration: 1.2s; animation-delay: 0.7s; }
+.music-wave.playing span:nth-child(28) { animation-duration: 0.6s; animation-delay: 0.9s; }
+.music-wave.playing span:nth-child(29) { animation-duration: 1.0s; animation-delay: 1.1s; }
+.music-wave.playing span:nth-child(30) { animation-duration: 1.4s; animation-delay: 1.3s; }
+.music-wave.playing span:nth-child(31) { animation-duration: 0.9s; animation-delay: 0.0s; }
+.music-wave.playing span:nth-child(32) { animation-duration: 1.3s; animation-delay: 0.2s; }
+.music-wave.playing span:nth-child(33) { animation-duration: 0.7s; animation-delay: 0.4s; }
   /* 小屏幕时尺寸调整 */
-  @media(max-width:420px){
-    #mediaWidget { width: 90%; left: 5%; right: 5%; padding:8px; }
-    #mediaWidget .cover { width:48px; height:48px; }
-  }
+  /* 唱片：与 #mediaWidget 使用相同的入场/出场过渡与属性，初始隐藏并与组件显隐同步 */
 .search-container {
   position: relative;
   display: flex;
@@ -322,8 +464,8 @@
   height: 24px;
   vertical-align: middle;
   transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 /* 淡出状态 */
 .engine-icon.fade-out {
@@ -557,6 +699,7 @@ form input[type="text"] {
   z-index: 50;
   transition: transform 0.2s ease, opacity 0.2s ease;
   pointer-events: auto;       /* 保持可触发悬停 */
+  z-index: 99999;
 }
 #biliIcon:hover {
   transform: scale(1.1);
@@ -572,9 +715,10 @@ form input[type="text"] {
   height: auto;
   opacity: 0;                 /* 默认透明 */
   cursor: pointer;
-  z-index: 50;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+
+  transition: transform 0.3s ease, opacity 0.3s ease;
   pointer-events: auto;
+  z-index: 99999;
 }
 #extraIcon:hover {
   transform: scale(1.1);
@@ -682,9 +826,273 @@ form input[type="text"] {
   cursor: pointer;
 }
 
-  </style>
+  /* ===== 侧边栏快捷栏样式（新增） ===== */
+  /* 宽度收起时仅显示右箭头，展开时显示图标列 */
+  #quickPanel {
+    position: fixed;
+    width: 230px;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: auto;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #quickPanel.open {
+  left: 0;            /* 展开 */
+}
+  /* 收起状态：只保留打开箭头 */
+  #quickPanel.collapsed { width: 48px;  height: 70vh;}
 
-  <!-- ...existing head 内容... -->
+  /* 打开箭头按钮（默认隐藏，仅在 hover 或展开时显示） */
+  #quickPanel .openBtn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin-right: 2px;
+    left: 7px;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.18s, opacity 0.18s;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    opacity: 0; /* 默认隐藏 */
+    transform: translateX(-6px);
+    overflow: visible;
+  }
+  /* 鼠标悬停或面板展开时显示按钮 */
+  #quickPanel:hover .openBtn,
+  #quickPanel:not(.collapsed) .openBtn {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  #quickPanel .openBtn:hover { background: rgba(0,0,0,0.6); transform: translateX(2px); }
+  /* 面板主体（展开时显示） */
+  #quickPanel .panel {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: 55px;
+    padding: 15px 8px 10px;
+    background: rgba(0,0,0,0.36);
+    backdrop-filter: blur(6px);
+    border-radius: 10px;
+    transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease;
+    max-height: 70vh;
+    overflow: hidden;
+  }
+  /* 收起时隐藏面板 */
+  #quickPanel.collapsed .panel { width: 0; padding: 0; opacity: 0; transform: translateX(-8px); pointer-events: none; }
+
+  /* 图标容器：允许垂直滚动，但隐藏可见滚动条（仍可滚动） */
+#quickPanel .icons {
+  display: flex;
+  flex-direction: column; /* 纵向排列 */
+  align-items: center;    /* 居中对齐 */
+  overflow-y: auto;  max-height: 70vh;      /* 最大高度，超出时可滚动 */
+  gap: 8px;              /* 直接控制标题与图标、图标与图标之间的间距 */
+}
+
+#quickPanel .icons h3 {
+  margin: 0;             /* 移除标题默认边距 */
+  padding-bottom: 0px;   /* 按需微调 */
+  flex-shrink: 0;          /* 防止标题被压缩 */
+    white-space: nowrap;
+}
+  #quickPanel .icons a {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 20px;
+    display: block;
+    border-radius: 12px;
+    overflow: hidden;
+    flex: 0 0 auto;
+  }
+  #quickPanel .icons img { width: 100%; height: 100%; object-fit: cover; display:block; }
+  /* 隐藏 Webkit 浏览器的滚动条 */
+  #quickPanel .icons::-webkit-scrollbar { width: 0; height: 0; }
+  #quickPanel .icons::-webkit-scrollbar-thumb { background: transparent; }
+  #quickPanel .icons::-webkit-scrollbar-track { background: transparent; }
+   #quickPanelright {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: auto;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1)，
+                transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  /* 收起状态：只保留打开箭头 */
+  #quickPanelright.collapsedright { width: 48px;  height: 70vh; }
+  /* 打开箭头按钮（默认隐藏，仅在 hover 或展开时显示） */
+  #quickPanelright .openBtnright {
+    width: 40px;
+    top: 50vh;
+    left: 3px;
+    height: 40px;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    display: block;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.18s, opacity 0.18s;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    opacity: 0; /* 默认隐藏 */
+    transform: translateX(6px);
+  }
+  /* 鼠标悬停或面板展开时显示按钮 */
+  #quickPanelright:hover .openBtnright,
+  #quickPanelright:not(.collapsedright) .openBtnright {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  #closePanelRightX:hover {
+  color: #ff4d4f !important;
+  transform: scale(1.1);
+  transition: all 0.2s ease;
+}
+/* 确保原始按钮有过渡效果 */
+.openBtnRight {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+  #quickPanelright .openBtnright:hover { background: rgba(0,0,0,0.6); transform: translateX(-2px); }
+  /* 面板主体（展开时显示） */
+  #quickPanelright .panelright {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width:500px;
+    height: 100vh;
+    padding: 10px 8px;
+    background: rgba(0,0,0,0.36);
+    backdrop-filter: blur(6px);
+    border-radius: 10px;
+    transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease;
+    max-height: 100vh;
+    overflow: hidden;
+    z-index: -1;
+  }
+  /* 收起时隐藏面板 */
+  #quickPanelright.collapsedright .panelright { width: 0; padding: 0; opacity: 0; transform: translateX(-8px); pointer-events: none; }
+ .birthday-container {
+  margin: 20px 15px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  font-family: 'Segoe UI', sans-serif;
+  padding-bottom: 20px; /* 增加底部内边距，防止文字贴边 */
+  overflow: visible !important; /* 确保溢出的内容可见 */
+}
+
+.birthday-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.input-group {
+  display: flex;
+  gap: 8px;
+}
+
+#birthdayDateInput {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  padding: 6px;
+  font-size: 13px;
+  height: 20px;
+}
+
+#saveBirthdayBtn {
+  background: #0b74de;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#saveBirthdayBtn:hover { background: #0056b3; }
+
+.countdown-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px; /* 增加元素之间的间距 */
+}
+
+.countdown-card .label {
+  font-size: 12px;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.days-circle {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 10px;
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+#daysNumber {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.days-circle small { font-size: 12px; }
+
+.reset-link {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: underline;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.reset-link:hover { color: white; }
+#birthdaySurpriseLink {
+  width: 100%;
+  text-align: center;
+  animation: fadeInSurprise 0.5s ease; /* 添加一个淡入动画 */
+}
+
+@keyframes fadeInSurprise {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+ </style>
 </head>
 <body>
   <!-- 可把额外图标图片放到和 index.html 同目录，示例文件名 2025102523114053.png -->
@@ -730,6 +1138,49 @@ form input[type="text"] {
 <div id="weather" class="hover-box">
   <div id="weather-text">正在获取天气...</div>
 </div>
+<!-- 唱片元素（位于音乐组件左侧，半被覆盖） -->
+<div id="mediaWidget">
+  <div class="cover" id="mediaCover"></div>
+  <div class="meta">
+    <div class="title" id="mediaTitle">无标题</div>
+    <div class="artist" id="mediaArtist">未知艺术家</div>
+    <div class="music-wave" id="musicWave">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+</div>
   <div class="content">
     <img src="logo/bing-logo.png" alt="Bing Logo" class="bing-logo">
     <form action="https://www.bing.com/search" method="GET" target="_blank">
@@ -752,12 +1203,97 @@ form input[type="text"] {
   <button type="button" class="wallpaper-btn" id="openWallpaperModal">更改壁纸</button>
   
   <!-- 保留原来的 input，供加号区域调用 -->
-  <input type="file" id="videoUpload" accept="video/mp4,image/*" style="display:none;">
+  <input type="file" id="videoUpload" accept="video/mp4,image" style="display:none;">
 </div>
 <div id="wallpaperModal" class="modal">
   <div class="modal-content">
     <span id="closeModal" style="cursor:pointer;font-size:20px;">×</span>
     <div class="wallpaper-grid"></div>
+  </div>
+</div>
+
+<!-- 新增 添加快捷 的弹窗 -->
+<div id="addIconModal" class="modal" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="addIconTitle">
+    <span id="closeAddModal" style="cursor:pointer;font-size:20px;">×</span>
+    <h3 id="addIconTitle">添加快捷方式</h3>
+    <div class="form-row">
+      <label for="newIconName">名称</label>
+      <input id="newIconName" type="text" placeholder="例如：哔哩哔哩">
+    </div>
+    <div class="form-row">
+      <label for="newIconFile">图标（可选）</label>
+      <input id="newIconFile" type="file" accept="image/*">
+      <div style="margin-top:8px;"><img id="newIconPreview" alt="" style="width:72px;height:72px;border-radius:8px;display:none;object-fit:cover;border:1px solid #ddd;"></div>
+    </div>
+    <div class="form-row">
+      <label for="newIconUrl">URL</label>
+      <input id="newIconUrl" type="text" placeholder="例如：bilibili.com">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+      <button id="cancelNewIcon" type="button">取消</button>
+      <button id="saveNewIcon" type="button">保存</button>
+    </div>
+  </div>
+</div>
+
+<div id="quickPanel" class="collapsed">
+  <button class="openBtn">▶</button>
+  <div class="panel">
+    <div class="icons">
+      <h3 style="color:white;">快捷应用</h3>
+      <div class="iconWrapper addWrapper">
+        <button type="button" class="addBtn" title="添加快捷方式">+</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div><div id="quickPanelright" class="collapsedright" >
+  <button class="openBtnright" >◀</button>
+  <div class="panelright" >
+    <div id="closePanelRightX" style="position: absolute; top: 30px; right: 20px; color: white; cursor: pointer; font-size: 24px; line-height: 1;">&times;</div>
+    <div class="icons">
+      <!-- 这里可以放置右侧面板的内容 -->
+      <h2 style="color:white; margin-top: 20px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;右侧快捷面板</h2>
+      <div id="birthdayWidget" class="birthday-container">
+  <div id="birthdayPicker" class="birthday-section">
+    <h4>🎂 记录生日</h4>
+    <div class="input-group">
+      <input type="date" id="birthdayDateInput">
+      <button id="saveBirthdayBtn">确定</button>
+    </div>
+  </div>
+  
+<div id="birthdayDisplay" class="birthday-section" style="display: none;">
+  <div class="countdown-card">
+    <p class="label">距离生日还有</p>
+    <div class="days-circle">
+      <span id="daysNumber">--</span>
+      <small>天</small>
+    </div>
+    <button id="resetBirthdayBtn" class="reset-link">重置日期</button>
+    
+    <div id="surpriseLink" style="display: none; margin-top: 10px; font-size: 12px; color: #ffeb3b;">
+      小猫为你准备了一个小惊喜，<span id="goSurprise" style="text-decoration: underline; cursor: pointer; font-weight: bold;">去看看</span>
+    </div>
+  </div>
+</div>
+
+<div id="surpriseScreen" style="display: none; position: relative; width: 200px; height: 230px; overflow: hidden; border-radius: 12px; margin-top: 10px;">
+  <img src="生日动画/生日蛋糕.gif" style="width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 1;">
+  
+  <video src="生日动画/礼花.webm" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 2; pointer-events: none; mix-blend-mode: screen;"></video>
+  
+  <div style="position: absolute; z-index: 3; width: 100%; height: 100%; pointer-events: none;">
+    <h2 style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-family: 'Comic Sans MS', cursive; color: #ff4081; text-shadow: 2px 2px 4px white; margin: 0; font-size: 24px; width: 100%; text-align: center;">Happy Birthday!</h2>
+    
+    <span id="backFromSurprise" style="backFromSurprise:hover{opacity: 0;} position: absolute; right: 10px; bottom: 10px; color: white; background: rgba(0,0,0,0.5); padding: 4px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; pointer-events: auto; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.3);">
+      返回
+    </span>
+  </div>
+</div>
+</div>
+ </div>
   </div>
 </div>
  <script src="main.js"></script>

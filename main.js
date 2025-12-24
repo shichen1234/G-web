@@ -107,6 +107,15 @@ function switchEngine(e) {
 
     // 应用新引擎（会更新 engineIcon.src）
     applyEngine(current);
+
+    // ✅ 切换引擎后弹出小猫评论（随机一句）
+    const engineReplies = [
+      "换个搜索引擎试试喵～看看谁更聪明！",
+      "小猫也想知道哪个搜索结果更好喵～",
+      "咕噜咕噜～切换成功喵！"
+    ];
+    showBubble(engineReplies[Math.floor(Math.random() * engineReplies.length)]);
+
 engineIcon.classList.add("fade-in");
     // 小 logo 淡入
     engineIcon.classList.remove("fade-out");
@@ -135,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const bgVideo = document.getElementById("bgVideo");
 
   // 动态插入 1.jpg ~ 18.jpg
-  for (let i = 1; i <= 16; i++) {
+  for (let i = 1; i <= 18; i++) {
     const img = document.createElement("img");
     img.src = `wallpapers/${i}.jpg`;
     img.alt = `壁纸${i}`;
@@ -164,11 +173,8 @@ setTimeout(() => {
     });
     grid.appendChild(img);
   }
-
-  // ✅ 新增：动态插入 1.mp4 ~ 5.mp4 视频
-// ✅ 新增：动态插入 1.mp4 ~ 7.mp4 视频
-// ✅ 新增：动态插入 1.mp4 ~ 7.mp4 视频
-for (let i = 1; i <= 7; i++) {
+// ✅ 新增：动态插入 1.mp4 ~ 17.mp4 视频
+for (let i = 1; i <= 17; i++) {
   const videoSrc = `wallpapers/${i}.mp4`;
   const posterSrc = `wallpapers/fengmian/${i}.png`;  // 修改：使用 fengmian 文件夹下的 .png 图片作为缩略图
 
@@ -346,7 +352,7 @@ let replies = [];
 
 if (weatherInfo.includes("晴") || weatherInfo.includes("多云")) {
   replies = ["天气真好喵～出去晒晒太阳吧！", "阳光暖暖的，小猫都想打滚了～"];
-} else if (weatherInfo.includes("阴") || weatherInfo.includes("雾")) {
+} else if (weatherInfo.includes("阴") || weatherInfo.includes("雾") || weatherInfo.includes("霾")) {
   replies = ["今天灰灰的喵～适合窝在家里～", "雾蒙蒙的，小猫都看不清路啦～"];
 } else if (
   weatherInfo.includes("雨") ||
@@ -1060,6 +1066,8 @@ function getWeatherEmoji(weatherType) {
       return '☁️';
     case '雾':
       return '🌫️';
+    case '霾':
+      return '🌫️';
     case '雷阵雨':
       return '⛈️';
     case '小雨':
@@ -1208,4 +1216,878 @@ document.addEventListener("DOMContentLoaded", async () => {
   bgVideo.src = "video3.mp4";
   bgVideo.load();
   bgVideo.addEventListener("canplay", () => { bgVideo.play().catch(()=>{}); }, { once: true });
+});
+// ====================== 浏览器音乐播放检测 ======================
+if ('mediaSession' in navigator) {
+
+  // 1. 获取封面图逻辑
+  function getArtworkUrl(artwork) {
+    if (!artwork) return '';
+    if (typeof artwork === 'string') return artwork;
+    if (Array.isArray(artwork) && artwork.length > 0) {
+      // 优先找 512 或 384 尺寸的图，否则用最后一张
+      const preferred = artwork.find(a => a.sizes === '512x512') ||
+                        artwork.find(a => a.sizes === '384x384') ||
+                        artwork[artwork.length - 1];
+      return preferred?.src || '';
+    }
+    return '';
+  }
+
+  // 2. 更新界面显示逻辑
+  function updateMediaDisplay(message) {
+    const metadata = message.metadata || {};
+    const widget = document.getElementById('mediaWidget');
+    if (!widget) return;
+
+    // 更新标题和艺术家
+    const titleEl = widget.querySelector('.title');
+    const artistEl = widget.querySelector('.artist');
+    if (titleEl) titleEl.textContent = metadata.title || '无标题';
+    if (artistEl) artistEl.textContent = metadata.artist || '未知艺术家';
+
+    // 更新封面
+    const coverDiv = document.getElementById('mediaCover');
+    const coverUrl = getArtworkUrl(metadata.artwork);
+    if (coverDiv) {
+      if (coverUrl) {
+        coverDiv.style.backgroundImage = `url(${coverUrl})`;
+      } else {
+        coverDiv.style.backgroundImage = 'none'; 
+      }
+    }
+  }
+// 3. 核心监听器：接收来自 background.js 的消息并控制组件和波纹
+  chrome.runtime.onMessage.addListener((message) => {
+    // 获取组件和波纹元素
+    const widget = document.getElementById('mediaWidget');
+    const wave = document.getElementById('musicWave');
+    
+    if (!widget) return;
+
+    if (message.type === 'mediaSessionUpdate') {
+      updateMediaDisplay(message);
+
+      // ★★★ 核心改动：只要收到更新（意味着组件出现），就显示组件并启动波纹 ★★★
+      widget.classList.add('visible'); 
+      const record = document.getElementById('recordDisc'); if (record) record.classList.add('visible');
+      if (wave) wave.classList.add('playing'); 
+
+    } else if (message.type === 'mediaClear') {
+      // 彻底停止或关闭标签页时：隐藏组件并复位
+      widget.classList.remove('visible');
+      const record = document.getElementById('recordDisc'); if (record) record.classList.remove('visible');
+      if (wave) wave.classList.remove('playing'); // 停止波纹
+      
+      const titleEl = widget.querySelector('.title');
+      const artistEl = widget.querySelector('.artist');
+      const coverDiv = document.getElementById('mediaCover');
+      
+      if (titleEl) titleEl.textContent = '无标题';
+      if (artistEl) artistEl.textContent = '未知艺术家';
+      if (coverDiv) coverDiv.style.backgroundImage = 'none';
+    }
+  });
+
+} else {
+  console.log("当前浏览器不支持 Media Session API");
+}
+chrome.runtime.onMessage.addListener((msg) => {
+  chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.type === 'mediaClear') {
+    document.getElementById('music-widget').style.display = 'none';
+  }
+});
+
+  if (msg.type !== 'mediaSessionUpdate') return;
+
+  const widget = document.getElementById('mediaWidget');
+  if (!widget || !msg.metadata) return;
+
+  widget.classList.add('visible');
+  const record = document.getElementById('recordDisc'); if (record) record.classList.add('visible');
+
+  widget.querySelector('.title').textContent =
+    msg.metadata.title || '未知标题';
+
+  widget.querySelector('.artist').textContent =
+    msg.metadata.artist || '';
+});
+document.addEventListener("DOMContentLoaded", function () {
+    // ... (保留你原来的代码) ...
+
+    // ★★★ 新增元素获取 ★★★
+    // 兼容处理：页面可能使用不同 id（如只有 #mediaWidget / #mediaCover）。
+    const mediaContainer = document.getElementById('mediaContainer') || document.getElementById('mediaWidget');
+    const toggleMusicBtn = document.getElementById('toggleMusicBtn');
+    
+    // 初始化折叠状态
+    let isCollapsed = false; 
+
+    // ★★★ 按钮点击事件（存在性检查） ★★★
+    if (toggleMusicBtn && mediaContainer) {
+      toggleMusicBtn.addEventListener('click', () => {
+        isCollapsed = !isCollapsed;
+        
+        if (isCollapsed) {
+          // 状态：展开 -> 折叠 (滑出屏幕)
+          mediaContainer.classList.add('collapsed');
+          toggleMusicBtn.innerHTML = '&#9664;'; // 更改为朝左三角
+        } else {
+          // 状态：折叠 -> 展开 (滑回原位)
+          mediaContainer.classList.remove('collapsed');
+          toggleMusicBtn.innerHTML = '&#9654;'; // 更改为朝右三角
+        }
+      });
+    }
+
+    // 音乐组件悬停时小猫随机评论（优先绑定到实际存在的元素）
+    // 新增：仅在组件可见且未折叠/隐藏时才触发
+    function isElementVisible(el) {
+      if (!el) return false;
+      const style = window.getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
+      const rect = el.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) return false;
+      // 如果有折叠类或被标记为不可见，也视为不可见
+      if (el.classList.contains('collapsed')) return false;
+      return true;
+    }
+
+    if (mediaContainer) {
+      mediaContainer.addEventListener('mouseenter', () => {
+        // 如果组件当前不可见或处于折叠/隐藏状态，则不触发小猫评论
+        if (!isElementVisible(mediaContainer)) return;
+
+        const musicComments = [
+          "这个歌曲口味不错喵～",
+          "好听喵～小猫都想跟着摇摆了～",
+          "哇，这歌让我想打滚喵～",
+          "听到好歌，小猫要喵喵叫了～",
+          "好听喵～给我听一整天也不腻～",
+          "这封面也很有感觉喵～"
+        ];
+        showBubble(musicComments[Math.floor(Math.random() * musicComments.length)]);
+      });
+    }
+    // 1. 侧边栏开关逻辑（最优先保证能点开）
+  const quickPanel = document.getElementById('quickPanel');
+  const openBtn = document.querySelector('.openBtn');
+  // --- 核心：收起逻辑 ---
+  function collapseSidebar(e) {
+    if (e) e.stopPropagation(); // 阻止冒泡
+    quickPanel.classList.add('collapsed');
+    if (openBtn) openBtn.textContent = '▶';
+    console.log("侧边栏已收起");
+  }
+  // --- 核心：展开逻辑 ---
+  function expandSidebar(e) {
+    if (e) e.stopPropagation(); // 阻止冒泡
+    quickPanel.classList.remove('collapsed');
+    if (openBtn) openBtn.textContent = '◀';
+    console.log("侧边栏已展开");
+  }
+
+  // 1. 点击 ▶ 按钮逻辑
+  if (openBtn) {
+    openBtn.addEventListener('click', (e) => {
+      if (quickPanel.classList.contains('collapsed')) {
+        expandSidebar(e);
+      } else {
+        collapseSidebar(e);
+      }
+    });
+  }
+ // 4. 加载图标 (请确保这个函数已定义)
+  try {
+    loadIcons();
+  } catch (err) {
+    console.error("加载图标出错，但不影响侧边栏开关:", err);
+  }
+});
+
+// 2. 点击外部区域自动收起
+document.addEventListener('click', (e) => {
+    // 如果点击的不是面板本身，也不是面板内部元素，且面板当前是展开状态，则收回
+    if (!quickPanel.contains(e.target) && !quickPanel.classList.contains('collapsed')) {
+      toggleLeftPanel(false);
+    }
+  });
+// 在 main.js 的 DOMContentLoaded 事件中更新
+document.addEventListener('DOMContentLoaded', () => {
+  const quickPanelRight = document.getElementById('quickPanelright');
+  const openBtnRight = document.querySelector('.openBtnright'); // 注意类名大小写与HTML一致
+  const closePanelRightX = document.getElementById('closePanelRightX');
+
+  // 统一的切换逻辑函数
+  function toggleRightPanel(forceClose = false) {
+    if (forceClose) {
+      // 强制关闭：添加 collapsed 类，修改箭头为 ◀
+      quickPanelRight.classList.add('collapsedright');
+      if (openBtnRight) openBtnRight.textContent = '◀';
+    } else {
+      // 正常切换
+      quickPanelRight.classList.toggle('collapsedright');
+      const isClosed = quickPanelRight.classList.contains('collapsedright');
+      if (openBtnRight) openBtnRight.textContent = isClosed ? '◀' : '▶';
+    }
+  }
+
+  // 1. 点击左侧小箭头开关
+  if (openBtnRight) {
+    openBtnRight.addEventListener('click', (e) => {
+      e.stopPropagation(); // 阻止冒泡，防止触发“点击其他地方收回”的逻辑
+      toggleRightPanel();
+    });
+  }
+
+  // 2. 点击右面板内部的 X 号关闭，并改变箭头方向
+  if (closePanelRightX) {
+    closePanelRightX.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleRightPanel(true); // 调用强制关闭逻辑
+    });
+  }
+
+  // 3. 应用到左快捷栏类似的逻辑：点击页面其他地方收回面板
+  document.addEventListener('click', (e) => {
+    // 如果点击的不是面板本身，也不是面板内部元素
+    if (!quickPanelRight.contains(e.target)) {
+      // 且面板当前是展开状态（没有 collapsedright 类），则收回
+      if (!quickPanelRight.classList.contains('collapsedright')) {
+        toggleRightPanel(true);
+      }
+    }
+  });
+});// === Quick panel 初始化（确保点击稳定切换） ===
+(function quickPanelInit(){
+  function setupQuick(){
+    const quick = document.getElementById('quickPanel');
+    if (!quick) { console.debug('[quickPanel] not present'); return; }
+    const openBtn = quick.querySelector('.openBtn');
+    const icons = quick.querySelector('.icons');
+
+    function expand(){
+      quick.classList.remove('collapsed');
+      quick.setAttribute('aria-hidden','false');
+      if (openBtn) { openBtn.textContent = '◀';  openBtn.setAttribute('aria-expanded','true'); }
+      console.debug('[quickPanel] expand');
+    }
+    function collapse(){
+      quick.classList.add('collapsed');
+      quick.setAttribute('aria-hidden','true');
+      if (openBtn) { openBtn.textContent = '▶';  openBtn.setAttribute('aria-expanded','false'); }
+      console.debug('[quickPanel] collapse');
+    }
+    function toggle(){ if (quick.classList.contains('collapsed')) expand(); else collapse(); }
+
+    if (openBtn){
+      openBtn.addEventListener('click', (e)=>{ e.stopPropagation(); toggle(); });
+      openBtn.addEventListener('keydown', (e)=>{ if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }});
+    }
+
+    document.addEventListener('click', (e)=>{
+      if (e.target && e.target.closest && e.target.closest('.openBtn')) { e.stopPropagation(); toggle(); return; }
+      if (quick && !quick.contains(e.target) && !quick.classList.contains('collapsed')) collapse();
+    });
+
+    document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') collapse(); });
+
+    icons && icons.querySelectorAll('img').forEach(img => img.draggable = false);
+    icons && icons.querySelectorAll('a').forEach(a => a.setAttribute('tabindex','0'));
+
+    // === 添加 新建快捷 的交互逻辑 ===
+    const addBtn = icons && icons.querySelector('.addBtn');
+    const addModal = document.getElementById('addIconModal');
+    const nameInput = document.getElementById('newIconName');
+    const fileInput = document.getElementById('newIconFile');
+    const previewImg = document.getElementById('newIconPreview');
+    const urlInput = document.getElementById('newIconUrl');
+    const saveBtn = document.getElementById('saveNewIcon');
+    const cancelBtn = document.getElementById('cancelNewIcon');
+    let uploadedData = null;
+
+    function closeAddModal(){
+      if (!addModal) return;
+      console.debug('[addIcon] closing');
+      addModal.classList.remove('show'); addModal.setAttribute('aria-hidden','true');
+      // 等动画完成后隐藏 display
+      setTimeout(()=>{ try{ addModal.style.display = 'none'; } catch(e){} }, 350);
+      if (fileInput) { fileInput.value = ''; uploadedData = null; }
+      if (previewImg) { previewImg.style.display = 'none'; previewImg.src = ''; }
+      if (nameInput) nameInput.value = '';
+      if (urlInput) urlInput.value = '';
+    }
+
+    function openAddModal(){
+      if (!addModal) return;
+      console.debug('[addIcon] opening');
+      // 参考 wallpaper 弹窗：先设置 display 再添加 show 类以触发动画
+      try{ addModal.style.display = 'flex'; } catch(e){}
+      requestAnimationFrame(()=>{
+        addModal.classList.add('show'); addModal.setAttribute('aria-hidden','false');
+        requestAnimationFrame(()=>{ if (nameInput) nameInput.focus(); });
+      });
+    }
+
+    if (addBtn){
+      addBtn.addEventListener('click', (e)=>{ e.stopPropagation(); openAddModal(); });
+    }
+    if (document.getElementById('closeAddModal')){
+      document.getElementById('closeAddModal').addEventListener('click', closeAddModal);
+    }
+    if (cancelBtn) cancelBtn.addEventListener('click', closeAddModal);
+
+    // 点击遮罩或按 Esc 关闭弹窗
+    if (addModal) addModal.addEventListener('click', (e)=>{ if (e.target === addModal) closeAddModal(); });
+    document.addEventListener('keydown', (e)=>{ if (e.key === 'Escape' && addModal && addModal.classList.contains('show')) closeAddModal(); });
+
+    if (fileInput){
+      fileInput.addEventListener('change', (e)=>{
+        const f = e.target.files && e.target.files[0];
+        if (f){
+          const reader = new FileReader();
+          reader.onload = ()=>{ uploadedData = reader.result; if (previewImg){ previewImg.src = uploadedData; previewImg.style.display='block'; } };
+          reader.readAsDataURL(f);
+        } else {
+          uploadedData = null;
+          if (previewImg){ previewImg.style.display='none'; previewImg.src=''; }
+        }
+      });
+    }
+
+    function makePlaceholderIcon(name, size=128){
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      // simple color from name hash
+      let hash = 0; for (let i=0;i<name.length;i++) hash = name.charCodeAt(i) + ((hash<<5)-hash);
+      const hue = Math.abs(hash) % 360;
+      ctx.fillStyle = 'hsl('+hue+',70%,35%)';
+      ctx.fillRect(0,0,size,size);
+      // draw initial
+      const char = name.trim().charAt(0).toUpperCase() || '?';
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = Math.floor(size*0.5)+'px Arial';
+      ctx.fillText(char, size/2, size/2+2);
+      return canvas.toDataURL('image/png');
+    }
+
+    const STORAGE_KEY = 'quickPanelCustomIcons';
+
+    // ---- 创建单个自定义图标节点（含设置齿轮 & 删除浮层） ----
+    function createCustomIconElement(item){
+      const id = item.id || ('c'+Date.now()+Math.random()).replace('.', '');
+      // 外层容器
+      const wrapper = document.createElement('div');
+      wrapper.className = 'iconWrapper';
+      wrapper.dataset.id = id;
+
+      // 链接与图片
+      const a = document.createElement('a');
+      a.href = item.url || '#'; a.title = item.name || ''; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.setAttribute('tabindex','0');
+      const img = document.createElement('img'); img.src = item.img || makePlaceholderIcon(item.name || '', 256); img.alt = item.name || ''; img.draggable = false;
+      a.appendChild(img);
+      wrapper.appendChild(a);
+
+      // 齿轮按钮
+      const gearBtn = document.createElement('button'); gearBtn.type='button'; gearBtn.className = 'iconSettings'; gearBtn.title = '设置';
+      const gearImg = document.createElement('img'); gearImg.src = 'images/齿轮.png'; gearImg.alt = '设置'; gearBtn.appendChild(gearImg);
+      wrapper.appendChild(gearBtn);
+
+      // 删除浮层（覆盖在图标上的透明遮罩，包含“删除”与“取消”按钮），挂载到对应的 <a> 上
+      const pop = document.createElement('div'); pop.className = 'iconPopover overlay'; pop.dataset.for = id; pop.style.position = 'absolute';
+      pop.innerHTML = `
+        <button class="delBtn" type="button" aria-label="删除">
+          <svg viewBox="0 0 12 24" width="12" height="8" aria-hidden="true" focusable="false" style="flex:0 0 16px;">
+            <path fill="currentColor" d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+          </svg>
+          <span></span>
+        </button>
+        <button class="cancelBtn" type="button" aria-label="取消">
+          <svg viewBox="0 0 12 24" width="12" height="8" aria-hidden="true" focusable="false" style="flex:0 0 16px;">
+            <path fill="currentColor" d="M18.3 5.71L12 12l6.3 6.29-1.41 1.41L10.59 13.4 4.29 19.7 2.88 18.29 9.18 12 2.88 5.71 4.29 4.3l6.3 6.29L17.9 4.3z" />
+          </svg>
+          <span></span>
+        </button>
+      `;
+      // 将 pop 挂载到 wrapper 上（覆盖在图标之上，防止事件穿透到 <a>）
+      wrapper.appendChild(pop);
+
+      // 防止点击浮层冒泡（导致 document 的 click 关闭它）
+      pop.addEventListener('click', (e) => e.stopPropagation());
+
+      // 事件：齿轮点击切换覆盖式浮层（覆盖在图标上）——同时对下方图标设置禁用
+      gearBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        closeAllPopovers();
+        const willShow = !pop.classList.contains('show');
+        if (!willShow) { // 隐藏并清理定位
+          pop.classList.remove('show');
+          // 清理所有被禁用的图标
+          if (icons) icons.querySelectorAll('a.icon-disabled').forEach(a=>a.classList.remove('icon-disabled'));
+          // 清理 wrapper 的 has-overlay
+          wrapper.classList.remove('has-overlay');
+          // 如果没有任何打开的弹窗，则移除 overlay-open
+          if (!document.querySelector('.iconPopover.show') && icons) icons.classList.remove('overlay-open');
+          return;
+        }
+        // 显示覆盖式遮罩（无需额外定位）
+        pop.classList.add('show');
+        // 将当前 wrapper 标记为 has-overlay（以避免被淡化并禁用其内部链接的点击）
+        wrapper.classList.add('has-overlay');
+        if (icons) icons.classList.add('overlay-open');
+        console.debug('[addIcon] pop show', id);
+
+        // 禁用位于当前 wrapper 之后的所有图标（按 DOM 顺序）
+        if (icons) {
+          const wrappers = Array.from(icons.querySelectorAll('.iconWrapper'));
+          const idx = wrappers.indexOf(wrapper);
+          wrappers.forEach((w,i)=>{
+            const link = w.querySelector('a');
+            if (!link) return;
+            if (i > idx) link.classList.add('icon-disabled'); else link.classList.remove('icon-disabled');
+          });
+        }
+      });
+
+      // 删除操作
+// 在 main.js 的 createCustomIconElement 函数内，找到 delBtn 的点击事件
+// 假设你的存储 Key 是这个
+const STORAGE_KEY = 'quickPanelCustomIcons'; 
+
+// 在创建图标元素的逻辑中，找到删除按钮的点击监听器
+pop.querySelector('.delBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // 1. 获取当前图标的唯一 ID (确保你在创建时给 wrapper 设置了 dataset.id)
+    const iconId = wrapper.dataset.id; 
+
+    // 2. 从 localStorage 中彻底移除
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            let list = JSON.parse(raw);
+            // 过滤掉 ID 匹配的那一项
+            list = list.filter(item => item.id !== iconId);
+            // 将“干净”的数组重新存回去
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+            console.log('已从本地存储删除:', iconId);
+        }
+    } catch(err) {
+        console.warn('同步删除存储失败', err);
+    }
+
+    // 3. 从页面上移除 DOM
+    wrapper.remove();
+    
+    // 4. 关闭设置弹窗
+    if (typeof closeAllPopovers === 'function') closeAllPopovers();
+});
+      // 取消操作：仅关闭浮层（覆盖遮罩）
+      pop.querySelector('.cancelBtn').addEventListener('click', (e)=>{
+        e.preventDefault(); e.stopPropagation();
+        console.debug('[addIcon] pop cancel', id);
+        pop.classList.remove('show');
+        // 清理所有被禁用的图标
+        if (icons) icons.querySelectorAll('a.icon-disabled').forEach(a=>a.classList.remove('icon-disabled'));
+        // 清理 wrapper 的 has-overlay
+        wrapper.classList.remove('has-overlay');
+        // 若没有其他弹窗，移除 overlay-open
+        if (!document.querySelector('.iconPopover.show') && icons) icons.classList.remove('overlay-open');
+      });
+
+      // 点击链接也应先关闭浮层
+      a.addEventListener('click', ()=>{ closeAllPopovers(); });
+
+      return wrapper;
+    }
+
+    function closeAllPopovers(){
+      const open = document.querySelectorAll('.iconPopover.show');
+      if (!open) return;
+      open.forEach(p => {
+        p.classList.remove('show');
+        p.style.left = '';
+        p.style.top = '';
+        p.removeAttribute('data-side');
+      });
+      // 清理被禁用和 has-overlay 状态
+      if (icons) {
+        icons.querySelectorAll('a.icon-disabled').forEach(a=>a.classList.remove('icon-disabled'));
+        icons.querySelectorAll('.iconWrapper.has-overlay').forEach(w=>w.classList.remove('has-overlay'));
+        icons.classList.remove('overlay-open');
+      }
+    }
+
+    function deleteCustomIcon(id){
+      try{
+        const wrapper = icons && icons.querySelector('.iconWrapper[data-id="'+id+'"]');
+        if (wrapper) wrapper.remove();
+        // 如果弹窗挂载到了 <a>（带有 data-for），也一并移除
+        const attachedPop = document.querySelector('.iconPopover[data-for="'+id+'"]');
+        if (attachedPop) attachedPop.remove();
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const list = raw ? JSON.parse(raw) : [];
+        const filtered = list.filter(it => it.id !== id);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+        console.debug('[addIcon] deleted', id, 'remain=', filtered.length);
+      }catch(e){ console.warn('[addIcon] delete fail', e); }
+    }
+
+    function loadCustomIcons(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const items = JSON.parse(raw);
+        if (!Array.isArray(items)) return;
+        const addWrapper = icons && icons.querySelector('.addWrapper');
+        items.forEach(it => {
+          try{
+            // 保证有 id
+            if (!it.id) it.id = ('c'+Date.now()+Math.random()).replace('.', '');
+            const el = createCustomIconElement(it);
+            if (icons){ if (addWrapper) icons.insertBefore(el, addWrapper); else icons.appendChild(el); }
+          }catch(e){ console.warn('[addIcon] load item failed', e); }
+        });
+        console.debug('[addIcon] loaded', (items && items.length) || 0);
+      }catch(e){ console.warn('[addIcon] load error', e); }
+    }
+
+    // 在初始化时加载已保存的自定义图标
+    loadCustomIcons();
+
+    if (saveBtn){
+      saveBtn.addEventListener('click', ()=>{
+        const name = (nameInput && nameInput.value || '').trim();
+        let url = (urlInput && urlInput.value || '').trim();
+        if (!name){ alert('请输入名称'); if (nameInput) nameInput.focus(); return; }
+        if (!url){ alert('请输入URL'); if (urlInput) urlInput.focus(); return; }
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        let src = uploadedData;
+        if (!src) src = makePlaceholderIcon(name, 256);
+        // 统一使用 createCustomIconElement 来创建 DOM（包含齿轮与功能）
+        const id = ('c'+Date.now()+Math.random()).replace('.', '');
+        const item = { id: id, name: name, url: url, img: src };
+        const el = createCustomIconElement(item);
+        const addWrapper = icons.querySelector('.addWrapper');
+        if (addWrapper) icons.insertBefore(el, addWrapper); else icons.appendChild(el);
+
+        // 将新图标保存到 localStorage（追加）
+        try{
+          const raw = localStorage.getItem(STORAGE_KEY);
+          const list = raw ? JSON.parse(raw) : [];
+          list.push(item);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+          console.debug('[addIcon] saved to localStorage, total=', list.length, 'id=', id);
+        }catch(e){ console.warn('[addIcon] save fail', e); }
+
+        // 清理并关闭
+        uploadedData = null;
+        closeAddModal();
+      });
+    }
+
+    if (!quick.classList.contains('collapsed')) expand(); else collapse();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupQuick); else setupQuick();
+})();
+/* ============================================================
+   修复后的侧边栏与图标管理逻辑
+   ============================================================ */
+
+const STORAGE_KEY = 'quick_panel_icons';
+const DEFAULT_ICONS = [
+  { id: 'def-1', name: '哔哩哔哩', url: 'https://www.bilibili.com', img: 'images/01.jpg' },
+  { id: 'def-2', name: '抖音', url: 'https://www.douyin.com', img: 'images/02.jpg' },
+  { id: 'def-3', name: 'YouTube', url: 'https://www.youtube.com/', img: 'images/03.jpg' },
+  { id: 'def-4', name: '小红书', url: 'https://www.xiaohongshu.com/', img: 'images/04.jpg' },
+  { id: 'def-5', name: '快手', url: 'https://www.kuaishou.com', img: 'images/29.jpg' },
+  { id: 'def-6', name: 'TikTok', url: 'https://www.tiktok.com', img: 'images/30.jpg' },
+  { id: 'def-7', name: 'Instagram', url: 'https://www.Instagram.com/', img: 'images/05.jpg' },
+  { id: 'def-8', name: '微博', url: 'https://www.weibo.com/', img: 'images/06.jpg' },
+  { id: 'def-9', name: '爱奇艺', url: 'https://www.iqiyi.com/', img: 'images/07.jpg' },
+  { id: 'def-10', name: '优酷', url: 'https://www.youku.com/', img: 'images/08.jpg' },
+  { id: 'def-11', name: '芒果TV', url: 'https://www.mgtv.com/', img: 'images/09.jpg' },
+  { id: 'def-12', name: 'Netflix', url: 'https://www.netflix.com/', img: 'images/10.jpg' },
+  { id: 'def-13', name: '豆包', url: 'https://www.doubao.com/', img: 'images/11.jpg' },
+  { id: 'def-14', name: 'ChatGPT', url: 'https://chatgpt.com/', img: 'images/12.jpg' },
+  { id: 'def-15', name: 'Gemini', url: 'https://gemini.google.com/', img: 'images/13.jpg' },
+  { id: 'def-16', name: '网易云音乐', url: 'https://music.163.com/', img: 'images/14.jpg' },
+  { id: 'def-17', name: '酷狗音乐', url: 'https://www.kugou.com/', img: 'images/28.jpg' },
+  { id: 'def-18', name: 'Spotify', url: 'https://open.spotify.com/', img: 'images/15.jpg' },
+  { id: 'def-19', name: '淘宝', url: 'https://www.taobao.com/', img: 'images/16.jpg' },
+  { id: 'def-20', name: '拼多多', url: 'https://www.pinduoduo.com/', img: 'images/17.jpg' },
+  { id: 'def-21', name: '京东', url: 'https://www.jd.com/', img: 'images/18.jpg' },
+  { id: 'def-22', name: '亚马逊', url: 'https://amazon.com/', img: 'images/19.jpg' },
+  { id: 'def-23', name: 'Github', url: 'https://github.com/', img: 'images/20.jpg' },
+  { id: 'def-24', name: 'CSDN', url: 'https://www.csdn.net/', img: 'images/21.jpg' },
+  { id: 'def-25', name: '知乎', url: 'https://www.zhihu.com/', img: 'images/22.jpg' },
+  { id: 'def-26', name: '百度贴吧', url: 'https://tieba.baidu.com/', img: 'images/23.jpg' },
+  { id: 'def-27', name: 'Reddit', url: 'https://www.reddit.com/', img: 'images/24.jpg' },
+  { id: 'def-28', name: 'Twitch', url: 'https://www.twitch.tv/', img: 'images/25.jpg' },
+  { id: 'def-29', name: 'X', url: 'https://www.x.com', img: 'images/32.jpg' },
+  { id: 'def-30', name: 'Discord', url: 'https://www.discord.com/', img: 'images/26.jpg' },
+  { id: 'def-31', name: 'Wikipedia', url: 'https://www.wikipedia.org/', img: 'images/27.jpg' },
+  { id: 'def-32', name: 'Pinterest', url: 'https://www.pinterest.com/', img: 'images/31.jpg' }
+];
+
+// 辅助：生成占位图标
+function makePlaceholderIcon(name, size=128){
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  let hash = 0; for (let i=0;i<name.length;i++) hash = name.charCodeAt(i) + ((hash<<5)-hash);
+  const hue = Math.abs(hash) % 360;
+  ctx.fillStyle = 'hsl('+hue+',70%,35%)';
+  ctx.fillRect(0,0,size,size);
+  const char = name.trim().charAt(0).toUpperCase() || '?';
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = Math.floor(size*0.5)+'px Arial';
+  ctx.fillText(char, size/2, size/2+2);
+  return canvas.toDataURL('image/png');
+}
+
+// 核心：创建图标节点 (现在它是全局函数了！)
+function createCustomIconElement(item) {
+  const id = item.id || ('c' + Date.now() + Math.random()).replace('.', '');
+  
+  // 外层容器
+  const wrapper = document.createElement('div');
+  wrapper.className = 'iconWrapper';
+  wrapper.dataset.id = id;
+
+  // 链接
+  const a = document.createElement('a');
+  a.href = item.url || '#';
+  a.title = item.name || '';
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  
+  // 图片
+  const img = document.createElement('img');
+  img.src = item.img || makePlaceholderIcon(item.name || '', 256);
+  img.alt = item.name || '';
+  img.draggable = false;
+  
+  a.appendChild(img);
+  wrapper.appendChild(a);
+
+  // 齿轮按钮
+  const gearBtn = document.createElement('button');
+  gearBtn.type = 'button';
+  gearBtn.className = 'iconSettings';
+  const gearImg = document.createElement('img');
+  gearImg.src = 'images/齿轮.png'; // 确保你有这个图片，或者改用 base64
+  gearBtn.appendChild(gearImg);
+  wrapper.appendChild(gearBtn);
+
+  // 删除浮层
+  const pop = document.createElement('div');
+  pop.className = 'iconPopover overlay';
+  pop.innerHTML = `
+    <button class="delBtn" type="button" style="background:#ff6b6b;color:white;">删除</button>
+    <button class="cancelBtn" type="button" style="background:white;color:black;">取消</button>
+  `;
+  wrapper.appendChild(pop);
+
+  // 事件：齿轮点击显示/隐藏删除层
+  gearBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const isShown = pop.classList.contains('show');
+    // 关闭其他所有打开的
+    document.querySelectorAll('.iconPopover.show').forEach(p => p.classList.remove('show'));
+    if (!isShown) pop.classList.add('show');
+  });
+
+  // 事件：删除
+  pop.querySelector('.delBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (confirm(`确定要删除 "${item.name}" 吗？`)) {
+      wrapper.remove();
+      // 持久化删除
+      let list = JSON.parse(localStorage.getItem(STORAGE_KEY)) || DEFAULT_ICONS;
+      list = list.filter(i => i.id !== item.id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+  });
+
+  // 事件：取消
+  pop.querySelector('.cancelBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    pop.classList.remove('show');
+  });
+
+  // 点击其他地方关闭浮层
+  document.addEventListener('click', (e) => {
+    if (!wrapper.contains(e.target)) pop.classList.remove('show');
+  });
+
+  return wrapper;
+}
+
+// 核心：加载所有图标
+function loadIcons() {
+  const iconsContainer = document.querySelector('#quickPanel .icons');
+  const addWrapper = document.querySelector('#quickPanel .addWrapper'); // 获取加号容器
+  
+  if (!iconsContainer || !addWrapper) {
+    console.error("HTML结构不匹配，请检查 .icons 和 .addWrapper");
+    return;
+  }
+
+  // 清理现有图标（除了加号按钮）
+  iconsContainer.querySelectorAll('.iconWrapper:not(.addWrapper)').forEach(el => el.remove());
+
+  // 读取数据
+  let list = [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    list = raw ? JSON.parse(raw) : DEFAULT_ICONS;
+  } catch(e) {
+    list = DEFAULT_ICONS;
+  }
+  // 如果首次加载为空，强制写入默认
+  if (list.length === 0 && !localStorage.getItem(STORAGE_KEY)) {
+    list = DEFAULT_ICONS;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  }
+
+  // 渲染
+  list.forEach(item => {
+    const el = createCustomIconElement(item);
+    iconsContainer.insertBefore(el, addWrapper); // 插在加号前面
+  });
+}
+
+// 初始化侧边栏交互 (加号功能、开关面板)
+document.addEventListener('DOMContentLoaded', () => {
+  // 1. 加载图标
+  loadIcons();
+
+  // 2. 侧边栏开关
+  const quickPanel = document.getElementById('quickPanel');
+  const openBtn = quickPanel.querySelector('.openBtn');
+  const closeBtn = quickPanel.querySelector('.closeBtn');
+  
+  function togglePanel() {
+    quickPanel.classList.toggle('collapsed');
+    const isClosed = quickPanel.classList.contains('collapsed');
+    openBtn.textContent = isClosed ? '▶' : '◀';
+  }
+  
+  if (openBtn) openBtn.addEventListener('click', togglePanel);
+  if (closeBtn) closeBtn.addEventListener('click', togglePanel);
+});
+// 在 main.js 的 DOMContentLoaded 事件中更新
+document.addEventListener('DOMContentLoaded', () => {
+  const STORAGE_KEY_BIRTHDAY = 'user_birthday_date';
+  const pickerSection = document.getElementById('birthdayPicker');
+  const displaySection = document.getElementById('birthdayDisplay');
+  const dateInput = document.getElementById('birthdayDateInput');
+  const daysNumber = document.getElementById('daysNumber');
+  const saveBtn = document.getElementById('saveBirthdayBtn');
+  const resetBtn = document.getElementById('resetBirthdayBtn');
+
+  // 计算剩余天数
+// 修改后的 calculateDays 函数
+function calculateDays(birthdayStr) {
+  const today = new Date();
+  // 【关键修复 1】：强制将当前时间设置为今天的凌晨 00:00:00.000
+  today.setHours(0, 0, 0, 0);
+
+  const parts = birthdayStr.split('-');
+  const bMonth = parseInt(parts[1], 10) - 1;
+  const bDay = parseInt(parts[2], 10);
+  
+  // 【关键修复 2】：强制将生日日期也设置为当天的凌晨 00:00:00.000
+  let nextBirthday = new Date(today.getFullYear(), bMonth, bDay);
+  nextBirthday.setHours(0, 0, 0, 0);
+
+  // 如果今年的生日已经过了，算明年的
+  if (nextBirthday < today) {
+    nextBirthday.setFullYear(today.getFullYear() + 1);
+  }
+
+  const diffTime = nextBirthday - today;
+  // 【关键修复 3】：使用 Math.round 或 Math.floor 确保结果是一个纯整数 0
+  return Math.round(diffTime / (1000 * 60 * 60 * 24));
+}
+
+  // 更新界面显示
+  function updateUI() {
+    const savedDate = localStorage.getItem(STORAGE_KEY_BIRTHDAY);
+    if (savedDate) {
+      const days = calculateDays(savedDate);
+      daysNumber.textContent = days === 0 ? "今" : days;
+      
+      // 显示倒计时卡片
+      pickerSection.style.display = 'none';
+      displaySection.style.display = 'block';
+      surpriseScreen.style.display = 'none'; // 确保惊喜屏默认隐藏
+
+      // 如果是今天，显示惊喜入口
+      if (days === 0) {
+        surpriseLink.style.display = 'block';
+        daysNumber.nextElementSibling.textContent = "天";
+      } else {
+        surpriseLink.style.display = 'none';
+      }
+    } else {
+      pickerSection.style.display = 'block';
+      displaySection.style.display = 'none';
+      surpriseScreen.style.display = 'none';
+    }
+  }
+  // 保存生日
+  saveBtn.addEventListener('click', () => {
+    const dateVal = dateInput.value;
+    if (!dateVal) {
+      alert("请选择日期喵~");
+      return;
+    }
+    localStorage.setItem(STORAGE_KEY_BIRTHDAY, dateVal);
+    updateUI();
+    // 使用现有的 showBubble 函数反馈
+    if (typeof showBubble === 'function') {
+      showBubble("已经记下你的生日啦喵！✨");
+    }
+  });
+
+  // 重置生日
+  resetBtn.addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY_BIRTHDAY);
+    updateUI();
+  });
+
+  // 初始化加载
+  updateUI();
+  // 更新UI的函数
+  // 点击“去看看”
+  document.getElementById('goSurprise').addEventListener('click', () => {
+    // 1. 切换显示区域
+    displaySection.style.display = 'none';
+    surpriseScreen.style.display = 'block';
+    
+    // 2. 小猫弹出祝福（假设你已有名为 showBubble 的函数）
+    if (typeof showBubble === 'function') {
+      showBubble("✨ 哇！祝你生日快乐喵！快看我为你准备的蛋糕~ 🎂");
+    }
+  });
+
+  // 点击“返回”
+  document.getElementById('backFromSurprise').addEventListener('click', () => {
+    updateUI();
+  });
+
+  // 其余代码保持不变 (calculateDays, saveBtn, resetBtn 等)
+  // ... (见上一条回复的逻辑)
 });
