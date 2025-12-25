@@ -2091,3 +2091,552 @@ function calculateDays(birthdayStr) {
   // 其余代码保持不变 (calculateDays, saveBtn, resetBtn 等)
   // ... (见上一条回复的逻辑)
 });
+// === Todo List 逻辑 ===
+// ======================================================
+// 修复后的 Todo List 逻辑 (解决点击无效问题)
+// ======================================================
+const todoInput = document.getElementById('todoInput');
+const addTodoBtn = document.getElementById('addTodoBtn');
+const todoList = document.getElementById('todoList');
+const TODO_KEY = 'user_todos';
+
+function loadTodos() {
+  const todos = JSON.parse(localStorage.getItem(TODO_KEY)) || [];
+  todoList.innerHTML = ''; // 清空列表
+  todos.forEach((todo, index) => {
+    createTodoElement(todo.text, todo.done, index);
+  });
+}
+
+function createTodoElement(text, done, index) {
+  const li = document.createElement('li');
+  if (done) li.classList.add('done');
+
+  // 1. 创建文本 span (替代原来的 innerHTML 写法)
+  const span = document.createElement('span');
+  span.textContent = text;
+  span.style.cssText = "cursor:pointer; flex:1;"; // 设置样式
+  
+  // 绑定点击事件：切换完成状态
+  span.addEventListener('click', (e) => {
+    toggleTodo(index);
+    e.stopPropagation();
+  });
+
+  // 2. 创建删除按钮
+  const btn = document.createElement('button');
+  btn.className = 'del-todo-btn';
+  btn.textContent = '×';
+  
+  // 绑定点击事件：删除 (这是修复的核心)
+  btn.addEventListener('click', (e) => {
+    // 阻止事件冒泡（防止触发 span 的点击）
+    e.stopPropagation(); 
+    deleteTodo(index);
+  });
+
+  // 3. 将元素添加到 li，再添加到 list
+  li.appendChild(span);
+  li.appendChild(btn);
+  todoList.appendChild(li);
+}
+
+// 添加任务逻辑
+function handleAddTodo() {
+  const text = todoInput.value.trim();
+  if (!text) return;
+  
+  const todos = JSON.parse(localStorage.getItem(TODO_KEY)) || [];
+  todos.push({ text: text, done: false });
+  localStorage.setItem(TODO_KEY, JSON.stringify(todos));
+  
+  todoInput.value = '';
+  loadTodos();
+  
+  // 小猫互动
+  if (typeof showBubble === 'function') {
+    const msgs = ["收到！记下来了喵~", "好记性不如烂笔头喵！", "加油完成哦喵~"];
+    showBubble(msgs[Math.floor(Math.random() * msgs.length)]);
+  }
+}
+
+// 删除任务逻辑 (不再需要 window. 前缀)
+function deleteTodo(index) {
+  const todos = JSON.parse(localStorage.getItem(TODO_KEY)) || [];
+  todos.splice(index, 1);
+  localStorage.setItem(TODO_KEY, JSON.stringify(todos));
+  loadTodos();
+}
+
+// 切换状态逻辑
+function toggleTodo(index) {
+  const todos = JSON.parse(localStorage.getItem(TODO_KEY)) || [];
+  todos[index].done = !todos[index].done;
+  localStorage.setItem(TODO_KEY, JSON.stringify(todos));
+  loadTodos();
+  
+  if (todos[index].done && typeof showBubble === 'function') {
+    showBubble("太棒了！又完成一件事喵！🎉");
+  }
+}
+
+// 绑定输入框和添加按钮事件
+if (addTodoBtn) {
+  addTodoBtn.addEventListener('click', handleAddTodo);
+}
+
+if (todoInput) {
+  todoInput.addEventListener('keydown', (e) => { 
+    if(e.key === 'Enter') handleAddTodo(); 
+  });
+}
+
+// 初始化加载
+if (todoList) {
+  loadTodos();
+}
+// === 计算器逻辑 (优化版) ===
+// === 计算器逻辑 (扩展程序兼容版) ===
+document.addEventListener('DOMContentLoaded', () => {
+  const display = document.getElementById('calcDisplay');
+  const buttons = document.querySelectorAll('.calc-btn');
+  
+  if(!display) return;
+
+  // ★ 新增：安全的计算函数（不使用 eval）
+  function safeCalculate(expression) {
+    // 1. 移除末尾悬空的符号
+    const ops = ['+', '-', '*', '/', '.'];
+    while (ops.includes(expression.slice(-1))) {
+      expression = expression.slice(0, -1);
+    }
+    if (!expression) return "";
+
+    // 2. 解析字符串为数组： "10-2*3" -> ["10", "-", "2", "*", "3"]
+    let tokens = expression.split(/([\+\-\*\/])/).map(t => t.trim()).filter(t => t !== "");
+
+    // 3. 处理开头的负数 (例如 "-5+3")
+    if (tokens[0] === '-' && !isNaN(tokens[1])) {
+       tokens[1] = '-' + tokens[1]; // 组合成 "-5"
+       tokens.shift(); // 移除独立的 "-"
+    }
+
+    // 4. 第一轮：先算乘除 (* /)
+    for (let i = 0; i < tokens.length; i++) {
+      if (tokens[i] === '*' || tokens[i] === '/') {
+        let left = parseFloat(tokens[i - 1]);
+        let right = parseFloat(tokens[i + 1]);
+        let res = (tokens[i] === '*') ? (left * right) : (left / right);
+        // 用结果替换掉 "左 操作符 右" 这三项
+        tokens.splice(i - 1, 3, res);
+        i--; // 索引回退，继续检查
+      }
+    }
+
+    // 5. 第二轮：再算加减 (+ -)
+    let result = parseFloat(tokens[0]);
+    for (let i = 1; i < tokens.length; i += 2) {
+      let op = tokens[i];
+      let num = parseFloat(tokens[i + 1]);
+      if (op === '+') result += num;
+      if (op === '-') result -= num;
+    }
+
+    return isNaN(result) ? "Error" : result;
+  }
+
+  // 按钮点击监听
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.getAttribute('data-val');
+      let current = display.value; 
+      const ops = ['+', '-', '*', '/', '.'];
+
+      // 1. 清除 (C)
+      if (val === 'C') {
+        display.value = '';
+      } 
+      // 2. 删除 (DEL)
+      else if (val === 'DEL') {
+        if (current === 'Error' || current === 'Infinity' || current === 'NaN') {
+          display.value = '';
+        } else {
+          display.value = current.slice(0, -1);
+        }
+      } 
+      // 3. 计算 (=)
+      else if (val === '=') {
+        try {
+          if (!current) return;
+          
+          // ★ 使用我们写的 safeCalculate 代替 eval
+          let result = safeCalculate(current);
+          
+          // 处理精度 (如 0.1+0.2)
+          if (typeof result === 'number' && !Number.isInteger(result)) {
+            result = parseFloat(result.toFixed(6));
+          }
+          
+          display.value = result;
+
+          // 小猫互动
+          if(typeof showBubble === 'function' && result !== 'Error' && Math.random() > 0.8) {
+             showBubble("算数我在行喵！");
+          }
+        } catch (e) {
+          console.error(e);
+          display.value = 'Error';
+          if(typeof showBubble === 'function') showBubble("算式太难了喵...");
+        }
+      } 
+      // 4. 输入处理
+      else {
+        if (display.value === 'Error') {
+            display.value = '';
+            current = '';
+        }
+
+        const lastChar = current.slice(-1);
+
+        // 符号替换逻辑 (例如输入 5+ 后点 -, 变成 5-)
+        if (ops.includes(lastChar) && ops.includes(val)) {
+           display.value = current.slice(0, -1) + val;
+           return;
+        }
+        
+        // 防止多个小数点
+        if (val === '.') {
+           const parts = current.split(/[\+\-\*\/]/);
+           const currentNum = parts[parts.length - 1];
+           if (currentNum.includes('.')) return;
+        }
+
+        display.value += val;
+      }
+    });
+  });
+});
+// === 🦖 恐龙快跑游戏逻辑 ===
+// === 🦖 恐龙快跑游戏逻辑 (宽屏版) ===
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas = document.getElementById('dinoCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  const highScoreEl = document.getElementById('dinoHighScore');
+  
+  // 游戏状态
+  let isPlaying = false;
+  let score = 0;
+  let highScore = parseInt(localStorage.getItem('dinoHighScore') || '0');
+  let gameSpeed = 5;
+  let animationId = null;
+
+  highScoreEl.textContent = highScore;
+
+  // 恐龙配置
+  const dino = {
+    x: 40,
+    y: 100, // 基础高度
+    w: 24,
+    h: 28,
+    dy: 0,
+    jumpStrength: 10, // 跳跃力度
+    gravity: 0.6,     // 重力
+    grounded: true,
+    draw: function() {
+      ctx.fillStyle = '#fff';
+      // 身体
+      ctx.fillRect(this.x, this.y, this.w, this.h); 
+      // 头
+      ctx.fillRect(this.x + 12, this.y - 10, 16, 12); 
+      // 眼睛
+      ctx.fillStyle = '#333';
+      ctx.fillRect(this.x + 18, this.y - 8, 2, 2);
+      ctx.fillStyle = '#fff';
+      // 腿 (简单的动画效果)
+      if (Math.floor(Date.now() / 100) % 2 === 0 || !this.grounded) {
+        ctx.fillRect(this.x + 4, this.y + 28, 4, 6);
+        ctx.fillRect(this.x + 14, this.y + 28, 4, 6);
+      } else {
+        ctx.fillRect(this.x + 2, this.y + 28, 4, 6);
+        ctx.fillRect(this.x + 16, this.y + 28, 4, 6);
+      }
+    },
+    jump: function() {
+      if (this.grounded) {
+        this.dy = -this.jumpStrength;
+        this.grounded = false;
+      }
+    },
+    update: function() {
+      this.dy += this.gravity;
+      this.y += this.dy;
+      
+      // 地面接触检测 (100 是我们设定的地面 y 坐标)
+      if (this.y > 100) { 
+        this.y = 100;
+        this.dy = 0;
+        this.grounded = true;
+      }
+    }
+  };
+
+  // 障碍物管理
+  let obstacles = [];
+  function spawnObstacle() {
+    let height = Math.random() > 0.5 ? 30 : 20;
+    obstacles.push({
+      x: canvas.width,
+      y: 134 - height, // 这里的 134 = dino.y(100) + dino.h(28) + 腿高(6)
+      w: Math.random() > 0.5 ? 18 : 12,
+      h: height,
+      color: '#ff6b6b'
+    });
+  }
+
+  let spawnTimer = 0;
+  
+  function update() {
+    animationId = requestAnimationFrame(update);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 绘制地面线
+    ctx.beginPath();
+    ctx.moveTo(0, 134);
+    ctx.lineTo(canvas.width, 134);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // 更新恐龙
+    dino.update();
+    dino.draw();
+
+    // 障碍物逻辑
+    spawnTimer++;
+    if (spawnTimer > 100 - Math.min(score, 60) + Math.random() * 50) {
+      spawnObstacle();
+      spawnTimer = 0;
+    }
+
+    for (let i = 0; i < obstacles.length; i++) {
+      let obs = obstacles[i];
+      obs.x -= gameSpeed;
+      
+      ctx.fillStyle = obs.color;
+      ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+
+      // 碰撞检测
+      // 稍微缩小一点判定范围，手感更好
+      if (
+        dino.x + 4 < obs.x + obs.w &&
+        dino.x + dino.w - 4 > obs.x &&
+        dino.y + 4 < obs.y + obs.h &&
+        dino.y + dino.h > obs.y
+      ) {
+        gameOver();
+      }
+
+      if (obs.x + obs.w < 0) {
+        obstacles.splice(i, 1);
+        score++;
+        i--;
+        if (score % 5 === 0) gameSpeed += 0.2; // 缓慢加速
+      }
+    }
+    
+    // 显示分数 (画在 Canvas 里面)
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText("Score: " + score, canvas.width - 10, 30);
+  }
+
+  function gameOver() {
+    isPlaying = false;
+    cancelAnimationFrame(animationId);
+    
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = '#fff';
+    ctx.font = '24px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
+    ctx.font = '14px Arial';
+    ctx.fillText("点击重试", canvas.width / 2, canvas.height / 2 + 25);
+
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem('dinoHighScore', highScore);
+      highScoreEl.textContent = highScore;
+    }
+  }
+
+  function resetGame() {
+    obstacles = [];
+    score = 0;
+    gameSpeed = 5;
+    spawnTimer = 0;
+    dino.y = 100;
+    dino.dy = 0;
+    isPlaying = true;
+    update();
+  }
+
+  // 点击事件
+  canvas.addEventListener('click', (e) => {
+    e.stopPropagation(); // 阻止冒泡
+    if (!isPlaying) resetGame();
+    else dino.jump();
+  });
+
+  // 键盘事件 (空格/上箭头)
+  document.addEventListener('keydown', (e) => {
+    // 检测右侧面板是否展开 (检查 collapsedright 类)
+    const panel = document.getElementById('quickPanelright');
+    if (panel && !panel.classList.contains('collapsedright')) {
+      if (e.code === 'Space' || e.code === 'ArrowUp') {
+        if (document.activeElement.tagName === 'INPUT') return; // 输入框打字时不触发
+        e.preventDefault();
+        if (!isPlaying) resetGame();
+        else dino.jump();
+      }
+    }
+  });
+
+  // 初始画面文字
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.font = '16px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText("点击开始摸鱼", canvas.width / 2, 70);
+});
+// === 🗓️ 迷你日历逻辑 (农历增强版) ===
+document.addEventListener('DOMContentLoaded', () => {
+  const monthYearEl = document.getElementById('calMonthYear');
+  const gridEl = document.getElementById('calGrid');
+  const prevBtn = document.getElementById('prevMonth');
+  const nextBtn = document.getElementById('nextMonth');
+  const toTodayBtn = document.getElementById('toToday'); 
+if (toTodayBtn) {
+  toTodayBtn.addEventListener('click', () => {
+    // 1. 将 currentDate 重置为当前真实时间
+    currentDate = new Date(); 
+    // 2. 重新渲染日历
+    renderCalendar(currentDate);
+    if (typeof showBubble === 'function') {
+      showBubble("回到今天啦喵～📅");
+    }
+  });
+}
+  if(!gridEl) return;
+
+  let currentDate = new Date();
+
+  function renderCalendar(date) {
+    const year = date.getFullYear();
+    const month = date.getMonth(); 
+    
+    monthYearEl.textContent = `${year}年 ${month + 1}月`;
+    gridEl.innerHTML = '';
+
+    const firstDay = new Date(year, month, 1).getDay(); // 当月第一天星期几
+    const daysInMonth = new Date(year, month + 1, 0).getDate(); // 当月总天数
+    const today = new Date();
+
+    // 填充空白
+    for(let i = 0; i < firstDay; i++) {
+      gridEl.appendChild(document.createElement('div'));
+    }
+
+    // 填充日期
+    for(let d = 1; d <= daysInMonth; d++) {
+      const cell = document.createElement('div');
+      
+      // --- 核心改动：计算农历和节日 ---
+      // 创建当前日期的对象
+      const currentLoopDate = new Date(year, month, d);
+      let lunarText = '';
+      let isFestival = false;
+
+      // 只有当 Lunar 库加载成功时才计算，防止报错
+      if (window.Lunar && window.Solar) {
+        const solar = Solar.fromDate(currentLoopDate);
+        const lunar = Lunar.fromDate(currentLoopDate);
+
+        // 1. 获取农历基础日期 (初一、十五等)
+        let dayStr = lunar.getDayInChinese();
+        if (dayStr === '初一') dayStr = lunar.getMonthInChinese() + '月';
+
+        // 2. 获取节气 (清明、冬至等)
+        const jieqi = lunar.getJieQi();
+
+        // 3. 获取节日 (优先显示)
+        // 获取公历节日 (如元旦、国庆)
+        const solarFestivals = solar.getFestivals();
+        // 获取农历节日 (如春节、中秋)
+        const lunarFestivals = lunar.getFestivals();
+
+        // 优先级逻辑：节日 > 节气 > 农历初一 > 普通农历
+        if (lunarFestivals.length > 0) {
+          lunarText = lunarFestivals[0];
+          isFestival = true;
+          // 修正：如果遇到“春节”，显示这两个字
+          if(lunarText.length > 3) lunarText = lunarText.substring(0, 3); 
+        } else if (solarFestivals.length > 0) {
+          lunarText = solarFestivals[0];
+          isFestival = true;
+           if(lunarText.length > 3) lunarText = lunarText.substring(0, 3);
+        } else if (jieqi) {
+          lunarText = jieqi;
+          isFestival = true; // 节气也高亮
+        } else {
+          lunarText = dayStr;
+        }
+      } else {
+        lunarText = '...'; // 库没加载出来的兜底
+      }
+
+      // --- 构建 HTML ---
+      cell.className = isFestival ? 'is-festival' : '';
+      cell.innerHTML = `
+        <span class="solar-text">${d}</span>
+        <span class="lunar-text">${lunarText}</span>
+      `;
+      
+      // 样式处理
+      cell.style.borderRadius = '6px';
+      cell.style.cursor = 'default';
+      
+      // 高亮今天
+      if (today.getFullYear() === year && today.getMonth() === month && today.getDate() === d) {
+        cell.style.background = '#0b74de';
+        cell.style.color = 'white'; // 强制文字变白
+        cell.style.fontWeight = 'bold';
+        cell.style.boxShadow = '0 2px 8px rgba(11, 116, 222, 0.4)';
+        // 去掉节日红，避免在蓝色背景上看不清
+        cell.classList.remove('is-festival'); 
+      } else {
+        cell.addEventListener('mouseenter', () => cell.style.background = 'rgba(255,255,255,0.1)');
+        cell.addEventListener('mouseleave', () => {
+             if(!(today.getFullYear() === year && today.getMonth() === month && today.getDate() === d)) 
+                 cell.style.background = 'transparent'; 
+        });
+      }
+      gridEl.appendChild(cell);
+    }
+  }
+
+  renderCalendar(currentDate);
+
+  prevBtn.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar(currentDate);
+  });
+  
+  nextBtn.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar(currentDate);
+  });
+});

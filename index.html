@@ -242,7 +242,7 @@
   padding: 10px 16px;
   border-radius: 20px;
   box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-  max-width: 300px;
+  max-width: 360px;
   opacity: 0;
   transform: scale(0.3);
   transform-origin: left bottom;
@@ -892,14 +892,29 @@ form input[type="text"] {
   }
   /* 收起时隐藏面板 */
   #quickPanel.collapsed .panel { width: 0; padding: 0; opacity: 0; transform: translateX(-8px); pointer-events: none; }
-
-  /* 图标容器：允许垂直滚动，但隐藏可见滚动条（仍可滚动） */
 #quickPanel .icons {
   display: flex;
   flex-direction: column; /* 纵向排列 */
   align-items: center;    /* 居中对齐 */
   overflow-y: auto;  max-height: 70vh;      /* 最大高度，超出时可滚动 */
   gap: 8px;              /* 直接控制标题与图标、图标与图标之间的间距 */
+}
+  /* 图标容器：允许垂直滚动，但隐藏可见滚动条（仍可滚动） */
+#quickPanelright .icons {
+  height: 100%;            /* 占满面板高度 */
+  overflow-y: auto;        /* 允许垂直滚动 */
+  overflow-x: hidden;      /* 禁止水平滚动 */
+  width: 100%;             /* 占满宽度 */
+  padding-bottom: 50px;    /* 底部留出一点空间，防止内容贴底 */
+  
+  /* 隐藏滚动条（美观，保持毛玻璃纯净感） */
+  scrollbar-width: none;   /* Firefox */
+  -ms-overflow-style: none;/* IE/Edge */
+}
+
+/* 针对 Chrome/Safari 隐藏滚动条 */
+#quickPanelright .icons::-webkit-scrollbar {
+  display: none;
 }
 
 #quickPanel .icons h3 {
@@ -1092,6 +1107,110 @@ form input[type="text"] {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+/* 待办列表样式 */
+#todoList li {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+#todoList li:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+#todoList li span {
+  flex: 1;                   /* 占满剩余空间 */
+  white-space: normal;       /* 允许文本换行 */
+  word-break: break-word;    /* 强制长单词/长链接换行 */
+  overflow-wrap: anywhere;   /* 现代浏览器强制换行支持 */
+  line-height: 1.5;          /* 多行时增加行高，更易阅读 */
+  padding-right: 10px;       /* 防止文字紧贴删除按钮 */
+  text-align: left;          /* 文字左对齐 */
+}
+#todoList li.done span {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.del-todo-btn {
+  background: transparent;
+  border: none;
+  color: #ff6b6b;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0 4px;
+}
+.del-todo-btn:hover {
+  transform: scale(1.2);
+}
+/* 滚动条美化 */
+#todoList::-webkit-scrollbar { width: 4px; }
+#todoList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+#addTodoBtn {
+  background: #0b74de;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+/* 计算器按钮样式 */
+.calc-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 10px 0;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.calc-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+.calc-btn:active {
+  transform: scale(0.95);
+}
+/* 修改日历格子的样式，支持显示农历 */
+#calGrid div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 42px; /* 稍微增加高度给农历留空间 */
+  line-height: 1.2;
+}
+
+/* 公历数字 */
+.solar-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 农历/节日文字 */
+.lunar-text {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-top: 1px;
+  transform: scale(0.9); /* 让字显得更精致 */
+}
+
+/* 节日或节气的高亮样式 */
+.is-festival .lunar-text {
+  color: #ff6b6b;
+  font-weight: bold;
+  opacity: 1;
+}
+
+/* 今天的样式微调 */
+#calGrid div[style*="background: rgb(11, 116, 222)"] .lunar-text {
+  color: rgba(255,255,255,0.9); /* 今天选中时，农历字变白 */
+}
  </style>
 </head>
 <body>
@@ -1254,8 +1373,8 @@ form input[type="text"] {
     <div id="closePanelRightX" style="position: absolute; top: 30px; right: 20px; color: white; cursor: pointer; font-size: 24px; line-height: 1;">&times;</div>
     <div class="icons">
       <!-- 这里可以放置右侧面板的内容 -->
-      <h2 style="color:white; margin-top: 20px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;右侧快捷面板</h2>
-      <div id="birthdayWidget" class="birthday-container">
+      <h2 style="color:white; margin-top: 20px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;快捷面板</h2>
+<div id="birthdayWidget" class="birthday-container">
   <div id="birthdayPicker" class="birthday-section">
     <h4>🎂 记录生日</h4>
     <div class="input-group">
@@ -1263,39 +1382,157 @@ form input[type="text"] {
       <button id="saveBirthdayBtn">确定</button>
     </div>
   </div>
-  
-<div id="birthdayDisplay" class="birthday-section" style="display: none;">
-  <div class="countdown-card">
-    <p class="label">距离生日还有</p>
-    <div class="days-circle">
-      <span id="daysNumber">--</span>
-      <small>天</small>
-    </div>
-    <button id="resetBirthdayBtn" class="reset-link">重置日期</button>
-    
-    <div id="surpriseLink" style="display: none; margin-top: 10px; font-size: 12px; color: #ffeb3b;">
-      小猫为你准备了一个小惊喜，<span id="goSurprise" style="text-decoration: underline; cursor: pointer; font-weight: bold;">去看看</span>
+  <div id="birthdayDisplay" class="birthday-section" style="display: none;">
+    <div class="countdown-card">
+      <p class="label">距离生日还有</p>
+      <div class="days-circle">
+        <span id="daysNumber">--</span>
+        <small>天</small>
+      </div>
+      <button id="resetBirthdayBtn" class="reset-link">重置日期</button>
+      <div id="surpriseLink" style="display: none; margin-top: 10px; font-size: 12px; color: #ffeb3b;">
+        小猫为你准备了一个小惊喜，<span id="goSurprise" style="text-decoration: underline; cursor: pointer; font-weight: bold;">去看看</span>
+      </div>
     </div>
   </div>
-</div>
+<div id="surpriseScreen" style="display: none; position: relative; width: 100%; height: 250px; overflow: hidden; border-radius: 12px; margin-top: 10px; background: rgba(0,0,0,0.2);">
+    
+    <img src="生日动画/生日蛋糕.gif" style="
+        position: absolute; 
+        top: 50%; 
+        left: 50%; 
+        transform: translate(-50%, -50%); 
+        max-width: 85%; 
+        max-height: 85%; 
+        width: auto; 
+        height: auto; 
+        z-index: 1;
+        object-fit: contain;">
+        
+    <video src="生日动画/礼花.webm" autoplay loop muted playsinline style="
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%; 
+        object-fit: cover; 
+        z-index: 2; 
+        pointer-events: none; 
+        mix-blend-mode: screen;">
+    </video>
 
-<div id="surpriseScreen" style="display: none; position: relative; width: 200px; height: 230px; overflow: hidden; border-radius: 12px; margin-top: 10px;">
-  <img src="生日动画/生日蛋糕.gif" style="width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 1;">
+    <div style="position: absolute; z-index: 3; width: 100%; height: 100%; pointer-events: none;">
+        <h2 style="
+            position: absolute; 
+            top: 15px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            font-family: 'Comic Sans MS', cursive; 
+            color: #ff4081; 
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.8); 
+            margin: 0; 
+            font-size: 24px; 
+            width: 100%; 
+            text-align: center;">
+            Happy Birthday!
+        </h2>
+        
+        <span id="backFromSurprise" style="
+            position: absolute; 
+            right: 10px; 
+            bottom: 10px; 
+            color: white; 
+            background: rgba(0,0,0,0.5); 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            cursor: pointer; 
+            pointer-events: auto; 
+            backdrop-filter: blur(4px); 
+            border: 1px solid rgba(255,255,255,0.3);">
+            返回
+        </span>
+    </div>
+</div>
+</div>
+<div class="widget-row" style="display: flex; gap: 10px; margin: 15px 15px; width: calc(100% - 30px);">
   
-  <video src="生日动画/礼花.webm" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 2; pointer-events: none; mix-blend-mode: screen;"></video>
-  
-  <div style="position: absolute; z-index: 3; width: 100%; height: 100%; pointer-events: none;">
-    <h2 style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-family: 'Comic Sans MS', cursive; color: #ff4081; text-shadow: 2px 2px 4px white; margin: 0; font-size: 24px; width: 100%; text-align: center;">Happy Birthday!</h2>
-    
-    <span id="backFromSurprise" style="backFromSurprise:hover{opacity: 0;} position: absolute; right: 10px; bottom: 10px; color: white; background: rgba(0,0,0,0.5); padding: 4px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; pointer-events: auto; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.3);">
-      返回
-    </span>
+  <div id="todoWidget" class="birthday-container" style="flex: 1; margin: 0; display: flex; flex-direction: column;">
+    <div class="birthday-section" style="flex: 1; display: flex; flex-direction: column;">
+      <h4>📝 备忘录</h4>
+      <div class="input-group">
+        <input type="text" id="todoInput" placeholder="记录事项..." maxlength="10" style="width: 100%;">
+        <button id="addTodoBtn" style="white-space: nowrap;">+</button>
+      </div>
+      <ul id="todoList" style="list-style: none; padding: 0; margin-top: 10px; flex: 1; overflow-y: auto; max-height: 220px;">
+      </ul>
+    </div>
+  </div>
+
+  <div id="calcWidget" class="birthday-container" style="flex: 1; margin: 0;">
+    <div class="birthday-section">
+      <h4>🧮 计算器</h4>
+      <input type="text" id="calcDisplay" readonly style="width:100%; background:rgba(0,0,0,0.3); border:none; color:white; font-size:18px; text-align:right; padding:8px; box-sizing:border-box; border-radius:6px; margin-bottom:8px;">
+      
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px;">
+        <button class="calc-btn op" data-val="C" style="color:#ff6b6b;">C</button>
+        <button class="calc-btn op" data-val="/">÷</button>
+        <button class="calc-btn op" data-val="*">×</button>
+        <button class="calc-btn op" data-val="DEL">←</button>
+        
+        <button class="calc-btn num" data-val="7">7</button>
+        <button class="calc-btn num" data-val="8">8</button>
+        <button class="calc-btn num" data-val="9">9</button>
+        <button class="calc-btn op" data-val="-">-</button>
+        
+        <button class="calc-btn num" data-val="4">4</button>
+        <button class="calc-btn num" data-val="5">5</button>
+        <button class="calc-btn num" data-val="6">6</button>
+        <button class="calc-btn op" data-val="+">+</button>
+        
+        <button class="calc-btn num" data-val="1">1</button>
+        <button class="calc-btn num" data-val="2">2</button>
+        <button class="calc-btn num" data-val="3">3</button>
+        <button class="calc-btn op" data-val="=" style="grid-row: span 2; background:#0b74de; border:none;">=</button>
+        
+        <button class="calc-btn num" data-val="0" style="grid-column: span 2;">0</button>
+        <button class="calc-btn num" data-val=".">.</button>
+      </div>
+    </div>
+  </div>
+
+</div> 
+<div id="dinoWidget" class="birthday-container" style="margin: 0 15px 15px 15px; width: calc(100% - 30px); padding: 10px;">
+  <div class="birthday-section" style="text-align: center;">
+    <h4 style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.9;">🦖 小游戏：小恐龙快跑</h4>
+    <canvas id="dinoCanvas" width="600" height="150" style="width: 100%; height: 120px; border-radius: 8px; background: rgba(0,0,0,0.2); cursor: pointer; display: block;"></canvas>
+    <div style="font-size: 12px; margin-top: 8px; display: flex; justify-content: space-between; color: rgba(255,255,255,0.8);">
+      <span>按空格 / 点击 跳跃</span>
+      <span>最高分: <span id="dinoHighScore">0</span></span>
+    </div>
   </div>
 </div>
+<div id="calendarWidget" class="birthday-container" style="margin: 0 15px 15px 15px; width: calc(100% - 30px);">
+  <div class="birthday-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <h4 id="calMonthYear" style="margin:0; font-size: 16px;">2025年 12月</h4>
+      <div style="display: flex; gap: 8px;">
+        <button id="toToday" title="回到今天" style="background:rgba(255,255,255,0.1); border:none; color:white; cursor:pointer; padding: 4px 8px; border-radius: 4px; font-weight:bold;">今天</button>
+        <button id="prevMonth" style="background:rgba(255,255,255,0.1); border:none; color:white; cursor:pointer; padding: 4px 8px; border-radius: 4px;">◀</button>
+        <button id="nextMonth" style="background:rgba(255,255,255,0.1); border:none; color:white; cursor:pointer; padding: 4px 8px; border-radius: 4px;">▶</button>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 12px; opacity: 0.7; margin-bottom: 8px;">
+      <span style="color:#ff6b6b">日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span style="color:#ff6b6b">六</span>
+    </div>
+    <div id="calGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 13px;">
+      </div>
+  </div>
 </div>
  </div>
   </div>
 </div>
+<script src="lunar.js"></script>
  <script src="main.js"></script>
 </body>
 </html>
