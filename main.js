@@ -128,7 +128,7 @@ function manageZenLyricsWidget() {
                             ? player.getTransLyrics() 
                             : [];
         
-        const currentTime = player.audio.currentTime + 0.35;
+        const currentTime = player.audio.currentTime + 0.2;
         
         let originalText = '...';
         let translationText = ''; // 翻译文本容器

@@ -2248,3 +2248,35 @@ input[type="range"]#volumeSlider::-moz-range-thumb {
     align-items: center;
     justify-content: space-between;
 }
+/* [start of code block for style1.css] */
+
+/* =========================================
+   🎵 音乐播放列表下载进度条样式
+   ========================================= */
+
+/* 歌曲列表项，确保 flex 布局和垂直居中 */
+#musicPlaylist .song-item {
+    display: flex;
+    align-items: center;
+}
+
+/* 下载操作区域的容器 */
+.song-action-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px; /* 进度文字和图标之间的间距 */
+}
+
+/* 下载进度百分比文字 */
+.download-progress {
+    display: none; /* 默认隐藏 */
+    font-size: 13px;
+    color: #ffffff; /* 灰色文字，不那么显眼 */
+    font-family: monospace; /* 使用等宽字体，防止数字跳动 */
+    min-width: 40px; /* 预留最小宽度，防止UI布局在显示时跳动 */
+    text-align: right;
+    font-weight: bold;
+}
+
+/* [end of code block for style1.css] */

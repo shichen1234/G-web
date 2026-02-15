@@ -277,12 +277,16 @@ function broadcastMediaUpdateToMainWidget() {
       
       const li = document.createElement('li');
       li.className = `song-item ${i === currentSongIndex ? 'active' : ''}`;
-      li.innerHTML = `
-        <div style="flex:1;">${song.id}. ${song.title} - ${song.artist}</div>
+li.innerHTML = `
+    <div style="flex:1;">${song.id}. ${song.title} - ${song.artist}</div>
+    <div class="song-action-wrapper">
+        <span class="download-progress"></span>
         <span class="song-status-icon" title="${isDownloaded ? '删除' : '下载'}">
           ${isDownloaded ? '🗑️' : '⬇️'}
         </span>
-      `;
+    </div>
+  `;
+
       
       li.addEventListener('click', (e) => {
         if (e.target.classList.contains('song-status-icon')) return;
@@ -310,60 +314,94 @@ function broadcastMediaUpdateToMainWidget() {
     ui.listPanel.scrollTop = scrollPos;
   }
 
-  // 2. 下载 (MP3 + LRC + 翻译LRC)
-  async function downloadSong(song, index) {
-    const btn = ui.listUl.children[index].querySelector('.song-status-icon');
-    btn.textContent = '⏳';
-    
+async function downloadSong(song, index) {
+    const li = ui.listUl.children[index];
+    const actionWrapper = li.querySelector('.song-action-wrapper');
+    const statusIcon = actionWrapper.querySelector('.song-status-icon');
+    const progressSpan = actionWrapper.querySelector('.download-progress');
+
+    // 如果不是下载图标(说明已下载或正在下载)，则不执行
+    if (statusIcon.textContent.trim() !== '⬇️') return;
+
+    // 更新UI，开始下载状态
+    statusIcon.style.display = 'none'; // 隐藏下载图标
+    progressSpan.style.display = 'inline-block'; // 显示进度百分比的span
+    progressSpan.textContent = '0%'; // 初始为0%
+
     try {
-      // 1. 下载 MP3
-      const mp3Url = PROXY_BASE + GITHUB_BASE + encodeURIComponent(song.filename);
-      const mp3Resp = await fetch(mp3Url);
-      if (!mp3Resp.ok) throw new Error('MP3 download failed');
-      const mp3Blob = await mp3Resp.blob();
-      
-      // 存入 MP3
-      await dbOp(STORE_SONGS, "readwrite", store => 
-        store.put({ filename: song.filename, blob: mp3Blob, timestamp: Date.now() })
-      );
+        // 1. 下载 MP3 并跟踪进度
+        const mp3Url = PROXY_BASE + GITHUB_BASE + encodeURIComponent(song.filename);
+        const mp3Resp = await fetch(mp3Url);
+        if (!mp3Resp.ok) throw new Error(`MP3 download failed: ${mp3Resp.status}`);
 
-      // 2. 下载原版 LRC
-      try {
-        const lrcUrl = PROXY_BASE + GITHUB_BASE + encodeURIComponent(song.lrcFilename);
-        const lrcResp = await fetch(lrcUrl);
-        if (lrcResp.ok) {
-          const lrcText = await lrcResp.text();
-          await dbOp(STORE_LYRICS, "readwrite", store => 
-            store.put({ filename: song.lrcFilename, content: lrcText })
-          );
-        }
-      } catch (e) { console.warn('LRC download failed:', e); }
+        const contentLength = +mp3Resp.headers.get('Content-Length'); // 获取文件总大小
+        const reader = mp3Resp.body.getReader(); // 创建读取器
 
-      // 3. ✅ 新增：下载翻译版 LRC (如果存在)
-      if (song.transLrcFilename) {
-          try {
-            const transUrl = PROXY_BASE + GITHUB_BASE + encodeURIComponent(song.transLrcFilename);
-            const transResp = await fetch(transUrl);
-            if (transResp.ok) {
-                const transText = await transResp.text();
-                // 同样存入 lyrics 表，key 为翻译文件名
-                await dbOp(STORE_LYRICS, "readwrite", store => 
-                    store.put({ filename: song.transLrcFilename, content: transText })
-                );
-                console.log(`翻译歌词已下载: ${song.transLrcFilename}`);
+        let receivedLength = 0; // 已接收大小
+        let chunks = []; // 存储下载的数据块
+        while (true) {
+            const { done, value } = await reader.read(); // 读取一块数据
+            if (done) {
+                break;
             }
-          } catch (e) { console.warn('Translation LRC download failed:', e); }
-      }
+            chunks.push(value);
+            receivedLength += value.length;
 
-      if (typeof showBubble === 'function') showBubble(`"${song.title}" 下载完毕！`);
-      await renderPlaylist();
-      
+            // 如果有文件总大小，就计算并显示百分比
+            if (contentLength) {
+                const progress = Math.round((receivedLength / contentLength) * 100);
+                progressSpan.textContent = `${progress}%`;
+            } else {
+                progressSpan.textContent = '...'; // 否则显示省略号
+            }
+        }
+
+        const mp3Blob = new Blob(chunks); // 将所有数据块合并成一个Blob
+
+        // 存入 MP3
+        await dbOp(STORE_SONGS, "readwrite", store =>
+            store.put({ filename: song.filename, blob: mp3Blob, timestamp: Date.now() })
+        );
+
+        // (这部分下载歌词的代码与原版逻辑相同，保持不变)
+        // 2. 下载原版 LRC
+        try {
+            const lrcUrl = PROXY_BASE + GITHUB_BASE + encodeURIComponent(song.lrcFilename);
+            const lrcResp = await fetch(lrcUrl);
+            if (lrcResp.ok) {
+                const lrcText = await lrcResp.text();
+                await dbOp(STORE_LYRICS, "readwrite", store =>
+                    store.put({ filename: song.lrcFilename, content: lrcText })
+                );
+            }
+        } catch (e) { console.warn('LRC download failed:', e); }
+
+        // 3. 下载翻译版 LRC (如果存在)
+        if (song.transLrcFilename) {
+            try {
+                const transUrl = PROXY_BASE + GITHUB_BASE + encodeURIComponent(song.transLrcFilename);
+                const transResp = await fetch(transUrl);
+                if (transResp.ok) {
+                    const transText = await transResp.text();
+                    await dbOp(STORE_LYRICS, "readwrite", store =>
+                        store.put({ filename: song.transLrcFilename, content: transText })
+                    );
+                }
+            } catch (e) { console.warn('Translation LRC download failed:', e); }
+        }
+        // --- 歌词下载部分结束 ---
+
+        if (typeof showBubble === 'function') showBubble(`"${song.title}" 下载完毕！`);
+        
+        // 重新渲染整个列表，UI会自动恢复正常（下载图标变为删除图标）
+        await renderPlaylist();
+
     } catch (error) {
-      console.error(error);
-      alert('歌曲下载失败，请检查网络。');
-      await renderPlaylist(); // 恢复图标状态
+        console.error('Download failed:', error);
+        await renderPlaylist();
     }
-  }
+}
+
 
   // 3. 播放
   async function playSong(index) {
@@ -547,6 +585,13 @@ function broadcastMediaUpdateToMainWidget() {
       const offset = activeElement.offsetTop;
       ui.lyricWrapper.style.transform = `translateY(-${offset - 40}px)`; // 40是您之前的滚动中心值
     }
+    // 如果禅模式开启，顺便更新禅模式歌词，这样就和正常模式一样丝滑了
+if (window.isZenMode || window.isAutoZenActive) {
+    if (typeof window.manageZenLyricsWidget === 'function') {
+        window.manageZenLyricsWidget();
+    }
+}
+
   }
 
   // === 事件监听 ===
@@ -844,4 +889,23 @@ async function initializePlayer() {
 
   initializePlayer();
 
+});
+document.addEventListener('DOMContentLoaded', () => {
+    const playlistContainer = document.getElementById('musicPlaylist');
+    
+    if (playlistContainer) {
+        const scrollSensitivity = 0.3; // 灵敏度因子。0.3 表示滚动速度为原来的30%。您可以根据需要调整这个值。
+
+        playlistContainer.addEventListener('wheel', function(event) {
+            // event.preventDefault() 会阻止默认的滚动行为
+            event.preventDefault();
+            
+            // event.deltaY 是原始的滚动距离
+            // 我们将它乘以灵敏度因子来得到一个新的、更小的滚动距离
+            const scrollAmount = event.deltaY * scrollSensitivity;
+
+            // 将计算出的滚动量应用到容器的 scrollTop 上
+            playlistContainer.scrollTop += scrollAmount;
+        }, { passive: false }); // passive: false 是必需的，因为它允许我们调用 event.preventDefault()
+    }
 });
