@@ -32,6 +32,6 @@
 &nbsp&nbsp&nbsp&nbsp​管理生活： 直接在仪表盘上添加、编辑或删除任务和日历事件，记录便签，查看运势或倒计时。<br><br>
 &nbsp&nbsp​&nbsp&nbsp高效搜索： 在统一搜索栏中输入查询内容，获取即时建议，并在不同搜索引擎间切换以高效查找内容。<br><br>
 &nbsp&nbsp​&nbsp&nbsp享受乐趣： 体验额外的娱乐和实用功能，如玩几局贪吃蛇游戏，查看带波形动画的媒体控制，以及接收节日问候。<br><br>
-​<stromh>隐私说明 (Privacy)</strong><br><br>
+​<strong>隐私说明 (Privacy)</strong><br><br>
 &nbsp&nbsp&nbsp&nbsp​零个人数据收集： 所有偏好设置、事件和组件数据仅存储在本地。<br><br>
 &nbsp&nbsp​&nbsp&nbsp安全承诺： G-web 不会传输、分析或出售任何浏览记录或个人信息。<br><br>
