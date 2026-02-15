@@ -1,0 +1,2247 @@
+.video-tile {
+  position: relative; /* 确保遮罩能绝对定位 */
+  transform: translateZ(0);
+}
+
+.download-mask {
+position: absolute;
+  top: 0; left: 0;
+  width: 100%; 
+  height: 100%; /* ✅ 修改这里：改为 100% 以填满整个略缩图区域 */
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  border-radius: 8px; /* 保持与略缩图一样的圆角 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-size: 12px;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.download-mask.active {
+  opacity: 1;
+  pointer-events: auto; /* 防止下载时重复点击 */
+}
+
+/* 简单的旋转圆圈 */
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top: 2px solid #fff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 5px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 已下载标志 (可选) */
+.downloaded-badge {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 8px; height: 8px;
+  background: #4caf50;
+  border-radius: 50%;
+  box-shadow: 0 0 4px #4caf50;
+  z-index: 5;
+  display: none; /* 默认隐藏，JS控制显示 */
+}
+    /* --- 📝 备忘录拖拽专用样式 --- */
+#todoList li {
+  cursor: grab; /* 鼠标放上去显示抓手 */
+  will-change: transform; /* 性能优化 */
+  /* 加上过渡效果，平时操作也更丝滑 */
+  transition: transform 0.2s, background 0.2s, opacity 0.2s; 
+}
+
+#todoList li:active {
+  cursor: grabbing; /* 抓取时的手势 */
+}
+
+/* 正在被拖动的条目样式 */
+#todoList li.dragging {
+  opacity: 0.5;
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(0.98);
+  border: 1px dashed rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+    /* 拖拽时的样式 */
+.iconWrapper.dragging {
+  opacity: 0.4;
+  transform: scale(0.95);
+  border: 2px dashed rgba(255, 255, 255, 0.5);
+}
+
+/* 防止加号按钮被拖拽或影响布局 */
+.addWrapper {
+  order: 9999; /* 确保它永远在视觉最后（虽然我们主要靠DOM顺序） */
+}
+/* 1. 基础指针设置：全局兜底 */
+html, body, * {
+  cursor: url('鼠标/Zhand.cur'), auto !important;
+}
+
+/* 2. 可点击状态：全元素覆盖 (小手样式) */
+/* 核心：增加了壁纸页面的 img, .video-tile, 开关滑块等 */
+a, 
+a *,
+button:not(:disabled), 
+button:not(:disabled) *,
+.wallpaper-btn, 
+.add-wallpaper, 
+.add-wallpaper span,
+.add-wallpaper div,
+.wp-tab.active,
+.wp-tab,
+.wp-tab span,
+#closeTipPopup,
+#volumeSlider,
+#volumeSlider input,
+#volunIcon,
+.wp-tab.active span,
+.calc-btn, 
+.openBtn, 
+.openBtnright,
+#engineSwitch,
+#engineSwitch img,
+#suggestionList li,
+.menu-list li,
+.submenu li,
+#catVideo,
+.iconSettings,
+.iconSettings img,
+#biliIcon,
+#extraIcon,
+#dinoCanvas,
+.del-todo-btn,
+#drawFortuneBtn,
+#saveBirthdayBtn,
+#addTodoBtn,
+#todoList li,         
+#todoList li span,    
+#goSurprise,
+.reset-link,
+/* --- 新增：壁纸选择页面相关 --- */
+.wallpaper-grid img,       /* 预设壁纸图片 */
+.video-tile,               /* 动态壁纸容器 */
+.lazy-video-thumb,         /* 视频缩略图 */
+.lazy-video-thumb img,     /* 视频封面图 */
+.switch,                   /* 开关容器 */
+.slider,                   /* 开关滑块 */
+.slider:before,            /* 开关圆点 */
+#closeModal,
+#cmdTrigger,
+.cmd-item,
+.cmd-item selected,
+.cmd-item.selected div span               /* 关闭叉号 */
+{
+  cursor: url('鼠标/Zlink.cur'), pointer !important;
+}
+
+/* 3. 输入框专用：确保所有输入框在悬停时显示 Zlink.cur */
+/* 3. 输入框专用：覆盖所有输入框 */
+input[type="text"], 
+input[type="date"],
+input[type="file"],
+#searchInput,          /* 主界面搜索框 */
+#todoInput,            /* 备忘录输入框 */
+#newIconName,          /* 添加快捷应用-名称 */
+#newIconUrl,           /* 添加快捷应用-链接 */
+#birthdayDateInput {
+  /* 👇 修改了这里 */
+  /* 解释：url('路径') x坐标 y坐标, 后备样式 */
+  cursor: url('鼠标/Zbeam.png') 16 16, text !important;
+}
+
+/* 4. 搜索按钮及内部图标的禁用状态 (禁止样式) */
+button:disabled, 
+button:disabled *, 
+#searchBtn:disabled,
+#searchBtn:disabled svg,
+#searchBtn:disabled path {
+  cursor: url('鼠标/Zunavail.cur'), not-allowed !important;
+  pointer-events: auto !important; 
+}
+
+/* 5. 针对右键菜单特定的样式 */
+.context-menu, .submenu {
+    cursor: url('鼠标/Zhand.cur'), auto !important;
+}
+.menu-list li span, .submenu li span {
+    cursor: inherit !important;
+}
+  * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;      }
+    #closeModal {
+  position: absolute;
+  top: -30px;       /* 距离弹窗顶部 */
+  right: -30px;     /* 距离弹窗右侧 */
+  font-size: 24px; /* 字体大小 */
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+    .modal {
+  display: none; /* 默认隐藏 */
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  z-index: 10000;
+  justify-content: center;
+  align-items: center;
+    opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.modal.show {
+  opacity: 1;
+}
+/* === 壁纸弹窗重构样式 === */
+
+/* 1. 弹窗容器调整 */
+.modal-content {
+  background: #fff;
+  padding: 0; /* 清除默认内边距，由内部元素控制 */
+  border-radius: 16px;
+  position: relative;
+  max-width: 900px;
+  width: 90%;
+  height: 80vh; /* 固定高度，内部滚动 */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* 防止圆角溢出 */
+  /* 初始动画状态 */
+  transform: translateY(30px) scale(0.96);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(.2,.9,.2,1), opacity 0.35s ease;
+}
+.modal.show .modal-content {
+
+  transform: translateY(0) scale(1);
+
+  opacity: 1;
+
+}
+/* 2. 头部样式 */
+.modal-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: #f9f9f9;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#closeModal {
+  /* 重置之前的绝对定位，改为相对布局 */
+  position: static; 
+  font-size: 28px;
+  color: #999;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.2s;
+}
+#closeModal:hover { color: #ff6b6b; }
+
+/* 3. 主体布局 (左右分栏) */
+.modal-body {
+  display: flex;
+  flex: 1; /* 占满剩余高度 */
+  overflow: hidden;
+}
+
+/* --- 左侧侧边栏 --- */
+.wp-sidebar {
+  width: 160px;
+  background: #f0f2f5;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+  gap: 12px;
+  border-right: 1px solid #eee;
+}
+
+.wp-tab {
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 15px;
+  color: #666;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.wp-tab:hover {
+  background: rgba(0,0,0,0.03);
+  color: #333;
+}
+
+/* ✨ 选中状态：向右突出效果 */
+.wp-tab.active {
+  background: #fff;
+  color: #0b74de;
+  font-weight: bold;
+  /* 关键：向右移动覆盖边框，并添加阴影 */
+  width: 130px; 
+  transform: translateX(2px) scale(1.02); 
+  box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.266);
+  border-radius: 8px 0 0 8px; /* 左侧圆角 */
+  z-index: 2;
+}
+
+/* 选中时的左侧蓝色指示条 */
+.wp-tab.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 20px;
+  width: 4px;
+  background: #0b74de;
+  border-radius: 0 4px 4px 0;
+}
+
+/* --- 右侧内容区 --- */
+.wp-right-panel {
+  flex: 1;
+  padding: 20px 30px;
+  overflow-y: auto; /* 允许内部滚动 */
+  background: #fff;
+}
+
+/* 调整原来的开关区域边距 */
+.parallax-option {
+  margin-bottom: 5px;
+  padding-left: 0;
+}
+
+/* 调整壁纸网格 */
+.wallpaper-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* 稍微调大一点 */
+  gap: 16px;
+  padding-bottom: 40px;
+}
+
+/* 修复：确保滚动条美观 */
+.wp-right-panel::-webkit-scrollbar { width: 6px; }
+.wp-right-panel::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+.wallpaper-grid img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.wallpaper-grid img:hover { transform: scale(1.05); }
+.add-wallpaper {
+  width: 100%;        /* 占满格子宽度 */
+  height: 80px;    
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ccc;
+  color: #333;
+  font-size: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.add-wallpaper:hover {
+  transform: scale(1.05);
+}
+/* 快捷栏 添加按钮 样式 */
+#quickPanel .addWrapper { width: 48px; height: 48px; margin-top:10px; }
+#quickPanel .addBtn {
+  width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.04); color:#fff; border: 1px dashed rgba(255,255,255,0.08); cursor:pointer; font-size:20px;
+}
+#quickPanel .addBtn:hover { transform: translateY(-2px); background: rgba(255,255,255,0.06); }
+
+/* 自定义图标：容器与齿轮/弹层样式 🔧 */
+#quickPanel .icons .iconWrapper { will-change: transform; position: relative; width:48px; height:48px; margin-top:10px; display:inline-block; border-radius:12px; overflow:visible; }
+#quickPanel .icons .iconWrapper img { width:48px; height:48px; border-radius:12px; display:block; }
+#quickPanel .icons .iconSettings { position:absolute; right:-3px; bottom:-7px; width:20px; height:20px; padding:0; border:none; background:rgba(0,0,0,0.35); border-radius:50%; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(.9); transition:opacity .16s ease, transform .16s ease; pointer-events:none; }
+#quickPanel .icons .iconSettings img { width:14px; height:14px; display:block; object-fit:contain; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
+#quickPanel .icons .iconWrapper:hover .iconSettings { opacity:1; transform:scale(1); pointer-events:auto; }
+
+/* 图标上的操作按钮（覆盖式） */
+#quickPanel .icons .iconActions { position:absolute; right:-6px; bottom:-6px; display:flex; gap:8px; align-items:center; pointer-events:auto; z-index:200; }
+#quickPanel .icons .iconActions.hidden { display:none; opacity:0; transform:translateY(6px); transition:opacity .12s ease, transform .12s ease; }
+#quickPanel .icons .iconActions.show { display:flex; opacity:1; transform:translateY(0); }
+#quickPanel .icons .iconActions button { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0; border:none; cursor:pointer; box-shadow: 0 6px 16px rgba(2,6,23,0.45); transition: transform .12s ease, box-shadow .12s ease; }
+#quickPanel .icons .iconActions button svg { width:16px; height:16px; }
+#quickPanel .icons .iconActions .delBtn { background: linear-gradient(180deg,#ff6b6b,#e04b4b); color:#fff; }
+#quickPanel .icons .iconActions .delBtn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(224,75,75,0.28); }
+#quickPanel .icons .iconActions .cancelBtn { background:#fff; color:#222; border:1px solid rgba(0,0,0,0.06); }
+#quickPanel .icons .iconActions .cancelBtn:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.2); }
+#quickPanel .icons .iconWrapper a, 
+#quickPanel .icons .iconWrapper img {
+  -webkit-user-drag: none; 
+  user-select: none;
+  -webkit-user-select: none;
+}
+/* Popover 挂载到 body，使用 fixed 定位，显示在图标右侧（更紧凑 & 美化） */
+#quickPanel .icons .iconPopover {
+  /* 默认作为浮动 popover（被覆盖时会被 override） */
+  position:fixed; left:0; top:0;
+  min-width: 120px; max-width: 220px;
+  background: linear-gradient(180deg,#0b0f13,#0f1720);
+  color:#fff; padding:6px 8px; border-radius:10px;
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow:0 10px 30px rgba(2,6,23,0.6);
+  transform-origin:left center;
+  opacity:0; visibility:hidden; transform:translateX(-6px) scale(.98);
+  transition:opacity .18s ease, transform .18s ease, visibility .18s;
+  z-index:200000; display:flex; gap:8px; align-items:center; font-size:13px;
+}
+
+/* 覆盖式遮罩：直接覆盖在图标上（用于 .overlay） */
+#quickPanel .icons .iconWrapper .iconPopover.overlay {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: auto !important;
+  max-width: none !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+  background: rgba(0,0,0,0.36) !important; /* 透明遮罩 */
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  opacity:0; visibility:hidden; transform:none; transition:opacity .12s ease;
+  z-index: 60 !important; /* 确保覆盖同层图标 */
+}
+#quickPanel .icons .iconWrapper .iconPopover.overlay.show { opacity:1; visibility:visible; }
+#quickPanel .icons .iconWrapper .iconPopover.overlay button {border: 0; min-width: 56px; height:40px; border-radius:9px; font-weight:700; display:flex; align-items:center; gap:8px; padding:6px 10px; justify-content:center; color: #fff; }
+#quickPanel .icons .iconWrapper .iconPopover.overlay button svg { width:16px; height:16px; fill: currentColor; }
+#quickPanel .icons .iconWrapper .iconPopover.overlay .delBtn { background: linear-gradient(180deg,#ff6b6b,#e04b4b); color:#fff; }
+#quickPanel .icons .iconWrapper .iconPopover.overlay .cancelBtn { background: linear-gradient(180deg,#ff6b6b,#e04b4b); color:#fff; }
+#quickPanel .icons .iconWrapper .iconPopover.overlay button:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,0.28); }
+
+/* 垂直排列按钮（上/下） */
+#quickPanel .icons .iconWrapper .iconPopover.overlay { flex-direction: column !important; justify-content: center !important; gap: 8px !important; }
+
+/* 当某个遮罩打开时：禁止并淡化没有被遮罩的图标（按 wrapper 判断），保持被遮罩图标和遮罩本身不被变暗 */
+#quickPanel .icons.overlay-open .iconWrapper:not(.has-overlay) { pointer-events: none; opacity: 0.72; }
+#quickPanel .icons .iconWrapper.has-overlay a { pointer-events: none; }
+#quickPanel .icons .iconWrapper.has-overlay .iconPopover.overlay { pointer-events: auto; z-index: 80 !important; }
+
+/* 仅被遮罩禁用的单个图标（用于禁止下方图标点击） */
+#quickPanel .icons a.icon-disabled { pointer-events: none; opacity: 0.5; }
+#quickPanel .icons a.icon-disabled:hover { transform: none; }
+
+/* 取消按钮（次要） */
+#quickPanel .icons .iconPopover .cancelBtn { background: linear-gradient(180deg,#ff6b6b,#e04b4b); color:#fff; border: none; box-shadow: 0 6px 14px rgba(224,75,75,0.22); }
+#quickPanel .icons .iconPopover .cancelBtn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(224,75,75,0.26); }
+
+/* 当在左侧显示时，箭头方向改为右侧 */
+#quickPanel .icons .iconPopover[data-side="left"]::before { right: -6px; left: auto; }
+
+/* 表单在添加图标弹窗中的简单样式 */
+#addIconModal .form-row{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+#addIconModal input[type="text"], #addIconModal input[type="file"]{ padding:8px; border:1px solid #ddd; border-radius:6px; width:100%; box-sizing:border-box; }
+#addIconModal button{ padding:8px 12px; border-radius:6px; border: none; background: #0b74de; color:#fff; cursor:pointer; }
+#addIconModal button#cancelNewIcon{ background:#ddd; color:#333; }
+  #catShadow {
+  position: absolute;
+  bottom: 0px;
+  left: 15px; /* 根据小猫位置微调 */
+  width: 170px;
+  height: 25px;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%);
+  border-radius: 50%;
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  opacity: 1;
+  display: none; /* 初始不显示，等待 JS 控制 */
+}  
+    .bubble-paw {
+  position: absolute;
+  right: -12px;
+  bottom: -12px;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: -2;
+  transform: rotate(-15deg);
+  opacity: 0.9;
+}
+    #catSpeechBubble {
+  position: fixed;
+  bottom: 220px; /* 小猫盒子高度 + 间距 */
+  left: 190px;
+  background: #fff;
+  color: #333;
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 20px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  max-width: 500px;
+  opacity: 0;
+  transform: scale(0.3);
+  transform-origin: left bottom;
+  pointer-events: none;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: none;
+}
+
+.bubble-tail {
+  width: 12px;
+  height: 12px;
+  background: inherit; 
+  position: absolute;
+  bottom: -6px;
+  left: 16px; /* ← 控制水平位置，靠近左下角 */
+  clip-path: polygon(0 0, 100% 0, 0 100%); /* 左下角三角形 */
+  z-index: -1;
+}
+
+.bubble-text {
+  white-space: nowrap;
+  position: relative; /* 必须加 position 才能让 z-index 生效 */
+  z-index: 2;
+}
+
+/* 动画触发类 */
+#catSpeechBubble.show {
+  animation: bubblePop 0.4s ease-out forwards, bubbleFadeOut 1s ease-in forwards 3s;
+}
+
+@keyframes bubblePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bubbleFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+    #catBox {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 200px;        /* 可根据需求调整大小 */
+  height: 200px;
+  background:transparent;  /* 半透明方框 */
+  overflow: hidden;
+  z-index: 40;
+  transform-origin: bottom left;
+}
+
+/* 在 style1.css 中找到 #catBox video 相关样式并修改 */
+
+/* 原代码: #catBox video { ... } */
+/* 修改为: */
+#catBox img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 43;
+  /* 禁止拖拽图片 */
+  -webkit-user-drag: none;
+}
+
+/* 确保 #catVideo 的光标样式还在 (在 style1.css 的通用设置区域) */
+/* 搜索 #catVideo, 确保它被包含在 cursor: url(...) 列表中 (原代码已包含ID选择器，通常不需要额外修改，但建议检查) */
+#mediaWidget {
+  /* 定位与尺寸 */
+  position: fixed; 
+  bottom: 80px;
+  right: 20px;
+  width: 320px;
+  max-width: calc(100vw - 40px);
+
+  /* 外观与布局 */
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.35));
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  padding: 10px;
+  color: #ffffff;
+  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+
+  /* 初始动画状态 */
+  transform: translateY(110%);
+  opacity: 0;
+  
+  /* ✅ 核心修正：包含所有动画属性的 transition 规则 */
+  transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.2, 1), 
+              opacity 0.4s ease, 
+              right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  
+  /* 层级与交互 */
+  z-index: 7999;
+  pointer-events: none;
+}
+
+#mediaWidget.visible {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+  #mediaWidget .cover {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    background: linear-gradient(180deg,#222,#333);
+    background-size: cover;
+    background-position: center;
+    flex: 0 0 56px;
+  }
+  #mediaWidget .meta {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  #mediaWidget .title {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #mediaWidget .artist {
+    font-size: 12px;
+    opacity: 0.85;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+/* 声波容器 */
+.music-wave {
+  display: flex;
+  align-items: flex-end; /* 让波纹底部对齐 */
+  height: 20px;          /* 波纹的最大高度 */
+  gap: 4px;              /* 条纹之间的间距 */
+  margin-top: 6px;       /* 距离上方文字的距离 */
+  opacity: 0.8;
+}
+
+/* 每一个波纹条 */
+.music-wave span {
+  width: 3px;            /* 条纹宽度 */
+  background-color: #fff;
+  border-radius: 1px;
+  height: 3px;           /* 默认高度（静止时） */
+  transition: height 0.2s ease; /* 暂停时平滑回落 */
+}
+
+/* 当添加了 .playing 类时，触发动画 */
+.music-wave.playing span {
+  animation: wave-animation 1s infinite ease-in-out;
+}
+
+/* 定义跳动动画 */
+@keyframes wave-animation {
+  0%, 100% { height: 3px; }
+  50% { height: 20px; } /* 跳到的最高高度 */
+}
+
+/* 给每一根条纹设置不同的延迟，制造错落感 */
+.music-wave.playing span:nth-child(1) { animation-duration: 0.9s; animation-delay: 0.0s; }
+.music-wave.playing span:nth-child(2) { animation-duration: 1.3s; animation-delay: 0.2s; }
+.music-wave.playing span:nth-child(3) { animation-duration: 0.7s; animation-delay: 0.4s; }
+.music-wave.playing span:nth-child(4) { animation-duration: 1.1s; animation-delay: 0.6s; }
+.music-wave.playing span:nth-child(5) { animation-duration: 1.5s; animation-delay: 0.8s; }
+.music-wave.playing span:nth-child(6) { animation-duration: 0.8s; animation-delay: 1.0s; }
+.music-wave.playing span:nth-child(7) { animation-duration: 1.2s; animation-delay: 1.2s; }
+.music-wave.playing span:nth-child(8) { animation-duration: 0.6s; animation-delay: 1.4s; }
+.music-wave.playing span:nth-child(9) { animation-duration: 1.0s; animation-delay: 0.1s; }
+.music-wave.playing span:nth-child(10) { animation-duration: 1.4s; animation-delay: 0.3s; }
+.music-wave.playing span:nth-child(11) { animation-duration: 0.9s; animation-delay: 0.5s; }
+.music-wave.playing span:nth-child(12) { animation-duration: 1.3s; animation-delay: 0.7s; }
+.music-wave.playing span:nth-child(13) { animation-duration: 0.7s; animation-delay: 0.9s; }
+.music-wave.playing span:nth-child(14) { animation-duration: 1.1s; animation-delay: 1.1s; }
+.music-wave.playing span:nth-child(15) { animation-duration: 1.5s; animation-delay: 1.3s; }
+.music-wave.playing span:nth-child(16) { animation-duration: 0.8s; animation-delay: 0.0s; }
+.music-wave.playing span:nth-child(17) { animation-duration: 1.2s; animation-delay: 0.2s; }
+.music-wave.playing span:nth-child(18) { animation-duration: 0.6s; animation-delay: 0.4s; }
+.music-wave.playing span:nth-child(19) { animation-duration: 1.0s; animation-delay: 0.6s; }
+.music-wave.playing span:nth-child(20) { animation-duration: 1.4s; animation-delay: 0.8s; }
+.music-wave.playing span:nth-child(21) { animation-duration: 0.9s; animation-delay: 1.0s; }
+.music-wave.playing span:nth-child(22) { animation-duration: 1.3s; animation-delay: 1.2s; }
+.music-wave.playing span:nth-child(23) { animation-duration: 0.7s; animation-delay: 1.4s; }
+.music-wave.playing span:nth-child(24) { animation-duration: 1.1s; animation-delay: 0.1s; }
+.music-wave.playing span:nth-child(25) { animation-duration: 1.5s; animation-delay: 0.3s; }
+.music-wave.playing span:nth-child(26) { animation-duration: 0.8s; animation-delay: 0.5s; }
+.music-wave.playing span:nth-child(27) { animation-duration: 1.2s; animation-delay: 0.7s; }
+.music-wave.playing span:nth-child(28) { animation-duration: 0.6s; animation-delay: 0.9s; }
+.music-wave.playing span:nth-child(29) { animation-duration: 1.0s; animation-delay: 1.1s; }
+.music-wave.playing span:nth-child(30) { animation-duration: 1.4s; animation-delay: 1.3s; }
+.music-wave.playing span:nth-child(31) { animation-duration: 0.9s; animation-delay: 0.0s; }
+.music-wave.playing span:nth-child(32) { animation-duration: 1.3s; animation-delay: 0.2s; }
+.music-wave.playing span:nth-child(33) { animation-duration: 0.7s; animation-delay: 0.4s; }
+.music-wave.playing span:nth-child(34) { animation-duration: 1.2s; animation-delay: 1.2s; }
+.music-wave.playing span:nth-child(35) { animation-duration: 1.4s; animation-delay: 0.8s; }
+.music-wave.playing span:nth-child(36) { animation-duration: 0.8s; animation-delay: 0.5s; }
+.music-wave.playing span:nth-child(37) { animation-duration: 1.4s; animation-delay: 0.3s; }
+/* 小屏幕时尺寸调整 */
+  /* 唱片：与 #mediaWidget 使用相同的入场/出场过渡与属性，初始隐藏并与组件显隐同步 */
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 640px;
+    margin: 0 auto;                    /* 保持水平居中容器 */
+  transform: translateX(-12px);      /* 向左微移，使输入框视觉居中；按需调整数值 */
+}
+
+#engineSwitch {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  margin-right: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+#engineSwitch:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.engine-icon {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+/* 淡出状态 */
+.engine-icon.fade-out {
+  opacity: 0;
+  transform: scale(0.85);
+}
+
+/* 淡入状态 */
+.engine-icon.fade-in {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* 调整搜索框样式以适应新布局 */
+form input[type="text"] {
+  margin-left: 0;
+  flex: 1;
+}
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      font-family: "Segoe UI", sans-serif;
+    }
+video#bgVideo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+  transform: translate3d(0, 0, 0); 
+  -webkit-transform: translate3d(0, 0, 0);
+  will-change: transform; 
+  backface-visibility: hidden;
+}
+    .content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      background: transparent;
+      padding: 20px;
+    }
+    .bing-logo {
+      display: block;
+      width: 175px; /* 大图标统一放大，按需调整（例如 120px / 160px） */
+      height: auto;
+      margin: 0 auto 20px auto;
+      filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.4));
+      transition: opacity 0.3s ease; /* 添加过渡：opacity 变化时平滑过渡 0.3s */
+    }
+    form {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+    }
+    form input[type="text"] {
+      padding: 12px 20px;
+      width: 320px;
+      font-size: 16px;
+      border: 0.5px solid white;
+      border-radius: 30px;
+      background: transparent;
+      color: white;
+      outline: none;
+      transition: all 0.3s ease;
+      background: rgba(0, 0, 0, 0.1); 
+  border: 0.5px solid rgba(255, 255, 255, 0.6);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 丝滑过渡 */
+      }
+    form input[type="text"]::placeholder {
+      color: rgb(255, 255, 255);
+    }
+form input[type="text"]:hover,
+form input[type="text"]:focus {
+  background: rgba(0, 0, 0, 0.149);  /* ✅ 立刻变黑，保证看清 */
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  text-shadow: none; /* 背景黑了就不需要文字阴影了，显得更干净 */
+}
+    form button {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background-color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    form button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    form button:hover:enabled {
+      background-color: #ddd;
+    }
+        form button svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      fill: #333; /* 把图标填充为深色，确保在白色按钮上可见 */
+    }
+    /* 可选：让按钮内 SVG 使用按钮文字颜色 */
+    form button { color: #333; }
+    .wallpaper-change-wrapper {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+    .wallpaper-btn {
+      display: inline-block;
+      padding: 12px 24px;
+      font-size: 16px;
+      border: 2px solid white;
+      border-radius: 30px;
+      background: transparent;
+      color: white;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: auto;
+      will-change: opacity, transform;
+    }
+    .wallpaper-change-wrapper:hover .wallpaper-btn {
+      opacity: 1;
+    }
+    #videoUpload {
+      display: none;
+    }#suggestionList {
+      list-style: none;
+      padding: 0;
+      margin: 8px auto 0 auto;
+      max-width: 360px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      color: #000;
+      position: fixed;
+      top: auto;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2147483647;
+      display: none;
+      font-size: 15px;
+      text-align: left;
+    }
+    #suggestionList li {
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+    #suggestionList li:hover {
+      background-color: #f0f0f0;
+    }
+/* ✅ 北京时间样式（右上角） */
+#beijingTime {
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  user-select: none;
+  z-index: 20;
+  transition: background-color 0.3s ease;
+}
+
+/* ✅ 悬停效果 */
+#beijingTime:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+/* ✅ 星期样式（右上角时间下方） */
+#weekDay {
+  position: fixed;
+  top: 65px;
+  right: 20px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  user-select: none;
+  z-index: 20;
+  transition: background-color 0.3s ease;
+}
+
+/* ✅ 悬停效果 */
+#weekDay:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+/* ✅ 问候语样式（左上角） */
+#greetingMessage {
+  position: fixed;
+  top: 65px;
+  left: 20px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0); /* 初始透明 */
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  user-select: none;
+  z-index: 20;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ✅ 鼠标悬停时变为黑色半透明 */
+#greetingMessage:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+    .wallpaper-btn.disabled {
+  border-color: transparent;
+  color: transparent;
+  pointer-events: none;
+}
+/* ✅ 右下角图标样式（改为悬停显示） */
+#biliIcon {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 40px;
+  height: auto;
+  opacity: 0;                 /* 默认透明 */
+  cursor: pointer;
+  z-index: 50;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  pointer-events: auto;       /* 保持可触发悬停 */
+  z-index:8999;
+}
+#biliIcon:hover {
+  transform: scale(1.1);
+  opacity: 1;                 /* 悬停时出现 */
+}
+
+/* 右下角额外图标，位于 biliIcon 左侧（同样悬停显示） */
+#extraIcon {
+  position: fixed;
+  bottom: 20px;
+  right: 70px;
+  width: 40px;
+  height: auto;
+  opacity: 0;                 /* 默认透明 */
+  cursor: pointer;
+
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  pointer-events: auto;
+  z-index:8999;
+}
+#extraIcon:hover {
+  transform: scale(1.1);
+  opacity: 1;                 /* 悬停时出现 */
+}
+
+/* 将搜索按钮向右移动一些 */
+.search-container button[type="submit"] {
+  margin-left: 2px; /* 根据需要调整为 8px / 16px 等 */
+}
+/* ✅ 1. 新增左上角容器样式 */
+.top-left-bar {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  display: flex;
+  align-items: center; /* 垂直居中对齐 */
+  gap: 10px;           /* 天气和图片之间的间距 */
+  z-index: 50;
+}
+
+/* ✅ 2. 修改天气组件样式 (移除原本的 absolute 定位) */
+#weather {
+  position: relative; /* 改为相对定位 */
+  top: auto;
+  left: auto;
+  font-size: 16px;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  transition: background-color 0.3s;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  height: 32px; /* 固定高度，方便对齐 */
+  display: flex;
+  align-items: center;
+  box-sizing: border-box; /* 包含 padding */
+}
+
+#weather:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* ✅ 3. 新增提示图片按钮样式 */
+#cmdTrigger {
+  height: 32px;        /* 与天气组件高度保持一致 */
+  width: auto;         /* 宽度自适应 */
+  border-radius: 16px; /* 圆角，稍微圆润一点 */
+  cursor: pointer;
+  opacity: 0.8;
+  transition: all 0.2s ease;
+  object-fit: cover;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+#cmdTrigger:hover {
+  opacity: 1;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+#weather-text {
+  pointer-events: none;
+}
+
+/* ✅ 禁止选中所有背景和图标元素 */
+#bgImage, #bgVideo, #biliIcon, #extraIcon, .bing- {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+/* 修改原有的 #bgImage 和 #bgVideo 样式，增加 scale */
+#bgImage, #bgVideo {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  object-fit: cover;
+  z-index: -1;
+  
+  /* 初始缩放 */
+  transform: scale(1.05); 
+  
+  /* 🔴 绝对不要加 transition */
+  transition: none !important;
+
+  /* ✅ 告诉浏览器这个元素会频繁变形，请分配显卡显存 */
+  will-change: transform; 
+  
+  /* 硬件加速辅助属性 */
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+/* ✅ 禁用搜索引擎图标的右键菜单 */
+#engineSwitch img {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: auto;
+}
+
+/* ✅ 移除视频画中画和下载选项 */
+#bgVideo {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ✅ 弹窗内的视频也禁用画中画 */
+.wallpaper-grid video {
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: auto;
+}
+/* 视频缩略图及下方标签 */
+.video-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: auto;
+}
+.video-tile video {
+  display: block;
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: transform 180ms ease; /* 只保留缩放过渡 */
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: auto;
+}
+/* 悬停效果：取消变灰/变暗，改为与图片一样放大 */
+.video-tile:hover video {
+  filter: none;                 /* 取消灰度和亮度处理 */
+  transform: scale(1.05);       /* 与图片 hover 一致的放大比例 */
+}
+/* 将“动态”文字放在视频正下方 */
+.video-label {
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #222;
+  user-select: none;
+  -webkit-user-select: none;
+  margin-top: -2px; /* 视觉上紧贴视频 */
+}
+/* ===== 壁纸选择页视频：彻底禁用浏览器视频浮层 ===== */
+.wallpaper-grid video {
+  pointer-events: none;               /* 核心：浏览器不再识别为可交互视频 */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 让“外层容器”负责点击 */
+.video-tile {
+  cursor: pointer;
+}
+
+  /* ===== 侧边栏快捷栏样式（新增） ===== */
+  /* 宽度收起时仅显示右箭头，展开时显示图标列 */
+  #quickPanel {
+    position: fixed;
+    width: 140px;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    pointer-events: auto;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #quickPanel.open {
+  left: 0;            /* 展开 */
+}
+  /* 收起状态：只保留打开箭头 */
+  #quickPanel.collapsed { width: 48px;  height: 70vh;}
+
+  /* 打开箭头按钮（默认隐藏，仅在 hover 或展开时显示） */
+  #quickPanel .openBtn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin-right: 2px;
+    left: 7px;
+    background: rgba(0,0,0,0.45);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.18s, opacity 0.18s;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    opacity: 0; /* 默认隐藏 */
+    transform: translateX(-6px);
+    overflow: visible;
+  }
+  /* 鼠标悬停或面板展开时显示按钮 */
+  #quickPanel:hover .openBtn,
+  #quickPanel:not(.collapsed) .openBtn {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  #quickPanel .openBtn:hover { background: rgba(0,0,0,0.6); transform: translateX(2px); }
+  /* 面板主体（展开时显示） */
+  #quickPanel .panel {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: 58px;
+    padding: 15px 8px 10px;
+    background: rgba(0,0,0,0.36);
+    backdrop-filter: blur(6px);
+    border-radius: 10px;
+    transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease;
+    max-height: 70vh;
+    overflow: hidden;
+  }
+  /* 收起时隐藏面板 */
+  #quickPanel.collapsed .panel { width: 0; padding: 0; opacity: 0; transform: translateX(-8px); pointer-events: none; }
+#quickPanel .icons {
+  display: flex;
+  flex-direction: column; /* 纵向排列 */
+  align-items: center;    /* 居中对齐 */
+  overflow-y: auto;  max-height: 70vh;      /* 最大高度，超出时可滚动 */
+  gap: 8px;              /* 直接控制标题与图标、图标与图标之间的间距 */
+}
+  /* 图标容器：允许垂直滚动，但隐藏可见滚动条（仍可滚动） */
+/* ============================================================
+   👉 右侧面板优化版 (保留原版缩放效果 + 性能增强)
+   ============================================================ */
+
+/* 1. 面板容器 */
+#quickPanelright {
+  position: fixed;
+  right: -1.5px;
+  top: 50%;
+  transform: translateY(-50%) translateZ(0); /* ✅ 强制开启 GPU 加速 */
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto;
+  
+  /* 初始宽度 (展开状态) */
+  width: 560px;
+  
+  /* 🚀 性能优化：添加 will-change 告诉浏览器这个元素的宽度会变 */
+  will-change: width, transform;
+  
+  /* 动画过渡：保持您喜欢的曲线 */
+  transition: width 0.5s cubic-bezier(0.2, 0.9, 0.2, 1), 
+              transform 0.5s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+/* 2. 收起状态 */
+#quickPanelright.collapsedright { 
+  width: 48px;  
+  height: 70vh;
+  /* 收起时不需要监听宽度变化了，节省资源 */
+  will-change: auto; 
+}
+
+/* 3. 开关按钮 */
+#quickPanelright .openBtnright {
+  width: 40px;
+  left: 3px;
+  height: 40px;
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  display: flex; /* 修复：block 改为 flex 居中更稳 */
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  
+  /* 按钮动画 */
+  transition: transform 0.2s, opacity 0.2s, left 0.5s cubic-bezier(0.2, 0.9, 0.2, 1);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  opacity: 0; 
+}
+
+/* 悬停或收起时显示按钮 */
+#quickPanelright:hover .openBtnright,
+#quickPanelright:not(.collapsedright) .openBtnright {
+  opacity: 1;
+  left: -6px; 
+}
+
+#quickPanelright .openBtnright:hover { 
+  background: rgba(0,0,0,0.6); 
+  transform: translateX(-2px); 
+}
+
+/* 4. 面板主体内容区 (毛玻璃背景) */
+#quickPanelright .panelright {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  
+  /* 固定内容宽度，防止缩放时内部元素挤压变形 */
+  width: 500px;
+  height: 100vh;
+  padding: 10px 8px;
+  
+  background: rgba(0,0,0,0.36);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 10px;
+  
+  /* 动画过渡 */
+  transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease;
+  
+  max-height: 100vh;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* 5. 收起时的面板主体 */
+#quickPanelright.collapsedright .panelright { 
+  width: 0; 
+  padding: 0; 
+  opacity: 0; 
+  transform: translateX(-8px); 
+  pointer-events: none; 
+  
+  /* ✅ 核心优化：彻底隐藏，让浏览器停止渲染内部的高斯模糊 */
+  visibility: hidden; 
+  transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease, visibility 0.22s;
+}
+
+/* 6. 图标区域滚动条优化 */
+#quickPanelright .icons {
+  height: 100%;
+  width: 100%;
+  padding-bottom: 50px;
+  
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  /* 隐藏滚动条但保留功能 */
+  scrollbar-width: none; 
+  -ms-overflow-style: none;
+}
+
+#quickPanelright .icons::-webkit-scrollbar {
+  display: none;
+}
+
+/* 7. 图标样式 */
+#quickPanel .icons h3 {
+  margin: 0 0 0 2px;
+  padding-bottom: 0px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+#quickPanel .icons a {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 20px;
+  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+#quickPanel .icons img { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover; 
+  display: block; 
+}
+
+/* 关闭按钮 */
+#closePanelRightX:hover {
+  color: #ff4d4f !important;
+  transform: scale(1.1);
+  transition: all 0.2s ease;
+}
+ .birthday-container {
+  margin: 20px 15px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  font-family: 'Segoe UI', sans-serif;
+  padding-bottom: 20px; /* 增加底部内边距，防止文字贴边 */
+  overflow: visible !important; /* 确保溢出的内容可见 */
+  /* ✨ 新增：丝滑过渡动画 */
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+              background 0.3s ease,
+              box-shadow 0.3s ease,
+              border-color 0.3s ease;
+}
+
+
+.birthday-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.input-group {
+  display: flex;
+  gap: 8px;
+}
+
+#birthdayDateInput {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  padding: 6px;
+  font-size: 13px;
+  height: 20px;
+}
+
+#saveBirthdayBtn {
+  background: #0b74de;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#saveBirthdayBtn:hover { background: #0056b3; }
+
+.countdown-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px; /* 增加元素之间的间距 */
+}
+
+.countdown-card .label {
+  font-size: 14px;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.days-circle {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 10px;
+  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+#daysNumber {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.days-circle small { font-size: 14px; }
+
+.reset-link {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: underline;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.reset-link:hover { color: white; }
+#birthdaySurpriseLink {
+  width: 100%;
+  text-align: center;
+  animation: fadeInSurprise 0.5s ease; /* 添加一个淡入动画 */
+}
+
+@keyframes fadeInSurprise {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* 待办列表样式 */
+#todoList li {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  height: auto;          /* 允许高度自适应内容 */
+  transition: all 0.2s;
+}
+#todoList li:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+#todoList li span {
+  flex: 1;                   /* 占满剩余空间 */
+  
+  /* ✅ 核心换行代码 */
+  white-space: normal;       /* 允许文本换行 (默认是 nowrap) */
+  word-break: break-all;     /* 强制长单词/英文/URL 换行 */
+  overflow-wrap: anywhere;   /* 现代浏览器换行支持 */
+  
+  line-height: 1.5;          /* 多行时增加行高，防止文字挤在一起 */
+  padding: 4px 0;            /* 增加上下内边距，让多行文字看起来更舒服 */
+  padding-right: 10px;       /* 防止文字紧贴右侧删除按钮 */
+  
+  text-align: left;          /* 文字左对齐 */
+  text-shadow: 2px 2px 4px rgba(0,0,0,1); /* 保持原有的阴影 */
+  cursor: pointer;
+}
+#todoList li.done span {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.del-todo-btn {
+  background: transparent;
+  border: none;
+  color: #ff6b6b;
+  cursor: pointer;
+  font-size: 25px;
+  padding: 0 4px;
+  text-shadow: 2px rgba(0,0,0,1); /* 轻微阴影提升可读性 */
+}
+.del-todo-btn:hover {
+  transform: scale(1.2);
+}
+/* 滚动条美化 */
+#todoList::-webkit-scrollbar { width: 4px; }
+#todoList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+#addTodoBtn {
+  background: #0b74de;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+/* 计算器按钮样式 */
+.calc-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 10px 0;
+  border-radius: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.calc-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+.calc-btn:active {
+  transform: scale(0.95);
+}
+/* 修改日历格子的样式，支持显示农历 */
+#calGrid div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 42px; /* 稍微增加高度给农历留空间 */
+  line-height: 1.2;
+}
+
+/* 公历数字 */
+.solar-text {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 农历/节日文字 */
+.lunar-text {
+  font-size: 14px;
+  color: rgb(255, 255, 255);
+  opacity: 1;
+  margin-top: 1px;
+  transform: scale(0.9); /* 让字显得更精致 */
+  text-shadow: 2px px px rgb(0, 0, 0); /* 增加轻微阴影提升可读性 */
+  font-weight: bolder;
+}
+
+/* 节日或节气的高亮样式 */
+.is-festival .lunar-text {
+  color: #ff6b6b;
+  font-weight: bold;
+  opacity: 1;
+    text-shadow: 1px 1px 1px rgb(0, 0, 0); /* 增加轻微阴影提升可读性 */
+}
+
+/* 今天的样式微调 */
+#calGrid div[style*="background: rgb(11, 116, 222)"] .lunar-text {
+  color: rgba(255,255,255,0.9); /* 今天选中时，农历字变白 */
+}
+/* === 开关按钮样式 === */
+.parallax-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px; /* 与下方壁纸网格拉开距离 */
+  padding-left: 5px;
+}
+
+.parallax-label {
+  font-size: 15px;
+  color: #333;
+  font-weight: 600;
+  user-select: none;
+}
+
+/* 开关滑块容器 */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input { 
+  opacity: 0; 
+  width: 0; 
+  height: 0; 
+}
+
+/* 滑块轨道 */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+/* 滑块圆球 */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* 激活状态 */
+input:checked + .slider {
+  background-color: #0b74de;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+/* AI 按钮样式 */
+#aiSwitch {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  margin-right: 8px; /* 与搜索按钮的间距 */
+  margin-left: 8px;  /* 与输入框的间距 */
+}
+
+#aiSwitch svg {
+  width: 24px;  /* 原来是 20px，改成 24px 让字母更清晰 */
+  height: 24px; /* 原来是 20px，改成 24px */
+  fill: currentColor;
+  pointer-events: none; /* 建议加上，防止点击事件被文字拦截 */
+}
+
+#aiSwitch:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+/* 激活状态（选中状态） */
+#aiSwitch.active {
+  background: #0b74de; /* 豆包蓝/主题蓝 */
+  border-color: #0b74de;
+  box-shadow: 0 0 12px rgba(11, 116, 222, 0.6);
+  transform: scale(1.1);
+}
+
+/* 当 AI 模式激活时，输入框稍微变个色提示用户（可选） */
+.search-container.ai-mode input {
+  border-color: #0b74de;
+  box-shadow: 0 0 8px rgba(11, 116, 222, 0.3);
+}
+/* === AI 图标文字样式 === */
+/* === AI 图标文字样式（细边框 + 修长版） === */
+/* === AI 图标文字样式（实心填充版） === */
+.ai-icon-text {
+  /* 1. 字体选择：使用窄高风格字体 */
+  font-family: 'DIN Condensed', 'Bahnschrift', 'Roboto Condensed', 'Arial Narrow', sans-serif;
+  font-weight: 600;
+  font-size: 72px;
+  letter-spacing: -2px;
+  
+  /* 2. 完美居中 */
+  text-anchor: middle;
+  dominant-baseline: central;
+  
+  /* 3. 初始状态：实心填充 (使用柔和的科技蓝) */
+  fill: #8ab4f8;          /* ✅ 初始颜色：科技蓝，显眼但不刺眼 */
+  stroke: none;           /* ✅ 取消边框 */
+  
+  /* 4. 形态调整 */
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scaleY(1.15); /* 保持修长感 */
+  
+  /* 5. 动画过渡 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* === 激活状态：白色实心 === */
+#aiSwitch.active .ai-icon-text {
+  fill: #ffffff;          /* ✅ 激活后变白 */
+  
+  /* 激活时增加一点文字光晕，更有质感 */
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6)); 
+  transform: scaleY(1.15) scale(1.05); /* 激活时轻微放大 */
+}
+
+/* 可选：鼠标悬停在按钮上时，文字稍微变亮一点 */
+#aiSwitch:hover .ai-icon-text {
+  filter: brightness(1.2);
+}
+/* === 选项容器样式 (修改) === */
+.options-container {
+  display: flex;
+  justify-content: center; /* 居中排列 */
+  gap: 20px;               /* 两个开关之间的间距 */
+  margin-bottom: 15px;
+  padding-left: 5px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.option-label {
+  font-size: 15px;
+  color: #333;
+  font-weight: 600;
+  user-select: none;
+}
+/* 1. 菜单基础样式：增加弹性过渡 */
+.context-menu {
+  display: none;
+  position: fixed;
+  z-index: 99999;
+  width: 160px;
+  background: rgba(73, 73, 73, 0.85); 
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px; /* 圆角稍微加大一点更像果冻 */
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  user-select: none;
+  
+  /* === 🚀 核心动画设置 === */
+  
+  /* 初始状态：透明 + 缩小到 80% + 稍微向下位移 */
+  opacity: 0;
+  transform: scale(0.8) translateY(10px);
+  transform-origin: top left; /* 从鼠标点击位置（左上角）炸开 */
+  
+  /* transition 解析：
+     opacity: 0.2秒 线性消失
+     transform: 0.4秒 弹性贝塞尔曲线 (1.28 表示会弹出去再收回来)
+     visibility: 配合 display 使用，防止闪烁
+  */
+  transition: 
+    opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28), 
+    visibility 0.2s;
+    
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* 2. 激活状态：完全显示 */
+.context-menu.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0); /* 回复正常大小和位置 */
+  visibility: visible;
+  pointer-events: auto;
+}
+.menu-list, .submenu {
+  list-style: none;
+  padding: 0;       /* 核心：去掉左侧留白 */
+  margin: 0;        /* 核心：去掉外边距 */
+}
+
+/* 确保菜单项填满宽度 */
+.menu-list li {
+  padding: 8px 16px; /* 调整一下内边距让文字居中好看点 */
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease-in 0.2s;
+}
+
+/* 悬停高亮 */
+.menu-list li:hover {
+  background: rgba(225, 225, 225, 0.15);
+  color: #fff;
+}
+
+/* 分割线 */
+.menu-list li.separator {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 4px 0;
+  padding: 0;
+  cursor: default;
+}
+.menu-list li.separator:hover {
+  background: rgba(255, 255, 255, 0.1); /* 分割线悬停不变色 */
+}
+/* === 右键菜单子菜单样式 === */
+.has-submenu {
+  position: relative; /* 让子菜单相对于它定位 */
+  display: flex;
+  justify-content: space-between;
+}
+
+.has-submenu .arrow {
+  font-size: 10px;
+  opacity: 0.6;
+transition: transform 0.2s ease;
+}
+.has-submenu:hover .arrow {
+  transform: translateX(2px); 
+}
+/* 子菜单容器 */
+.submenu {
+  /* ⚠️ 核心修改：使用 visibility 代替 display:none 以支持动画 */
+  visibility: hidden; 
+  opacity: 0;
+  
+  position: absolute;
+  left: 100%;
+  top: -6px;
+  width: 140px;
+  margin-left: 10px;
+  
+  /* 毛玻璃背景 */
+  background: rgba(73, 73, 73, 0.85); 
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  
+  list-style: none;
+  padding: 6px 0;
+  z-index: 1000;
+  
+  /* 🚀 进场/出场动画设置 */
+  /* 初始状态：向左偏移且稍微缩小 */
+  transform: translateX(-15px) scale(0.95);
+  transform-origin: top left; /* 动画起点 */
+  
+  /* 过渡效果：贝塞尔曲线让弹出有“Q弹”的感觉 */
+  transition: 
+    opacity 0.25s ease,
+    transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), /* 弹性效果 */
+    visibility 0.25s; 
+    
+  pointer-events: none; /* 隐藏时禁止点击 */
+}
+
+/* 隐形桥梁：防止鼠标从主菜单移向子菜单时中断 */
+.submenu::before {
+  content: "";
+  position: absolute;
+  left: -20px;     
+  top: 0;
+  width: 30px; 
+  height: 100%;
+  background: transparent;
+  z-index: -1;
+}
+
+/* 👇👇👇 触发动画的状态 👇👇👇 */
+.has-submenu:hover .submenu,
+.submenu:hover {
+  visibility: visible; /* 显示 */
+  opacity: 1;          /* 不透明 */
+  
+  /* 最终状态：回到原位并恢复原大小 */
+  transform: translateX(0) scale(1);
+  
+  pointer-events: auto; /* 恢复点击 */
+}.submenu li.active {
+  color: #0b74de;
+  font-weight: bold;
+}
+/* =========================================
+   右侧面板编辑模式样式 (新版：齿轮切换)
+   ========================================= */
+
+/* 1. 右上角齿轮设置按钮 */
+#panelSettingBtn {
+  position: absolute;
+  top: 30px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* 平滑过渡 */
+  color: white;
+}
+
+#panelSettingBtn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+/* ✨ 关键：当处于编辑模式时，齿轮保持旋转并高亮，指示正在编辑 */
+#quickPanelright.edit-mode #panelSettingBtn {
+  background: #0b74de;         /* 变成主题蓝，提示正在编辑 */
+  transform: rotate(180deg);   /* 旋转 180 度 */
+  box-shadow: 0 0 10px rgba(11, 116, 222, 0.6);
+  opacity: 1;                  /* 确保不消失 */
+  pointer-events: auto;        /* 确保可点击 */
+}
+
+/* 2. 组件默认状态 (平时不可拖动) */
+.draggable-widget {
+  transition: transform 0.3s, background 0.3s, box-shadow 0.3s, border-color 0.3s;
+}
+
+/* ✨ 3. 编辑模式下的组件特效 */
+/* 只有在 edit-mode 下，才应用悬停浮动特效 */
+#quickPanelright.edit-mode .birthday-container {
+  cursor: grab; /* 显示抓手 */
+  border: 1px dashed rgba(255,255,255,0.3); /* 虚线框提示可编辑 */
+}
+
+#quickPanelright.edit-mode .birthday-container:hover {
+  transform: translateY(-5px) scale(1.01); /* 微微上浮放大 */
+  background-color: rgba(255, 255, 255, 0.456);  /* 背景变亮 */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25); /* 增加立体阴影 */
+  border-color: rgba(255, 255, 255, 0.3);  /* 边框也变亮 */
+}
+
+/* 正在被拖动的组件 */
+#quickPanelright.edit-mode .draggable-widget.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+  cursor: grabbing;
+  border: 2px dashed #0b74de;
+}
+/* --- 修复：移除弹窗遮罩并添加拖动样式 --- */
+
+/* 1. 移除通用弹窗的黑色半透明背景 */
+#wallpaperModal{
+  /* 将原来的 background: rgba(0,0,0,0.6); 修改为 transparent */
+  background: transparent;
+  /* 
+     由于移除了背景，为了防止鼠标穿透点击到弹窗下方的元素，
+     弹窗容器需要保持对鼠标事件的拦截，这通常由其 display 属性和尺寸（100% 宽高）保证。
+  */
+}
+
+/* 2. 为可拖动的弹窗标题栏添加“移动”光标，给用户拖动提示 */
+#wallpaperModal .modal-header{
+    cursor: move;
+}
+
+/* 3. (可选优化) 当用户按住标题栏拖动时，光标变为“抓取”手势 */
+#wallpaperModal .modal-header:active{
+    cursor: grabbing;
+}
+/* =========================================
+   ✨ 新手引导：可拖动提示 (修正版)
+   ========================================= */
+#dragHint {
+  position: absolute;
+  padding-top: 5px;
+  /* 核心修正：将 top 从负值改为正值，让它出现在面板内部 */
+  top: 15px; 
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: rgb(115, 115, 115);
+  /* z-index 不需要那么夸张，只要比内容高一点即可 */
+  z-index: 1100; 
+  
+  /* 初始状态：隐藏 */
+  opacity: 0;
+  /* 初始时向上移动一点，实现从上往下“掉落”的动画效果 */
+  transform: translate(-50%, -20px);
+  pointer-events: none;
+  
+  /* 动画过渡 */
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#dragHint.visible {
+  opacity: 1;
+  /* 移动到最终位置 */
+  transform: translateX(-50%); 
+}
+
+/* 箭头和气泡的样式可以保持不变 */
+.drag-hint-bubble {
+  background: #0b74de;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: bold;
+  text-align: center;
+  box-shadow: 0 5px 20px rgba(11, 116, 222, 0.4);
+}
+
+.drag-hint-arrow {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 12px solid #0b74de; 
+}
+
+/* === Volume Slider Styles === */
+.volume-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#volumeIcon:hover {
+    transform: scale(1.1);
+}
+
+.volume-label {
+  font-size: 15px;
+  color: #333;
+  font-weight: 600;
+  user-select: none;
+}
+
+#volumeValue {
+  font-size: 16px;
+  color: #555;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: right;
+  font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif, monospace;
+}
+
+/* Slider Track */
+input[type="range"]#volumeSlider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 200px;
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 5px;
+  outline: none;
+  transition: background 0.3s;
+}
+
+input[type="range"]#volumeSlider:hover {
+    background: #ccc;
+}
+
+/* Slider Thumb (Chrome, Safari, Opera, Edge) */
+input[type="range"]#volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #0b74de;
+  cursor: pointer;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  margin-top: -6px; /* Vertically center the thumb */
+}
+
+/* Slider Thumb (Firefox) */
+input[type="range"]#volumeSlider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #0b74de;
+  cursor: pointer;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* Slider Track (Firefox) */
+input[type="range"]#volumeSlider::-moz-range-track {
+    width: 100%;
+    height: 6px;
+    cursor: pointer;
+    background: #e0e0e0;
+    border-radius: 5px;
+}
+/* 强制声音控制区域显示小手指针 */
+#volumeIcon, 
+#volumeSlider, 
+.volume-label, 
+#volumeValue {
+  cursor: url('鼠标/Zlink.cur'), pointer !important;
+}
+
+/* 针对滑动条滑块的兼容性处理 */
+input[type="range"]#volumeSlider::-webkit-slider-thumb {
+  cursor: url('鼠标/Zlink.cur'), pointer !important;
+}
+input[type="range"]#volumeSlider::-moz-range-thumb {
+  cursor: url('鼠标/Zlink.cur'), pointer !important;
+}
+/* ========== 禅模式优化样式 ========== */
+.zen-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.95) !important;
+  transition: opacity 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+#quickPanel.zen-hidden {
+  transform: translate(-100%, -50%) !important;
+}
+
+#quickPanelright.zen-hidden {
+  transform: translate(100%, -50%) !important;
+}
+#birthdayWidget, 
+#todoWidget, 
+#calcWidget, 
+#fortuneWidget, 
+#snakeWidget, 
+#calendarWidget {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+/* 新增：壁纸设置页的固定控制栏 */
+.sticky-controls-bar {
+  position: sticky;
+  /* 通过负 top 值抵消父容器的内边距，使其真正贴顶 */
+  top: -20px; 
+  z-index: 1;
+  background: linear-gradient(135deg,rgba(255, 255, 255, 0.563),rgba(2, 204, 255, 0.432));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  
+  /* 布局：通过负 margin 撑满宽度，再用 padding 补回空间 */
+  margin-left: -30px;
+  margin-right: -30px;
+  padding: 12px 30px;
+  
+  /* 边框与间距 */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px; /* 与下方壁纸列表的间距 */
+}
+
+/* 重置被移动的 .parallax-option 容器的样式 */
+.sticky-controls-bar .parallax-option {
+    position: static;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    /* 保留原有的 flex 布局 */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}

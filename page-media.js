@@ -3,7 +3,7 @@
   if (window.__G_WEB_MEDIA_INJECTED__) return;
   window.__G_WEB_MEDIA_INJECTED__ = true;
 
-  // 辅助：获取图片绝对路径
+  // 辅助:获取图片绝对路径
   function resolveUrl(url) {
     if (!url) return '';
     if (url.startsWith('//')) return 'https:' + url;
@@ -11,67 +11,73 @@
     return url;
   }
 
-  // === 核心抓取逻辑 ===
+  // === 核心抓取逻辑 (从页面 DOM 获取信息) ===
   function fallbackScraper() {
     const host = window.location.hostname;
     let title = '';
     let artist = '';
     let artwork = '';
-    let isPlaying = false; // 尝试判断是否正在播放
+    let isPlaying = false;
 
     // -------------------------------------------------
-    // 1. QQ音乐 (y.qq.com)
+    // 1. QQ音乐 (y.qq.com) - ✅ 修复版
     // -------------------------------------------------
     if (host.includes('y.qq.com')) {
-      // 底部播放栏
-      const songEl = document.getElementById('song_name') || document.querySelector('.music_name__text');
-      const singerEl = document.getElementById('singer_name') || document.querySelector('.singer_name__text');
-      const imgEl = document.getElementById('song_pic') || document.querySelector('.music_pic__img');
-      const playBtn = document.querySelector('.btn_big_play'); // 播放按钮
+      const songEl = document.querySelector('.song_info__name a') 
+                  || document.querySelector('.song_info__name')
+                  || document.getElementById('song_name') 
+                  || document.querySelector('.music_name__text');
+
+      const singerEl = document.querySelector('.song_info__singer a') 
+                    || document.querySelector('.song_info__singer')
+                    || document.getElementById('singer_name') 
+                    || document.querySelector('.singer_name__text');
+
+      const imgEl = document.querySelector('.song_info__cover img')
+                 || document.getElementById('song_pic')
+                 || document.querySelector('.song_info__pic')
+                 || document.querySelector('.music_pic__img');
+
+      const pauseBtn = document.querySelector('.player_btn__pause') 
+                    || document.querySelector('.btn_big_play--pause')
+                    || document.querySelector('.btn_pause');
 
       if (songEl) title = songEl.innerText;
       if (singerEl) artist = singerEl.innerText;
-      if (imgEl) artwork = imgEl.src;
-      // 如果播放按钮上有 'btn_big_play--pause' 类，说明正在播放（显示的是暂停图标）
-      if (playBtn && playBtn.classList.contains('btn_big_play--pause')) {
-        isPlaying = true;
+      
+      if (imgEl) {
+        artwork = imgEl.src || imgEl.getAttribute('src');
+        if ((!artwork || artwork.endsWith('g.png')) && imgEl.dataset && imgEl.dataset.src) {
+           artwork = imgEl.dataset.src;
+        }
       }
+      
+      if (pauseBtn) isPlaying = true;
     }
 
     // -------------------------------------------------
     // 2. 酷狗音乐 (kugou.com)
     // -------------------------------------------------
     else if (host.includes('kugou.com')) {
-      // 酷狗网页版播放器 (www.kugou.com/yy/html/rank.html 等)
-      // 这里的 DOM 结构比较老旧
       const songNameEl = document.querySelector('.change-song .songName') || document.getElementById('songName');
-      const singerNameEl = document.querySelector('.change-song .singerName'); // 某些页面结构
-      
-      // 尝试获取播放列表中的当前激活项
       const activeItem = document.querySelector('#songList .active') || document.querySelector('.songList .active');
       
       if (songNameEl) {
         title = songNameEl.innerText;
       } else if (activeItem) {
-        // 尝试从列表激活项获取
         title = activeItem.querySelector('.song_name')?.innerText || '';
       }
 
-      // 酷狗封面通常很难抓，尝试抓取类似 albumImg 的元素
       const imgEl = document.querySelector('.albumImg img') || document.querySelector('.pic img');
       if (imgEl) artwork = imgEl.src;
       
-      // 尝试从标题分割 "歌手 - 歌名"
       if (!artist && title.includes('-')) {
         const parts = title.split('-');
         artist = parts[0].trim();
         title = parts[1].trim();
       }
       
-      // 判断播放状态: 酷狗播放按钮通常变更为暂停样式
       const pauseBtn = document.querySelector('.btn-pause');
-      const playBtn = document.querySelector('.btn-play');
-      // 如果暂停按钮是可见的，或者播放按钮处于“暂停”态
       if (pauseBtn && window.getComputedStyle(pauseBtn).display !== 'none') isPlaying = true;
     }
 
@@ -79,7 +85,6 @@
     // 3. 酷我音乐 (kuwo.cn)
     // -------------------------------------------------
     else if (host.includes('kuwo.cn')) {
-      // 酷我新版 (React/Vue 构建)
       const nameEl = document.querySelector('.song_name') || document.querySelector('.control_left .name');
       const artistEl = document.querySelector('.artist') || document.querySelector('.control_left .artist');
       const imgEl = document.querySelector('.play_cover img') || document.querySelector('.control_left img');
@@ -88,7 +93,6 @@
       if (artistEl) artist = artistEl.innerText;
       if (imgEl) artwork = imgEl.src;
 
-      // 播放状态：酷我播放按钮切换 class 为 icon-pause
       const statusBtn = document.querySelector('.icon-play') || document.querySelector('.icon-pause');
       if (statusBtn && statusBtn.classList.contains('icon-pause')) {
         isPlaying = true;
@@ -101,10 +105,9 @@
     else if (host.includes('bilibili.com')) {
       const titleEl = document.querySelector('.video-title') || document.querySelector('.video-info-title-inner');
       if (titleEl) title = titleEl.getAttribute('title') || titleEl.innerText;
-      const metaImg = document.querySelector('meta[property="og:image"]');
-      if (metaImg) artwork = metaImg.content;
+      
       artist = document.querySelector('.up-name')?.innerText || 'Bilibili UP主';
-      // B站只要有视频元素且没暂停，就算播放
+      
       const video = document.querySelector('video');
       if (video && !video.paused) isPlaying = true;
     }
@@ -113,16 +116,108 @@
     // 5. 抖音 (Douyin)
     // -------------------------------------------------
     else if (host.includes('douyin.com')) {
-        const descEl = document.querySelector('.video-info-detail') || document.querySelector('[data-e2e="video-desc"]');
-        if (descEl) title = descEl.innerText.substring(0, 40);
-        const authorEl = document.querySelector('.author-info .name') || document.querySelector('[data-e2e="video-author-name"]');
-        if (authorEl) artist = authorEl.innerText;
-        // 抖音视频状态
-        const video = document.querySelector('video');
-        if (video && !video.paused) isPlaying = true;
+        
+        function findClosestToCenter(selector) {
+            const els = document.querySelectorAll(selector);
+            let closestEl = null;
+            let minDistance = Infinity;
+            const screenCenter = window.innerHeight / 2;
+
+            for (let el of els) {
+                if (!el || el.offsetParent === null) continue;
+                
+                const rect = el.getBoundingClientRect();
+                if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
+
+                const elCenter = rect.top + (rect.height / 2);
+                const distance = Math.abs(screenCenter - elCenter);
+
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestEl = el;
+                }
+            }
+            return closestEl;
+        }
+
+        const titleSelectors = [
+            '[data-e2e="video-desc"] span',
+            '[data-e2e="video-desc"]',
+            '.video-info-detail',
+            '.account-card-description',
+            'h1.title'
+        ];
+
+        for (let sel of titleSelectors) {
+            const el = findClosestToCenter(sel);
+            if (el && el.innerText.trim()) {
+                title = el.innerText.replace(/[\r\n]/g, ' ').substring(0, 50);
+                break;
+            }
+        }
+
+        const artistSelectors = [
+            '[data-e2e="video-author-name"]',
+            '.author-info .name',
+            '.account-name',
+            '.user-name'
+        ];
+
+        for (let sel of artistSelectors) {
+            const el = findClosestToCenter(sel);
+            if (el && el.innerText.trim()) {
+                artist = el.innerText.trim();
+                break;
+            }
+        }
+
+        const posterEls = document.querySelectorAll('xg-poster, .xgplayer-poster');
+        let closestPoster = null;
+        let minPDist = Infinity;
+        const screenCenter = window.innerHeight / 2;
+
+        for(let el of posterEls) {
+             const rect = el.getBoundingClientRect();
+             if(rect.height > 100 && rect.top < window.innerHeight && rect.bottom > 0) {
+                 const dist = Math.abs(screenCenter - (rect.top + rect.height/2));
+                 if(dist < minPDist) {
+                     minPDist = dist;
+                     closestPoster = el;
+                 }
+             }
+        }
+
+        if (closestPoster) {
+            const bg = window.getComputedStyle(closestPoster).backgroundImage;
+            if (bg && bg !== 'none' && bg.startsWith('url')) {
+                const match = bg.match(/url\(["']?(.*?)["']?\)/);
+                if (match && match[1]) artwork = match[1];
+            }
+        }
+
+        if (!artwork) {
+            const videoEls = document.querySelectorAll('video');
+            let closestVideo = null;
+            let minVDist = Infinity;
+            
+            for(let v of videoEls) {
+                const rect = v.getBoundingClientRect();
+                if(rect.height > 50) {
+                    const dist = Math.abs(screenCenter - (rect.top + rect.height/2));
+                    if(dist < minVDist) {
+                        minVDist = dist;
+                        closestVideo = v;
+                    }
+                }
+            }
+            
+            if (closestVideo && closestVideo.poster) {
+                artwork = closestVideo.poster;
+            }
+            if (closestVideo && !closestVideo.paused) isPlaying = true;
+        }
     }
 
-    // 整理结果
     if (title) {
       return {
         title: title.trim(),
@@ -135,48 +230,94 @@
     return null;
   }
 
-  // === 主循环函数 ===
-  function extract() {
-    let payload = null;
+  // ⚡ 优化1: 缓存上次发送的数据，避免重复发送相同内容
+  let lastSentData = null;
+  
+  function dataChanged(newData) {
+    if (!lastSentData) return true;
+    
+    // 简单对比主要字段
+    if (lastSentData.title !== newData.title) return true;
+    if (lastSentData.artist !== newData.artist) return true;
+    if (lastSentData.playbackState !== newData.playbackState) return true;
+    
+    return false;
+  }
 
-    // 策略 A: 优先尝试标准 API (网易云音乐、Spotify、YouTube 等支持得很好)
+  // === 主循环函数 (智能合并策略) ===
+  function extract() {
+    // 1. 获取原生 MediaSession 数据
+    let msData = null;
     if (navigator.mediaSession && navigator.mediaSession.metadata) {
       const md = navigator.mediaSession.metadata;
-      payload = {
+      msData = {
         title: md.title || '',
         artist: md.artist || '',
         album: md.album || '',
-        artwork: md.artwork || [],
+        artwork: md.artwork ? JSON.parse(JSON.stringify(md.artwork)) : [],
         playbackState: navigator.mediaSession.playbackState || 'none'
       };
     }
 
-    // 策略 B: 如果标准 API 没数据，或者处于这几个特定的“顽固”网站，强制使用 DOM 抓取
-    // 注意：即使 mediaSession 有数据，有时国内网站的数据也是错的，所以对特定域名优先 DOM 抓取
-    const host = window.location.hostname;
-    const forceDom = host.includes('kugou') || host.includes('kuwo') || host.includes('qq.com') || host.includes('bilibili') || host.includes('douyin');
+    // 2. 获取 DOM 数据
+    const domData = fallbackScraper();
+    
+    // 3. 最终合并数据
+    let finalPayload = {
+      title: '',
+      artist: '',
+      album: '',
+      artwork: [],
+      playbackState: 'none'
+    };
 
-    if (!payload || (forceDom)) {
-      const domData = fallbackScraper();
-      // 如果抓到了 DOM 数据，就覆盖它
-      if (domData) {
-        payload = domData;
+    if (msData) {
+      finalPayload = { ...msData };
+    }
+
+    if (domData) {
+      if (domData.title) finalPayload.title = domData.title;
+      if (domData.artist) finalPayload.artist = domData.artist;
+      if (domData.playbackState !== 'none') finalPayload.playbackState = domData.playbackState;
+      
+      if (domData.artwork && domData.artwork.length > 0) {
+        finalPayload.artwork = domData.artwork;
       }
     }
 
+    // 如果最终什么都没抓到，就不发送
+    if (!finalPayload.title && !finalPayload.artist) return;
+
+    // ⚡ 优化2: 只在数据变化时才发送
+    if (!dataChanged(finalPayload)) return;
+    
+    lastSentData = { ...finalPayload };
+
     // 发送消息
-    if (payload) {
-      window.postMessage({
-        source: 'G_WEB_MEDIA',
-        payload: payload,
-        playbackState: payload.playbackState || 'playing'
-      }, '*');
-    }
+    window.postMessage({
+      source: 'G_WEB_MEDIA',
+      payload: finalPayload,
+      playbackState: finalPayload.playbackState || 'playing'
+    }, '*');
   }
 
-  // 启动轮询 (每秒检查一次)
-  // 这种方式虽然看起来“笨”，但对于酷狗/酷我这种单页应用(SPA)是最稳定的
-  setInterval(extract, 1000);
+  // ⚡ 优化3: 降低轮询频率到2.5秒 (原来是1秒)
+  let intervalId = setInterval(extract, 2500);
+  
+  // ⚡ 优化4: 页面不可见时停止轮询
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    } else {
+      if (!intervalId) {
+        intervalId = setInterval(extract, 2500);
+        extract(); // 立即执行一次
+      }
+    }
+  });
   
   // 立即执行一次
   extract();

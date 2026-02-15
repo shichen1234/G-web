@@ -2,1216 +2,12 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
+  <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>G-web</title>
   <!-- 添加在其他 meta 标签之后 -->
-  <!-- 预加载大图标 -->
-  <style>
-  /* 禁止选中所有元素 */
-  * {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;      }
-    #closeModal {
-  position: absolute;
-  top: -30px;       /* 距离弹窗顶部 */
-  right: -30px;     /* 距离弹窗右侧 */
-  font-size: 24px; /* 字体大小 */
-  font-weight: bold;
-  color: #fff;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-#mediaWidget {
-  position: fixed;
-  right: 20px;           /* 靠右对齐，与 biliIcon 对齐 */
-  bottom: 80px;          /* biliIcon 在 bottom:20px，所以 20 + 40 + 20 ≈ 80px */
-  width: 320px;
-  max-width: calc(100vw - 40px);
-  /* 其余样式你已经写得很完整，不用改 */
-  transform: translateY(110%);
-  opacity: 0;
-  transition: transform 360ms cubic-bezier(.2,.9,.2,1), opacity 300ms ease;
-  z-index: 9999;
-  pointer-events: auto;
-}
-
-#mediaWidget.visible {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* 小屏幕适配 */
-@media (max-width: 480px) {
-  #mediaWidget {
-    width: calc(100vw - 40px);
-    left: 20px;
-    right: 20px;
-  }
-}
-    .modal {
-  display: none; /* 默认隐藏 */
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6);
-  z-index: 10000;
-  justify-content: center;
-  align-items: center;
-    opacity: 0;
-  transition: opacity 0.35s ease;
-}
-.modal.show {
-  opacity: 1;
-}
-.modal-content {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  position: relative;
-  max-width: 800px;
-  width: 90%;
-  /* 初始状态 */
-  transform: translateY(30px) scale(0.96);
-  opacity: 0;
-
-  transition:
-    transform 0.35s cubic-bezier(.2,.9,.2,1),
-    opacity 0.35s ease;
-}
-/* 显示状态 */
-.modal.show .modal-content {
-  transform: translateY(0) scale(1);
-  opacity: 1;
-}
-.wallpaper-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 12px;
-}
-.wallpaper-grid img {
-  width: 100%;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-.wallpaper-grid img:hover { transform: scale(1.05); }
-.add-wallpaper {
-  width: 100%;        /* 占满格子宽度 */
-  height: 80px;    
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #ccc;
-  color: #333;
-  font-size: 32px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-.add-wallpaper:hover {
-  transform: scale(1.05);
-}
-/* 快捷栏 添加按钮 样式 */
-#quickPanel .addWrapper { width: 48px; height: 48px; margin-top:10px; }
-#quickPanel .addBtn {
-  width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.04); color:#fff; border: 1px dashed rgba(255,255,255,0.08); cursor:pointer; font-size:20px;
-}
-#quickPanel .addBtn:hover { transform: translateY(-2px); background: rgba(255,255,255,0.06); }
-
-/* 自定义图标：容器与齿轮/弹层样式 🔧 */
-#quickPanel .icons .iconWrapper { position: relative; width:48px; height:48px; margin-top:10px; display:inline-block; border-radius:12px; overflow:visible; }
-#quickPanel .icons .iconWrapper img { width:48px; height:48px; border-radius:12px; display:block; }
-#quickPanel .icons .iconSettings { position:absolute; right:-6px; bottom:-10px; width:20px; height:20px; padding:0; border:none; background:rgba(0,0,0,0.35); border-radius:50%; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(.9); transition:opacity .16s ease, transform .16s ease; pointer-events:none; }
-#quickPanel .icons .iconSettings img { width:14px; height:14px; display:block; object-fit:contain; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
-#quickPanel .icons .iconWrapper:hover .iconSettings { opacity:1; transform:scale(1); pointer-events:auto; }
-
-/* 图标上的操作按钮（覆盖式） */
-#quickPanel .icons .iconActions { position:absolute; right:-6px; bottom:-6px; display:flex; gap:8px; align-items:center; pointer-events:auto; z-index:200; }
-#quickPanel .icons .iconActions.hidden { display:none; opacity:0; transform:translateY(6px); transition:opacity .12s ease, transform .12s ease; }
-#quickPanel .icons .iconActions.show { display:flex; opacity:1; transform:translateY(0); }
-#quickPanel .icons .iconActions button { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0; border:none; cursor:pointer; box-shadow: 0 6px 16px rgba(2,6,23,0.45); transition: transform .12s ease, box-shadow .12s ease; }
-#quickPanel .icons .iconActions button svg { width:16px; height:16px; }
-#quickPanel .icons .iconActions .delBtn { background: linear-gradient(180deg,#ff6b6b,#e04b4b); color:#fff; }
-#quickPanel .icons .iconActions .delBtn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(224,75,75,0.28); }
-#quickPanel .icons .iconActions .cancelBtn { background:#fff; color:#222; border:1px solid rgba(0,0,0,0.06); }
-#quickPanel .icons .iconActions .cancelBtn:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(0,0,0,0.2); }
-
-/* Popover 挂载到 body，使用 fixed 定位，显示在图标右侧（更紧凑 & 美化） */
-#quickPanel .icons .iconPopover {
-  /* 默认作为浮动 popover（被覆盖时会被 override） */
-  position:fixed; left:0; top:0;
-  min-width: 120px; max-width: 220px;
-  background: linear-gradient(180deg,#0b0f13,#0f1720);
-  color:#fff; padding:6px 8px; border-radius:10px;
-  border: 1px solid rgba(255,255,255,0.04);
-  box-shadow:0 10px 30px rgba(2,6,23,0.6);
-  transform-origin:left center;
-  opacity:0; visibility:hidden; transform:translateX(-6px) scale(.98);
-  transition:opacity .18s ease, transform .18s ease, visibility .18s;
-  z-index:200000; display:flex; gap:8px; align-items:center; font-size:13px;
-}
-
-/* 覆盖式遮罩：直接覆盖在图标上（用于 .overlay） */
-#quickPanel .icons .iconWrapper .iconPopover.overlay {
-  position: absolute !important;
-  left: 0 !important;
-  top: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-width: auto !important;
-  max-width: none !important;
-  padding: 0 !important;
-  border-radius: 12px !important;
-  background: rgba(0,0,0,0.36) !important; /* 透明遮罩 */
-  box-shadow: 0 8px 18px rgba(0,0,0,0.35) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 10px !important;
-  opacity:0; visibility:hidden; transform:none; transition:opacity .12s ease;
-  z-index: 60 !important; /* 确保覆盖同层图标 */
-}
-#quickPanel .icons .iconWrapper .iconPopover.overlay.show { opacity:1; visibility:visible; }
-#quickPanel .icons .iconWrapper .iconPopover.overlay button { min-width: 56px; height:40px; border-radius:9px; font-weight:700; display:flex; align-items:center; gap:8px; padding:6px 10px; justify-content:center; color: #fff; }
-#quickPanel .icons .iconWrapper .iconPopover.overlay button svg { width:16px; height:16px; fill: currentColor; }
-#quickPanel .icons .iconWrapper .iconPopover.overlay .delBtn { background: linear-gradient(180deg,#ff6b6b,#e04b4b); color:#fff; }
-#quickPanel .icons .iconWrapper .iconPopover.overlay .cancelBtn { background: linear-gradient(180deg,#ff6b6b,#e04b4b); color:#fff; }
-#quickPanel .icons .iconWrapper .iconPopover.overlay button:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(0,0,0,0.28); }
-
-/* 垂直排列按钮（上/下） */
-#quickPanel .icons .iconWrapper .iconPopover.overlay { flex-direction: column !important; justify-content: center !important; gap: 8px !important; }
-
-/* 当某个遮罩打开时：禁止并淡化没有被遮罩的图标（按 wrapper 判断），保持被遮罩图标和遮罩本身不被变暗 */
-#quickPanel .icons.overlay-open .iconWrapper:not(.has-overlay) { pointer-events: none; opacity: 0.72; }
-#quickPanel .icons .iconWrapper.has-overlay a { pointer-events: none; }
-#quickPanel .icons .iconWrapper.has-overlay .iconPopover.overlay { pointer-events: auto; z-index: 80 !important; }
-
-/* 仅被遮罩禁用的单个图标（用于禁止下方图标点击） */
-#quickPanel .icons a.icon-disabled { pointer-events: none; opacity: 0.5; }
-#quickPanel .icons a.icon-disabled:hover { transform: none; }
-
-/* 取消按钮（次要） */
-#quickPanel .icons .iconPopover .cancelBtn { background: linear-gradient(180deg,#ff6b6b,#e04b4b); color:#fff; border: none; box-shadow: 0 6px 14px rgba(224,75,75,0.22); }
-#quickPanel .icons .iconPopover .cancelBtn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(224,75,75,0.26); }
-
-/* 当在左侧显示时，箭头方向改为右侧 */
-#quickPanel .icons .iconPopover[data-side="left"]::before { right: -6px; left: auto; }
-
-/* 表单在添加图标弹窗中的简单样式 */
-#addIconModal .form-row{ display:flex; flex-direction:column; gap:6px; margin-top:8px; }
-#addIconModal input[type="text"], #addIconModal input[type="file"]{ padding:8px; border:1px solid #ddd; border-radius:6px; width:100%; box-sizing:border-box; }
-#addIconModal button{ padding:8px 12px; border-radius:6px; border: none; background: #0b74de; color:#fff; cursor:pointer; }
-#addIconModal button#cancelNewIcon{ background:#ddd; color:#333; }
-  #catShadow {
-  position: fixed;
-  bottom: 20px;
-  left: 35px; /* 根据小猫位置微调 */
-  width: 170px;
-  height: 25px;
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%);
-  border-radius: 50%;
-  z-index: -1;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  opacity: 1;
-  display: none; /* 初始不显示，等待 JS 控制 */
-}  
-    .bubble-paw {
-  position: absolute;
-  right: -12px;
-  bottom: -12px;
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-  pointer-events: none;
-  z-index: 1;
-  transform: rotate(-15deg);
-  opacity: 0.9;
-}
-    #catSpeechBubble {
-  position: fixed;
-  bottom: 220px; /* 小猫盒子高度 + 间距 */
-  left: 190px;
-  background: #fff;
-  color: #333;
-  font-size: 14px;
-  padding: 10px 16px;
-  border-radius: 20px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-  max-width: 360px;
-  opacity: 0;
-  transform: scale(0.3);
-  transform-origin: left bottom;
-  pointer-events: none;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  animation: none;
-}
-
-.bubble-tail {
-  width: 12px;
-  height: 12px;
-  background: #fff;
-  position: absolute;
-  bottom: -6px;
-  left: 16px; /* ← 控制水平位置，靠近左下角 */
-  clip-path: polygon(0 0, 100% 0, 0 100%); /* 左下角三角形 */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  z-index: 0;
-}
-
-.bubble-text {
-  white-space: nowrap;
-}
-
-/* 动画触发类 */
-#catSpeechBubble.show {
-  animation: bubblePop 0.4s ease-out forwards, bubbleFadeOut 1s ease-in forwards 3s;
-}
-
-@keyframes bubblePop {
-  0% {
-    opacity: 0;
-    transform: scale(0.3);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes bubbleFadeOut {
-  0% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-    #catBox {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  width: 200px;        /* 可根据需求调整大小 */
-  height: 200px;
-  background:transparent;  /* 半透明方框 */
-  border-radius: 16px;
-  overflow: hidden;
-  z-index: 40;
-}
-
-#catBox video {
-  width: 100%;
-  height: 100%;
- object-fit: contain;
- z-index: 43;
-}
-/* ...existing code... */
- /* 媒体控件样式（左下角） */
-  #mediaWidget {
-    position: absolute;
-    right:25px;
-    bottom: 80px;
-    width: 300px;
-    max-width: calc(100vw - 40px);
-    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.35));
-    backdrop-filter: blur(8px);
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
-    padding: 10px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    transform: translateY(110%); /* 隐藏（下移） */
-    opacity: 0;
-    transition: transform 360ms cubic-bezier(.2,.9,.2,1), opacity 300ms ease;
-    z-index: 9999;
-    pointer-events: auto;
-    color: #ffffff;
-    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial;
-  }
-  #mediaWidget.visible {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  #mediaWidget .cover {
-    width: 56px;
-    height: 56px;
-    border-radius: 8px;
-    background: linear-gradient(180deg,#222,#333);
-    background-size: cover;
-    background-position: center;
-    flex: 0 0 56px;
-  }
-  #mediaWidget .meta {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-  #mediaWidget .title {
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  #mediaWidget .artist {
-    font-size: 12px;
-    opacity: 0.85;
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-/* 声波容器 */
-.music-wave {
-  display: flex;
-  align-items: flex-end; /* 让波纹底部对齐 */
-  height: 20px;          /* 波纹的最大高度 */
-  gap: 4px;              /* 条纹之间的间距 */
-  margin-top: 6px;       /* 距离上方文字的距离 */
-  opacity: 0.8;
-}
-
-/* 每一个波纹条 */
-.music-wave span {
-  width: 3px;            /* 条纹宽度 */
-  background-color: #fff;
-  border-radius: 1px;
-  height: 3px;           /* 默认高度（静止时） */
-  transition: height 0.2s ease; /* 暂停时平滑回落 */
-}
-
-/* 当添加了 .playing 类时，触发动画 */
-.music-wave.playing span {
-  animation: wave-animation 1s infinite ease-in-out;
-}
-
-/* 定义跳动动画 */
-@keyframes wave-animation {
-  0%, 100% { height: 3px; }
-  50% { height: 20px; } /* 跳到的最高高度 */
-}
-
-/* 给每一根条纹设置不同的延迟，制造错落感 */
-.music-wave.playing span:nth-child(1) { animation-duration: 0.9s; animation-delay: 0.0s; }
-.music-wave.playing span:nth-child(2) { animation-duration: 1.3s; animation-delay: 0.2s; }
-.music-wave.playing span:nth-child(3) { animation-duration: 0.7s; animation-delay: 0.4s; }
-.music-wave.playing span:nth-child(4) { animation-duration: 1.1s; animation-delay: 0.6s; }
-.music-wave.playing span:nth-child(5) { animation-duration: 1.5s; animation-delay: 0.8s; }
-.music-wave.playing span:nth-child(6) { animation-duration: 0.8s; animation-delay: 1.0s; }
-.music-wave.playing span:nth-child(7) { animation-duration: 1.2s; animation-delay: 1.2s; }
-.music-wave.playing span:nth-child(8) { animation-duration: 0.6s; animation-delay: 1.4s; }
-.music-wave.playing span:nth-child(9) { animation-duration: 1.0s; animation-delay: 0.1s; }
-.music-wave.playing span:nth-child(10) { animation-duration: 1.4s; animation-delay: 0.3s; }
-.music-wave.playing span:nth-child(11) { animation-duration: 0.9s; animation-delay: 0.5s; }
-.music-wave.playing span:nth-child(12) { animation-duration: 1.3s; animation-delay: 0.7s; }
-.music-wave.playing span:nth-child(13) { animation-duration: 0.7s; animation-delay: 0.9s; }
-.music-wave.playing span:nth-child(14) { animation-duration: 1.1s; animation-delay: 1.1s; }
-.music-wave.playing span:nth-child(15) { animation-duration: 1.5s; animation-delay: 1.3s; }
-.music-wave.playing span:nth-child(16) { animation-duration: 0.8s; animation-delay: 0.0s; }
-.music-wave.playing span:nth-child(17) { animation-duration: 1.2s; animation-delay: 0.2s; }
-.music-wave.playing span:nth-child(18) { animation-duration: 0.6s; animation-delay: 0.4s; }
-.music-wave.playing span:nth-child(19) { animation-duration: 1.0s; animation-delay: 0.6s; }
-.music-wave.playing span:nth-child(20) { animation-duration: 1.4s; animation-delay: 0.8s; }
-.music-wave.playing span:nth-child(21) { animation-duration: 0.9s; animation-delay: 1.0s; }
-.music-wave.playing span:nth-child(22) { animation-duration: 1.3s; animation-delay: 1.2s; }
-.music-wave.playing span:nth-child(23) { animation-duration: 0.7s; animation-delay: 1.4s; }
-.music-wave.playing span:nth-child(24) { animation-duration: 1.1s; animation-delay: 0.1s; }
-.music-wave.playing span:nth-child(25) { animation-duration: 1.5s; animation-delay: 0.3s; }
-.music-wave.playing span:nth-child(26) { animation-duration: 0.8s; animation-delay: 0.5s; }
-.music-wave.playing span:nth-child(27) { animation-duration: 1.2s; animation-delay: 0.7s; }
-.music-wave.playing span:nth-child(28) { animation-duration: 0.6s; animation-delay: 0.9s; }
-.music-wave.playing span:nth-child(29) { animation-duration: 1.0s; animation-delay: 1.1s; }
-.music-wave.playing span:nth-child(30) { animation-duration: 1.4s; animation-delay: 1.3s; }
-.music-wave.playing span:nth-child(31) { animation-duration: 0.9s; animation-delay: 0.0s; }
-.music-wave.playing span:nth-child(32) { animation-duration: 1.3s; animation-delay: 0.2s; }
-.music-wave.playing span:nth-child(33) { animation-duration: 0.7s; animation-delay: 0.4s; }
-  /* 小屏幕时尺寸调整 */
-  /* 唱片：与 #mediaWidget 使用相同的入场/出场过渡与属性，初始隐藏并与组件显隐同步 */
-.search-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  max-width: 640px;
-    margin: 0 auto;                    /* 保持水平居中容器 */
-  transform: translateX(-12px);      /* 向左微移，使输入框视觉居中；按需调整数值 */
-}
-
-#engineSwitch {
-  background: none;
-  border: none;
-  padding: 8px;
-  cursor: pointer;
-  margin-right: 8px;
-  border-radius: 50%;
-  transition: background-color 0.3s ease;
-}
-
-#engineSwitch:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.engine-icon {
-  width: 24px;
-  height: 24px;
-  vertical-align: middle;
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
-}
-/* 淡出状态 */
-.engine-icon.fade-out {
-  opacity: 0;
-  transform: scale(0.85);
-}
-
-/* 淡入状态 */
-.engine-icon.fade-in {
-  opacity: 1;
-  transform: scale(1);
-}
-
-/* 调整搜索框样式以适应新布局 */
-form input[type="text"] {
-  margin-left: 0;
-  flex: 1;
-}
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      width: 100vw;
-      overflow: hidden;
-      font-family: "Segoe UI", sans-serif;
-    }
-    video#bgVideo {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      z-index: -1;
-    }
-    .content {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      background: transparent;
-      padding: 20px;
-    }
-    .bing-logo {
-      display: block;
-      width: 180px; /* 大图标统一放大，按需调整（例如 120px / 160px） */
-      height: auto;
-      margin: 0 auto 20px auto;
-      filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.4));
-      transition: opacity 0.3s ease; /* 添加过渡：opacity 变化时平滑过渡 0.3s */
-    }
-    form {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      position: relative;
-    }
-    form input[type="text"] {
-      padding: 12px 20px;
-      width: 320px;
-      font-size: 16px;
-      border: 2px solid white;
-      border-radius: 30px;
-      background: transparent;
-      color: white;
-      outline: none;
-      transition: all 0.3s ease;}
-    form input[type="text"]::placeholder {
-      color: rgba(255, 255, 255, 0.7);
-    }
-    form input[type="text"]:focus {
-      box-shadow: 0 0 12px rgba(255, 255, 255, 0.4);
-    }
-    form button {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: none;
-      background-color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    form button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-    form button:hover:enabled {
-      background-color: #ddd;
-    }
-        form button svg {
-      width: 20px;
-      height: 20px;
-      fill: none;
-      fill: #333; /* 把图标填充为深色，确保在白色按钮上可见 */
-    }
-    /* 可选：让按钮内 SVG 使用按钮文字颜色 */
-    form button { color: #333; }
-    .wallpaper-change-wrapper {
-      position: fixed;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-    }
-    .wallpaper-btn {
-      display: inline-block;
-      padding: 12px 24px;
-      font-size: 16px;
-      border: 2px solid white;
-      border-radius: 30px;
-      background: transparent;
-      color: white;
-      cursor: pointer;
-      opacity: 0;
-      transition: all 0.3s ease;
-      pointer-events: auto;
-      will-change: opacity, transform;
-    }
-    .wallpaper-change-wrapper:hover .wallpaper-btn {
-      opacity: 1;
-    }
-    #videoUpload {
-      display: none;
-    }#suggestionList {
-      list-style: none;
-      padding: 0;
-      margin: 8px auto 0 auto;
-      max-width: 360px;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 8px;
-      color: #000;
-      position: fixed;
-      top: auto;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 2147483647;
-      display: none;
-      font-size: 15px;
-      text-align: left;
-    }
-    #suggestionList li {
-      padding: 10px 16px;
-      cursor: pointer;
-    }
-    #suggestionList li:hover {
-      background-color: #f0f0f0;
-    }
-/* ✅ 北京时间样式（右上角） */
-#beijingTime {
-  position: fixed;
-  top: 15px;
-  right: 20px;
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
-  background: rgba(0, 0, 0, 0);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  user-select: none;
-  z-index: 20;
-  transition: background-color 0.3s ease;
-}
-
-/* ✅ 悬停效果 */
-#beijingTime:hover {
-  background: rgba(0, 0, 0, 0.4);
-}
-/* ✅ 星期样式（右上角时间下方） */
-#weekDay {
-  position: fixed;
-  top: 65px;
-  right: 20px;
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
-  background: rgba(0, 0, 0, 0);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  user-select: none;
-  z-index: 20;
-  transition: background-color 0.3s ease;
-}
-
-/* ✅ 悬停效果 */
-#weekDay:hover {
-  background: rgba(0, 0, 0, 0.4);
-}
-/* ✅ 问候语样式（左上角） */
-#greetingMessage {
-  position: fixed;
-  top: 65px;
-  left: 20px;
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
-  background: rgba(0, 0, 0, 0); /* 初始透明 */
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  user-select: none;
-  z-index: 20;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* ✅ 鼠标悬停时变为黑色半透明 */
-#greetingMessage:hover {
-  background: rgba(0, 0, 0, 0.4);
-}
-
-    .wallpaper-btn.disabled {
-  border-color: transparent;
-  color: transparent;
-  pointer-events: none;
-}
-/* ✅ 右下角图标样式（改为悬停显示） */
-#biliIcon {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 40px;
-  height: auto;
-  opacity: 0;                 /* 默认透明 */
-  cursor: pointer;
-  z-index: 50;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-  pointer-events: auto;       /* 保持可触发悬停 */
-  z-index: 99999;
-}
-#biliIcon:hover {
-  transform: scale(1.1);
-  opacity: 1;                 /* 悬停时出现 */
-}
-
-/* 右下角额外图标，位于 biliIcon 左侧（同样悬停显示） */
-#extraIcon {
-  position: fixed;
-  bottom: 20px;
-  right: 70px;
-  width: 40px;
-  height: auto;
-  opacity: 0;                 /* 默认透明 */
-  cursor: pointer;
-
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  pointer-events: auto;
-  z-index: 99999;
-}
-#extraIcon:hover {
-  transform: scale(1.1);
-  opacity: 1;                 /* 悬停时出现 */
-}
-
-/* 将搜索按钮向右移动一些 */
-.search-container button[type="submit"] {
-  margin-left: 12px; /* 根据需要调整为 8px / 16px 等 */
-}
-#weather {
-  position: absolute;
-  top: 15px; /* 调整位置，使其在问候语下方 */
-  left: 20px;
-  font-size: 16px;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 20px;
-  transition: background-color 0.3s;
-   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-}
-
-#weather:hover {
-  background-color: rgba(0, 0, 0, 0.4);
-}
-
-#weather-text {
-  pointer-events: none;
-}
-
-/* ✅ 禁止选中所有背景和图标元素 */
-#bgImage, #bgVideo, #biliIcon, #extraIcon, .bing- {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-/* ✅ 禁用搜索引擎图标的右键菜单 */
-#engineSwitch img {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  pointer-events: auto;
-}
-
-/* ✅ 移除视频画中画和下载选项 */
-#bgVideo {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* ✅ 弹窗内的视频也禁用画中画 */
-.wallpaper-grid video {
-  user-select: none;
-  -webkit-user-select: none;
-  pointer-events: auto;
-}
-/* 视频缩略图及下方标签 */
-.video-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
-  height: auto;
-}
-.video-tile video {
-  display: block;
-  width: 100%;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-  transition: transform 180ms ease; /* 只保留缩放过渡 */
-  -webkit-user-select: none;
-  user-select: none;
-  pointer-events: auto;
-}
-/* 悬停效果：取消变灰/变暗，改为与图片一样放大 */
-.video-tile:hover video {
-  filter: none;                 /* 取消灰度和亮度处理 */
-  transform: scale(1.05);       /* 与图片 hover 一致的放大比例 */
-}
-/* 将“动态”文字放在视频正下方 */
-.video-label {
-  width: 100%;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 600;
-  color: #222;
-  user-select: none;
-  -webkit-user-select: none;
-  margin-top: -2px; /* 视觉上紧贴视频 */
-}
-/* ===== 壁纸选择页视频：彻底禁用浏览器视频浮层 ===== */
-.wallpaper-grid video {
-  pointer-events: none;               /* 核心：浏览器不再识别为可交互视频 */
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* 让“外层容器”负责点击 */
-.video-tile {
-  cursor: pointer;
-}
-
-  /* ===== 侧边栏快捷栏样式（新增） ===== */
-  /* 宽度收起时仅显示右箭头，展开时显示图标列 */
-  #quickPanel {
-    position: fixed;
-    width: 230px;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    pointer-events: auto;
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  #quickPanel.open {
-  left: 0;            /* 展开 */
-}
-  /* 收起状态：只保留打开箭头 */
-  #quickPanel.collapsed { width: 48px;  height: 70vh;}
-
-  /* 打开箭头按钮（默认隐藏，仅在 hover 或展开时显示） */
-  #quickPanel .openBtn {
-    position: relative;
-    width: 40px;
-    height: 40px;
-    margin-right: 2px;
-    left: 7px;
-    background: rgba(0,0,0,0.45);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.18s, transform 0.18s, opacity 0.18s;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-    opacity: 0; /* 默认隐藏 */
-    transform: translateX(-6px);
-    overflow: visible;
-  }
-  /* 鼠标悬停或面板展开时显示按钮 */
-  #quickPanel:hover .openBtn,
-  #quickPanel:not(.collapsed) .openBtn {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  #quickPanel .openBtn:hover { background: rgba(0,0,0,0.6); transform: translateX(2px); }
-  /* 面板主体（展开时显示） */
-  #quickPanel .panel {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    width: 55px;
-    padding: 15px 8px 10px;
-    background: rgba(0,0,0,0.36);
-    backdrop-filter: blur(6px);
-    border-radius: 10px;
-    transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease;
-    max-height: 70vh;
-    overflow: hidden;
-  }
-  /* 收起时隐藏面板 */
-  #quickPanel.collapsed .panel { width: 0; padding: 0; opacity: 0; transform: translateX(-8px); pointer-events: none; }
-#quickPanel .icons {
-  display: flex;
-  flex-direction: column; /* 纵向排列 */
-  align-items: center;    /* 居中对齐 */
-  overflow-y: auto;  max-height: 70vh;      /* 最大高度，超出时可滚动 */
-  gap: 8px;              /* 直接控制标题与图标、图标与图标之间的间距 */
-}
-  /* 图标容器：允许垂直滚动，但隐藏可见滚动条（仍可滚动） */
-#quickPanelright .icons {
-  height: 100%;            /* 占满面板高度 */
-  overflow-y: auto;        /* 允许垂直滚动 */
-  overflow-x: hidden;      /* 禁止水平滚动 */
-  width: 100%;             /* 占满宽度 */
-  padding-bottom: 50px;    /* 底部留出一点空间，防止内容贴底 */
-  
-  /* 隐藏滚动条（美观，保持毛玻璃纯净感） */
-  scrollbar-width: none;   /* Firefox */
-  -ms-overflow-style: none;/* IE/Edge */
-}
-
-/* 针对 Chrome/Safari 隐藏滚动条 */
-#quickPanelright .icons::-webkit-scrollbar {
-  display: none;
-}
-
-#quickPanel .icons h3 {
-  margin: 0;             /* 移除标题默认边距 */
-  padding-bottom: 0px;   /* 按需微调 */
-  flex-shrink: 0;          /* 防止标题被压缩 */
-    white-space: nowrap;
-}
-  #quickPanel .icons a {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 20px;
-    display: block;
-    border-radius: 12px;
-    overflow: hidden;
-    flex: 0 0 auto;
-  }
-  #quickPanel .icons img { width: 100%; height: 100%; object-fit: cover; display:block; }
-  /* 隐藏 Webkit 浏览器的滚动条 */
-  #quickPanel .icons::-webkit-scrollbar { width: 0; height: 0; }
-  #quickPanel .icons::-webkit-scrollbar-thumb { background: transparent; }
-  #quickPanel .icons::-webkit-scrollbar-track { background: transparent; }
-   #quickPanelright {
-    position: fixed;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    pointer-events: auto;
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1)，
-                transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  /* 收起状态：只保留打开箭头 */
-  #quickPanelright.collapsedright { width: 48px;  height: 70vh; }
-  /* 打开箭头按钮（默认隐藏，仅在 hover 或展开时显示） */
-  #quickPanelright .openBtnright {
-    width: 40px;
-    top: 50vh;
-    left: 3px;
-    height: 40px;
-    background: rgba(0,0,0,0.45);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    display: block;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.18s, transform 0.18s, opacity 0.18s;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-    opacity: 0; /* 默认隐藏 */
-    transform: translateX(6px);
-  }
-  /* 鼠标悬停或面板展开时显示按钮 */
-  #quickPanelright:hover .openBtnright,
-  #quickPanelright:not(.collapsedright) .openBtnright {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  #closePanelRightX:hover {
-  color: #ff4d4f !important;
-  transform: scale(1.1);
-  transition: all 0.2s ease;
-}
-/* 确保原始按钮有过渡效果 */
-.openBtnRight {
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-  #quickPanelright .openBtnright:hover { background: rgba(0,0,0,0.6); transform: translateX(-2px); }
-  /* 面板主体（展开时显示） */
-  #quickPanelright .panelright {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    width:500px;
-    height: 100vh;
-    padding: 10px 8px;
-    background: rgba(0,0,0,0.36);
-    backdrop-filter: blur(6px);
-    border-radius: 10px;
-    transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease;
-    max-height: 100vh;
-    overflow: hidden;
-    z-index: -1;
-  }
-  /* 收起时隐藏面板 */
-  #quickPanelright.collapsedright .panelright { width: 0; padding: 0; opacity: 0; transform: translateX(-8px); pointer-events: none; }
- .birthday-container {
-  margin: 20px 15px;
-  padding: 15px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  font-family: 'Segoe UI', sans-serif;
-  padding-bottom: 20px; /* 增加底部内边距，防止文字贴边 */
-  overflow: visible !important; /* 确保溢出的内容可见 */
-}
-
-.birthday-section h4 {
-  margin: 0 0 12px 0;
-  font-size: 16px;
-  font-weight: 500;
-  text-align: center;
-}
-
-.input-group {
-  display: flex;
-  gap: 8px;
-}
-
-#birthdayDateInput {
-  flex: 1;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  color: white;
-  padding: 6px;
-  font-size: 13px;
-  height: 20px;
-}
-
-#saveBirthdayBtn {
-  background: #0b74de;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-#saveBirthdayBtn:hover { background: #0056b3; }
-
-.countdown-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px; /* 增加元素之间的间距 */
-}
-
-.countdown-card .label {
-  font-size: 12px;
-  margin-bottom: 8px;
-  opacity: 0.8;
-}
-
-.days-circle {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 10px;
-  background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-}
-
-#daysNumber {
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.days-circle small { font-size: 12px; }
-
-.reset-link {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  text-decoration: underline;
-  font-size: 11px;
-  cursor: pointer;
-}
-
-.reset-link:hover { color: white; }
-#birthdaySurpriseLink {
-  width: 100%;
-  text-align: center;
-  animation: fadeInSurprise 0.5s ease; /* 添加一个淡入动画 */
-}
-
-@keyframes fadeInSurprise {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-/* 待办列表样式 */
-#todoList li {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
-  padding: 8px 10px;
-  margin-bottom: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-#todoList li:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-#todoList li span {
-  flex: 1;                   /* 占满剩余空间 */
-  white-space: normal;       /* 允许文本换行 */
-  word-break: break-word;    /* 强制长单词/长链接换行 */
-  overflow-wrap: anywhere;   /* 现代浏览器强制换行支持 */
-  line-height: 1.5;          /* 多行时增加行高，更易阅读 */
-  padding-right: 10px;       /* 防止文字紧贴删除按钮 */
-  text-align: left;          /* 文字左对齐 */
-}
-#todoList li.done span {
-  text-decoration: line-through;
-  opacity: 0.6;
-}
-.del-todo-btn {
-  background: transparent;
-  border: none;
-  color: #ff6b6b;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 0 4px;
-}
-.del-todo-btn:hover {
-  transform: scale(1.2);
-}
-/* 滚动条美化 */
-#todoList::-webkit-scrollbar { width: 4px; }
-#todoList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
-#addTodoBtn {
-  background: #0b74de;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-  margin-top: 10px;
-}
-/* 计算器按钮样式 */
-.calc-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  padding: 10px 0;
-  border-radius: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.calc-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-.calc-btn:active {
-  transform: scale(0.95);
-}
-/* 修改日历格子的样式，支持显示农历 */
-#calGrid div {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 42px; /* 稍微增加高度给农历留空间 */
-  line-height: 1.2;
-}
-
-/* 公历数字 */
-.solar-text {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-/* 农历/节日文字 */
-.lunar-text {
-  font-size: 10px;
-  opacity: 0.6;
-  margin-top: 1px;
-  transform: scale(0.9); /* 让字显得更精致 */
-}
-
-/* 节日或节气的高亮样式 */
-.is-festival .lunar-text {
-  color: #ff6b6b;
-  font-weight: bold;
-  opacity: 1;
-}
-
-/* 今天的样式微调 */
-#calGrid div[style*="background: rgb(11, 116, 222)"] .lunar-text {
-  color: rgba(255,255,255,0.9); /* 今天选中时，农历字变白 */
-}
- </style>
+<link rel="stylesheet" href="style1.css">
+<link rel="stylesheet" href="style2.css">
 </head>
 <body>
   <!-- 可把额外图标图片放到和 index.html 同目录，示例文件名 2025102523114053.png -->
@@ -1221,8 +17,8 @@ form input[type="text"] {
   <img id="biliIcon" src="logo/2025102514322810.png" alt="bilibili" title="作者B站主页" style="user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;"/>
 </a>
 <img id="bgImage" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-2;display:none;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;" />
-<video id="bgVideo" muted loop poster="poster.jpg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-1;display:none;user-select:none;-webkit-user-select:none;" disablePictureInPicture controlsList="nodownload">
-  <source src="video3.mp4" type="video/mp4">
+<video id="bgVideo" muted loop poster="wallpapers/poster.jpg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-1;display:none;user-select:none;-webkit-user-select:none;" disablePictureInPicture controlsList="nodownload">
+  <!-- The 'src' will be set by JavaScript -->
   Your browser does not support the video tag.
 </video>
   <!-- ✅ 新增问候语和北京时间显示 -->
@@ -1230,23 +26,28 @@ form input[type="text"] {
   <div id="greetingMessage">问候加载中...</div>
   <div id="beijingTime">北京时间加载中...</div>
   <div id="weekDay">星期加载中...</div>
-  <div id="catBox">
-    
-   <video id="catTransition" muted playsinline style="
-  position: fixed;
-  bottom: -15px;
-  left: 20px;
-  width: 200px;
-  height: auto;
-  z-index: 45;
-  pointer-events: none;
-  display: none;
-  object-fit: contain;
-">
-</video> 
-<video id="catVideo" autoplay muted loop playsinline disablePictureInPicture>
-  <source src="./小猫/待机主要动作.webm" type="video/mp4">
-</video><div id="catShadow"></div>
+<div id="catBox">
+  <img id="catTransition" style="
+    position: fixed;
+    bottom: -15px;
+    left: 20px;
+    width: 200px;
+    height: auto;
+    z-index: 45;
+    pointer-events: none;
+    display: none;
+    object-fit: contain;
+  " /> 
+  
+  <img id="catVideo" src="./小猫/待机主要动作.gif" style="
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    z-index: 43;
+  " />
+  
+  <div id="catShadow"></div>
 </div>
 <div id="catSpeechBubble">
   <div class="bubble-tail"></div>
@@ -1254,8 +55,12 @@ form input[type="text"] {
    <span class="bubble-text"></span>
 </div>
   <!-- 天气组件 -->
-<div id="weather" class="hover-box">
-  <div id="weather-text">正在获取天气...</div>
+<div class="top-left-bar">
+  <div id="weather" class="hover-box">
+    <div id="weather-text">正在获取天气...</div>
+  </div>
+
+  <img id="cmdTrigger" src="images/提示.png" alt="指令" title="功能菜单">
 </div>
 <!-- 唱片元素（位于音乐组件左侧，半被覆盖） -->
 <div id="mediaWidget">
@@ -1297,18 +102,27 @@ form input[type="text"] {
       <span></span>
       <span></span>
       <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
     </div>
   </div>
 </div>
   <div class="content">
-    <img src="logo/bing-logo.png" alt="Bing Logo" class="bing-logo">
+    <img src="logo/bing-logo.png" alt="Bing Logo" class="bing-logo" draggable="false">
     <form action="https://www.bing.com/search" method="GET" target="_blank">
   <div class="search-container">
     <button type="button" id="engineSwitch">
-      <img src="logo/bing-logo-small.png" alt="搜索引擎" class="engine-icon">
+      <img src="logo/bing-logo-small.png" alt="搜索引擎" class="engine-icon" draggable="false">
     </button>
     <input type="text" id="searchInput" placeholder="搜索..." autocomplete="off">
-    <button type="submit" id="searchBtn" disabled>
+<button type="button" id="aiSwitch" title="使用豆包 AI 搜索">
+      <svg viewBox="0 0 100 100" width="26" height="26" style="overflow: visible;">
+        <text x="50" y="56" class="ai-icon-text">AI</text>
+      </svg>
+    </button>
+          <button type="submit" id="searchBtn" disabled>
       <svg viewBox="0 0 24 24">
         <path d="M15.5 14h-.8l-.3-.3c1-1.1 1.6-2.6 1.6-4.2C16 5.9 13.1 3 9.5 3S3 5.9 3 9.5 5.9 16 9.5 16c1.6 0 3.1-.6 4.2-1.6l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0C7 14 5 12 5 9.5S7 5 9.5 5 14 7 14 9.5 12 14 9.5 14z"/>
       </svg>
@@ -1318,18 +132,91 @@ form input[type="text"] {
     <ul id="suggestionList"></ul>
   </div>
   <div class="wallpaper-change-wrapper">
-  <!-- 改成普通按钮，不再直接绑定 input -->
-  <button type="button" class="wallpaper-btn" id="openWallpaperModal">更改壁纸</button>
-  
-  <!-- 保留原来的 input，供加号区域调用 -->
-  <input type="file" id="videoUpload" accept="video/mp4,image" style="display:none;">
-</div>
+<input type="file" id="videoUpload" accept="video/mp4,image/*" style="display:none;"></div>
 <div id="wallpaperModal" class="modal">
+
   <div class="modal-content">
-    <span id="closeModal" style="cursor:pointer;font-size:20px;">×</span>
-    <div class="wallpaper-grid"></div>
-  </div>
+
+    <div class="modal-header">
+      <div class="modal-title">🎨 更换壁纸</div>
+      <span id="closeModal">×</span>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- ===== 新增：这是为您补全的“可拖动提示条”元素 ===== -->
+    <!-- ======================================================== -->
+    <div id="dragHint" class="drag-hint">
+      按住标题栏区域可以拖动整个面板哦😽
+    </div>
+
+    <div class="modal-body">
+      <div class="wp-sidebar">
+        <div class="wp-tab active" data-type="static">
+          <span>🖼️ 静态壁纸</span>
+        </div>
+        <div class="wp-tab" data-type="dynamic">
+          <span>🎬 动态壁纸</span>
+        </div>
+        <div class="wp-tab" data-type="custom">
+          <span>📂 自定义壁纸</span>
+        </div>
+      </div>
+
+      <div class="wp-right-panel">
+        <div class="sticky-controls-bar">
+        <div class="parallax-option" style="position: relative; display: flex; align-items: center; justify-content: space-between;">
+            
+            <!-- 左侧：视差开关 -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label class="switch">
+                    <input type="checkbox" id="parallaxToggle">
+                    <span class="slider"></span>
+                </label>
+                <span class="parallax-label">背景视差</span>
+            </div>
+    
+            <!-- 中间：音量控制 -->
+            <div class="volume-option" style="display: flex; align-items: center; gap: 8px;">
+                <span id="volumeIcon" style="font-size: 20px; cursor: pointer; user-select: none;">🔊</span>
+                <span class="volume-label">背景声音</span>
+                <input type="range" id="volumeSlider" min="0" max="100" value="100">
+                <span id="volumeValue">100%</span>
+            </div>
+    
+            <!-- 右侧：信封按钮 -->
+            <button id="wpTipBtn" title="查看提示" style="background:none; border:none; font-size: 24px; cursor: pointer; transition: transform 0.2s;">
+                📩
+            </button>
+        </div>
 </div>
+
+        <div class="wallpaper-grid"></div>
+
+        <div id="wpTipPopup" class="envelope-popup">
+          <div class="envelope-inner">
+            <span id="closeTipPopup">×</span>
+            <h3 class="envelope-title">🐾 小猫的壁纸百科：</h3>
+            <div class="envelope-content-text">
+              <p style="font-size: 16px;">🌟 <strong>这里有哪些壁纸种类？</strong></p>
+              <p>主人可以随心切换<strong>静态美图</strong>、<strong>丝滑视频</strong>和<strong>自定义的壁纸</strong>作为背景喵！</p>
+              <p style="font-size: 16px; margin-top: 15px;">✨ <strong>什么是“背景视差”？</strong></p>
+              <p>这是一个超神奇的魔法！开启后，背景会随着主人的<strong>鼠标滑动</strong>而轻轻晃动，</p>
+              <p>让你的桌面瞬间变得有有趣，深邃又灵动喵！</p>
+              <hr>
+              <p>快去亲手试试看吧，打扮得漂亮一点喵！😽😽😽</p>
+              <h3 style="text-align: right;">猫猫 &nbsp; 留</h3>
+            </div>
+            <div class="envelope-stamp">POST</div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
 
 <!-- 新增 添加快捷 的弹窗 -->
 <div id="addIconModal" class="modal" aria-hidden="true">
@@ -1367,14 +254,14 @@ form input[type="text"] {
     </div>
   </div>
 </div>
-</div><div id="quickPanelright" class="collapsedright" >
-  <button class="openBtnright" >◀</button>
-  <div class="panelright" >
-    <div id="closePanelRightX" style="position: absolute; top: 30px; right: 20px; color: white; cursor: pointer; font-size: 24px; line-height: 1;">&times;</div>
+<div id="quickPanelright" class="collapsedright">
+  <button class="openBtnright">◀</button>
+  <div class="panelright">
+    <button id="panelSettingBtn" title="调整布局">⚙️</button>
     <div class="icons">
       <!-- 这里可以放置右侧面板的内容 -->
       <h2 style="color:white; margin-top: 20px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;快捷面板</h2>
-<div id="birthdayWidget" class="birthday-container">
+<div id="birthdayWidget" class="birthday-container draggable-widget">
   <div id="birthdayPicker" class="birthday-section">
     <h4>🎂 记录生日</h4>
     <div class="input-group">
@@ -1390,7 +277,7 @@ form input[type="text"] {
         <small>天</small>
       </div>
       <button id="resetBirthdayBtn" class="reset-link">重置日期</button>
-      <div id="surpriseLink" style="display: none; margin-top: 10px; font-size: 12px; color: #ffeb3b;">
+      <div id="surpriseLink" style="display: none; margin-top: 10px; font-size: 12px; color: #ffeb3b; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">
         小猫为你准备了一个小惊喜，<span id="goSurprise" style="text-decoration: underline; cursor: pointer; font-weight: bold;">去看看</span>
       </div>
     </div>
@@ -1455,13 +342,60 @@ form input[type="text"] {
     </div>
 </div>
 </div>
-<div class="widget-row" style="display: flex; gap: 10px; margin: 15px 15px; width: calc(100% - 30px);">
+<!-- ============================================= -->
+<!--   🎵 音乐播放器 (布局修改版)                  -->
+<!-- ============================================= -->
+<div id="musicPlayerWidget" class="birthday-container draggable-widget">
+  <div class="birthday-section">
+      
+    <!-- 1. 顶部信息行 (唱片、歌名、作者) -->
+    <div class="music-top-row">
+        <div class="music-vinyl" id="localMusicVinyl">
+            <img src="logo/icon.png" alt="cover">
+        </div>
+        <div class="music-info">
+            <h4 id="localMusicTitle">选择歌曲播放</h4>
+            <span id="localMusicArtist">--</span>
+        </div>
+    </div>
+    
+    <!-- 2. 歌词区域 (独立、更大) -->
+    <div id="lyricContainer" class="lyric-container">
+        <div id="lyricWrapper" class="lyric-wrapper">
+            <!-- 歌词将由 JS 动态插入这里 -->
+        </div>
+    </div>
+
+    <!-- 3. 进度条 -->
+    <div class="music-progress-container">
+      <span id="currentTime">00:00</span>
+      <input type="range" id="musicProgressBar" value="0" min="0" step="1">
+      <span id="totalTime">00:00</span>
+    </div>
+
+    <!-- 4. 控制按钮 -->
+    <div class="music-controls">
+      <button id="prevSongBtn" title="上一首">⏮️</button>
+      <button id="playPauseBtn" title="播放/暂停">▶️</button>
+      <button id="nextSongBtn" title="下一首">⏭️</button>
+      <button id="stopSongBtn" title="停止">⏹️</button>
+      <button id="togglePlaylistBtn" title="播放列表">📂</button>
+    </div>
+    
+    <!-- 5. 播放列表 (默认隐藏) -->
+    <div id="musicPlaylist" class="music-playlist" style="display: none;">
+      <ul id="songListUl"></ul>
+    </div>
+
+  </div>
+</div>
+<div id="todoCalcRow" class="widget-row draggable-widget" style="display: flex; gap: 10px; margin: 0 15px 15px; width: calc(100% - 30px);">
   
   <div id="todoWidget" class="birthday-container" style="flex: 1; margin: 0; display: flex; flex-direction: column;">
     <div class="birthday-section" style="flex: 1; display: flex; flex-direction: column;">
       <h4>📝 备忘录</h4>
       <div class="input-group">
-        <input type="text" id="todoInput" placeholder="记录事项..." maxlength="10" style="width: 100%;">
+        <input type="text" id="todoInput" placeholder="记录事项..." style="width: 100%;">
         <button id="addTodoBtn" style="white-space: nowrap;">+</button>
       </div>
       <ul id="todoList" style="list-style: none; padding: 0; margin-top: 10px; flex: 1; overflow-y: auto; max-height: 220px;">
@@ -1472,47 +406,58 @@ form input[type="text"] {
   <div id="calcWidget" class="birthday-container" style="flex: 1; margin: 0;">
     <div class="birthday-section">
       <h4>🧮 计算器</h4>
-      <input type="text" id="calcDisplay" readonly style="width:100%; background:rgba(0,0,0,0.3); border:none; color:white; font-size:18px; text-align:right; padding:8px; box-sizing:border-box; border-radius:6px; margin-bottom:8px;">
-      
-      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px;">
+<input type="text" id="calcDisplay" style="width:100%; background:rgba(0,0,0,0.3); border:none; color:white; font-size:18px; text-align:right; padding:8px; box-sizing:border-box; border-radius:6px; margin-bottom:8px;">      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px;">
         <button class="calc-btn op" data-val="C" style="color:#ff6b6b;">C</button>
         <button class="calc-btn op" data-val="/">÷</button>
         <button class="calc-btn op" data-val="*">×</button>
         <button class="calc-btn op" data-val="DEL">←</button>
-        
         <button class="calc-btn num" data-val="7">7</button>
         <button class="calc-btn num" data-val="8">8</button>
         <button class="calc-btn num" data-val="9">9</button>
         <button class="calc-btn op" data-val="-">-</button>
-        
         <button class="calc-btn num" data-val="4">4</button>
         <button class="calc-btn num" data-val="5">5</button>
         <button class="calc-btn num" data-val="6">6</button>
         <button class="calc-btn op" data-val="+">+</button>
-        
         <button class="calc-btn num" data-val="1">1</button>
         <button class="calc-btn num" data-val="2">2</button>
         <button class="calc-btn num" data-val="3">3</button>
         <button class="calc-btn op" data-val="=" style="grid-row: span 2; background:#0b74de; border:none;">=</button>
-        
         <button class="calc-btn num" data-val="0" style="grid-column: span 2;">0</button>
         <button class="calc-btn num" data-val=".">.</button>
       </div>
     </div>
   </div>
-
-</div> 
-<div id="dinoWidget" class="birthday-container" style="margin: 0 15px 15px 15px; width: calc(100% - 30px); padding: 10px;">
-  <div class="birthday-section" style="text-align: center;">
-    <h4 style="margin: 0 0 10px 0; font-size: 14px; opacity: 0.9;">🦖 小游戏：小恐龙快跑</h4>
-    <canvas id="dinoCanvas" width="600" height="150" style="width: 100%; height: 120px; border-radius: 8px; background: rgba(0,0,0,0.2); cursor: pointer; display: block;"></canvas>
-    <div style="font-size: 12px; margin-top: 8px; display: flex; justify-content: space-between; color: rgba(255,255,255,0.8);">
-      <span>按空格 / 点击 跳跃</span>
-      <span>最高分: <span id="dinoHighScore">0</span></span>
+</div>
+<div id="fortuneWidget" class="birthday-container draggable-widget flip-container" style="margin: 0 15px 15px 15px; width: 440px; height: 140px; perspective: 1000px;">
+  <div class="flipper">
+    <div class="front birthday-section" style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+      <h4>🎐 每日猫咪灵签</h4>
+      <button id="drawFortuneBtn" style="margin-top:15px; background:#0b74de; color:white; border:none; padding:8px 20px; border-radius:20px; cursor:pointer;">✨ 抽取今日运势</button>
+    </div>
+    <div class="back birthday-section" style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+      <div id="fortuneTitle" style="font-size:28px; font-weight:bold; color:#ffeb3b;">大吉</div>
+      <div id="fortuneText" style="margin-top:8px; opacity:0.9; font-size:14px;">宜：写代码 | 忌：修Bug</div>
     </div>
   </div>
 </div>
-<div id="calendarWidget" class="birthday-container" style="margin: 0 15px 15px 15px; width: calc(100% - 30px);">
+<div id="snakeWidget" class="birthday-container draggable-widget" style="margin: 0 15px 15px 15px; width: 450px; padding: 10px;">
+  <div class="birthday-section" style="text-align: center;">
+    <h4 style="text-shadow: 1px 1px 1px black; margin: 0 0 10px 0; font-size: 14px; opacity: 0.9;">🐍 小游戏：贪吃蛇大作战</h4>
+    
+    <canvas id="snakeCanvas" width="600" height="150" style="width: 100%; height: 120px; border-radius: 8px; background: rgba(0,0,0,0.3); cursor: pointer; display: block; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);"></canvas>
+    
+    <div style="font-size: 13px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; color: rgba(255,255,255,0.9); font-weight: bold;">
+      <span style="opacity: 0.8; font-size: 12px; font-weight: normal;">🎮 WASD / 方向键控制</span>
+      
+      <div style="display: flex; gap: 15px;">
+        <span style="color: #69f0ae;">得分: <span id="currentSnakeScore">0</span></span>
+        <span style="opacity: 0.6;">最高: <span id="snakeHighScore">0</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="calendarWidget" class="birthday-container draggable-widget" style="margin: 0 15px 15px 15px; width: 440px;">
   <div class="birthday-section">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
       <h4 id="calMonthYear" style="margin:0; font-size: 16px;">2025年 12月</h4>
@@ -1522,7 +467,7 @@ form input[type="text"] {
         <button id="nextMonth" style="background:rgba(255,255,255,0.1); border:none; color:white; cursor:pointer; padding: 4px 8px; border-radius: 4px;">▶</button>
       </div>
     </div>
-    <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 12px; opacity: 0.7; margin-bottom: 8px;">
+    <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 14px; opacity: 0.7; margin-bottom: 8px; text-shadow: 2px black; font-weight: bolder;">
       <span style="color:#ff6b6b">日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span style="color:#ff6b6b">六</span>
     </div>
     <div id="calGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 13px;">
@@ -1532,7 +477,144 @@ form input[type="text"] {
  </div>
   </div>
 </div>
+
+<canvas id="mouse-trail" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 999999;"></canvas>
+<div id="customContextMenu" class="context-menu">
+  <ul class="menu-list">
+    <li data-action="fullscreen">
+      <span>🖥️ 切换全屏</span>
+    </li>
+    <li class="separator"></li>
+    <li data-action="reload">
+      <span>🔄 刷新页面</span>
+    </li>
+     <li class="separator"></li>
+    <li data-action="wallpaper">
+      <span>🖼️ 更换壁纸</span>
+    </li>
+     <li class="separator"></li>
+    <li class="has-submenu">
+  <span>✨ 鼠标拖尾</span>
+  <span class="arrow">▶</span>
+  <ul class="submenu">
+    <li data-action="trail-particle">⚪ 珍珠泡沫</li>
+      <li class="separator"></li>
+    <li data-action="trail-line">➖ 彩虹流光</li>
+      <li class="separator"></li>
+    <li data-action="trail-sparkle">✨ 闪烁星尘</li>
+    <li class="separator"></li>
+    <li data-action="trail-laser">⚡️ 极光射线</li>
+    <li class="separator"></li>
+    <li data-action="trail-off" style="color:#ff6b6b">🚫 关闭特效</li>
+  </ul>
+</li>
+         <li class="separator"></li>
+    <li data-action="zen">
+      <span>🍃 禅模式 (显/隐UI)</span>
+    </li>
+         <li class="separator"></li>
+    <li data-action="about">
+      <span>🐱 关于作者</span>
+    </li>
+  </ul>
+</div>
+<div id="inputContextMenu" class="context-menu">
+  <ul class="menu-list">
+    <li data-action="copy">📄 复制</li>
+        <li class="separator"></li>
+    <li data-action="cut">✂️ 剪切</li>
+        <li class="separator"></li>
+    <li data-action="paste">📋 粘贴</li>
+    <li class="separator"></li>
+    <li data-action="select-all">🔲 全选</li>
+  </ul>
+</div>
+<div id="cmdPaletteOverlay" class="cmd-overlay">
+  <div class="cmd-box">
+    <div class="cmd-header">
+      <span class="cmd-icon">></span>
+      <input type="text" id="cmdInput" placeholder="搜索..." style="font-size: 16px; font-style: italic;" autocomplete="off">
+      <span class="cmd-hint">点击ESC关闭</span>
+    </div>
+    <ul id="cmdList" class="cmd-list">
+      </ul>
+  </div>
+</div>
+<div id="welcomeModal" class="welcome-modal">
+  <div class="welcome-card">
+    <img src="logo/logo.png" class="decor-paw1" alt="paw">
+    <img src="小猫/猫爪.png" class="decor-paw" alt="paw">
+    
+    <div class="welcome-header">
+      <h2>🎉 欢迎使用 G-web！</h2>
+    </div>
+    
+    <div class="welcome-body" style="font-size: 16px;">
+      <p>这里是你的专属起始页，一只可爱的小猫咪正在等着你喵！</p>
+ <div class="welcome-body">
+  <p><strong>喵呜～为了让壁纸背景看起来丝滑顺畅，主人一定要帮我个小忙喵！</strong>✨</p>
+  
+  <div style="background: rgba(11, 116, 222, 0.05); border-radius: 12px; padding: 15px; margin: 15px 0; border: 1px dashed #0b74de;">
+    <p style="font-weight: bold; color: #0b74de; margin-bottom: 5px;">🐾 开启图形加速指引：</p>
+    <p>请点击浏览器 <strong>设置</strong> → <strong>系统与性能</strong></p>
+    <p>在标题下方找到并开启 <strong>“图形加速”</strong> 喵！</p>
+  </div>
+  
+  <p style="font-size: 13px; color: #888;">如果不开启的话，视频背景可能会卡成幻灯片，小猫会头晕的呜... 😿</p>
+</div>
+      <ul style="text-align: left; margin: 15px 0 15px 20px; color: #666;">
+        <li>按 <strong>Alt+C</strong> 呼叫小猫</li>
+        <li>把浏览器缩放调整到90%视觉效果更好</li>
+        <li>右键点击桌面呼出菜单</li>
+        <li>左上角有功能菜单</li>
+        <li>壁纸全部都是从小红车和pinterest中挑选出来的，初始壁纸的作者和小红车链接<a href="https://steamcommunity.com/sharedfiles/filedetails/?id=3373205871">在这里喵~~<img src="images/箭头.png" style="width: 14px; padding: 0;margin: 0;"></a></li>
+      </ul>
+    </div>
+
+    <div style="text-align: center; margin-top: 10px;">
+      <button id="closeWelcomeBtn">开始探索喵！🚀</button>
+    </div>
+    <a href="#" id="copyrightLink" class="copyright-link">📜 版权声明</a>
+  </div>
+</div>
+
+<!-- 版权声明弹窗 -->
+<div id="copyrightModal" class="copyright-modal">
+  <div class="copyright-card">
+    <button class="copyright-close" id="copyrightClose">×</button>
+    
+    <div class="copyright-header">
+      <h2>📜 版权声明</h2>
+    </div>
+    
+    <div class="copyright-body">
+      <p><strong>扩展中壁纸均来自于 Wallpaper Engine 创意工坊、致美化和 Pinterest</strong>，著作权归原作者所有。本扩展仅作个人非商业推荐，若您是原作者并希望调整内容，请随时联系我。</p>
+      
+      <p style="margin-top: 15px;">本扩展内壁纸经过裁剪处理，仅供个人欣赏与非商业用途，严禁用于盈利、二次销售、平台搬运、AI训练等行为。</p>
+      
+      <p style="margin-top: 15px;">在此，向每一位原创作者致以诚挚的敬意与感谢，若各位用户喜爱这些内容，我在各个壁纸左下角设置了壁纸链接，建议前往原出处支持作者。</p>
+    </div>
+  </div>
+</div>
+<div id="zenTimeWidget">
+  <div id="zenDate">2024年01月01日</div>
+  <div id="zenTime">&nbsp;1&nbsp;2:&nbsp;0&nbsp;0&nbsp;</div>
+  <div id="zenInfo">
+    <span id="zenWeekDay">星期一</span>
+    <span>&nbsp;|&nbsp;</span>
+    <span id="zenWeather">晴 25℃</span>
+  </div>
+</div>
+<div id="zenLyricsWidget">
+  <div id="zenLyricsContent"></div>
+</div>
 <script src="lunar.js"></script>
  <script src="main.js"></script>
+ <script src="2.js"></script>
+ <script src="1.js"></script>
+ <script src="3.js"></script>
+ <script src="4.js"></script>
+ <script src="5.js"></script>
+ <script src="music-player.js"></script>
 </body>
 </html>

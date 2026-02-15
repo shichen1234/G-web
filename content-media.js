@@ -1,25 +1,50 @@
-// content-media.js - 负责注入脚本和转发消息
+// content-media.js - 性能优化版
 
-// 1. 注入 page-media.js 到网页主世界 (Main World)
-// 这样脚本才能像网页原生代码一样运行，读取所有 DOM 和变量
-const script = document.createElement('script');
-script.src = chrome.runtime.getURL('page-media.js');
-script.onload = function() {
-  this.remove(); // 执行后移除标签，保持页面整洁
-};
-(document.head || document.documentElement).appendChild(script);
+(function() {
+    'use strict';
+    
+    // 避免重复注入
+    if (window.__G_WEB_MEDIA_INJECTED__) {
+        return;
+    }
+    window.__G_WEB_MEDIA_INJECTED__ = true;
 
-// 2. 监听来自 page-media.js 的消息并转发给 background.js
-window.addEventListener('message', (e) => {
-  // 只接收来自当前窗口的消息
-  if (e.source !== window) return;
-  // 只接收特定标识的消息
-  if (e.data?.source !== 'G_WEB_MEDIA') return;
+    // 注入 page-media.js 到网页主世界
+    const script = document.createElement('script');
+    script.src = chrome.runtime.getURL('page-media.js');
+    script.onload = function() {
+        this.remove();
+    };
+    script.onerror = function() {
+        console.error('G-web: 无法加载 page-media.js');
+        this.remove();
+    };
+    (document.head || document.documentElement).appendChild(script);
 
-  // 转发给 background.js
-  chrome.runtime.sendMessage({
-    type: 'mediaUpdate',
-    metadata: e.data.payload,
-    playbackState: e.data.playbackState
-  });
-});
+    // ⚡ 优化: 提高节流时间到500ms (原来是300ms)
+    let lastMessageTime = 0;
+    const MESSAGE_THROTTLE = 500;
+
+    window.addEventListener('message', (e) => {
+        // 只接收来自当前窗口的消息
+        if (e.source !== window) return;
+        // 只接收特定标识的消息
+        if (e.data?.source !== 'G_WEB_MEDIA') return;
+
+        // 节流处理
+        const now = Date.now();
+        if (now - lastMessageTime < MESSAGE_THROTTLE) {
+            return;
+        }
+        lastMessageTime = now;
+
+        // 转发给 background.js
+        chrome.runtime.sendMessage({
+            type: 'mediaUpdate',
+            metadata: e.data.payload,
+            playbackState: e.data.playbackState
+        }).catch(() => {
+            // 忽略错误(例如扩展已禁用)
+        });
+    }, { passive: true }); // ⚡ 添加passive优化
+})();

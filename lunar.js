@@ -5525,7 +5525,7 @@
       getHolidaysByTarget:function(){return _getHolidaysByTarget(arguments);},
       fix:function(){_fix(arguments);}
     };
-  })(['元旦节','春节','清明节','劳动节','端午节','中秋节','国庆节','国庆中秋','抗战胜利日']);
+  })(['元旦','春节','清明节','劳动节','端午节','中秋节','国庆节','国庆中秋','抗战胜利日']);
   var NineStar = (function(){
     var _fromIndex=function(index){
       return {
@@ -7321,7 +7321,7 @@
         'jr.zhongQiu': '中秋节',
         'jr.chongYang': '重阳节',
         'jr.laBa': '腊八节',
-        'jr.yuanDan': '元旦节',
+        'jr.yuanDan': '元旦',
         'jr.qingRen': '情人节',
         'jr.fuNv': '妇女节',
         'jr.zhiShu': '植树节',

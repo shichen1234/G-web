@@ -1,53 +1,83 @@
 {
-  "manifest_version": 2,
-  "name": "G-web",
-  "version": "1.8",
-  "description": "更改新标签页为个人定制页面，还有一个可爱的私人猫猫（可通过 Alt+C 开启/关闭），音乐组件可以检测到浏览器目前所播放的音乐或者视频，左侧有快捷栏。",
-
-  "icons": {
-    "16": "icon1.png",
-    "48": "icon1.png",
-    "128": "icon1.png"
-  },
-
-  "chrome_url_overrides": {
-    "newtab": "index.html"
-  },
-
-  "permissions": [
-    "storage",
-    "tabs",
-    "activeTab",
-    "https://suggestion.baidu.com/*",
-    "<all_urls>"
-  ],
-
-  "background": {
-    "scripts": ["background.js"],
-    "persistent": true
-  },
-
-  "web_accessible_resources": [
-    "main.js",
-    "index.html",
-    "video3.mp4",
-    "poster.jpg",
-    "icon1.png",
-    "bing-logo.png",
-    "google-logo.png",
-    "baidu-logo.png",
-    "sogou-logo.png",
-    "bing-logo-small.png",
-    "google-logo-small.png",
-    "baidu-logo-small.png",
-    "sogou-logo-small.png",
-    "2025102523114053.png",
-    "2025102514322810.png",
-    "小猫/*.webm",
-    "小猫/*.png",
-    "page-media.js",
-    "content-media.js"
-  ],
-
-  "content_security_policy": "script-src 'self'; object-src 'self'"
+    "manifest_version": 3,
+    "name": "G-web",
+    "version": "3.1.1",
+    "description": "更改新标签页为个人定制页面，还有一个可爱的私人猫猫（可通过 Alt+C 开启/关闭），音乐组件可以检测到浏览器目前所播放的音乐或者视频，左侧有快捷栏，右侧有快捷面板，左上角有功能菜单，记录了所有功能，务必把浏览器的图形加速打开，以免视频壁纸出现卡顿。",
+    "icons": {
+        "16": "logo/icon.png",
+        "48": "logo/icon.png",
+        "128": "logo/icon.png"
+    },
+    "action": {
+        "default_title": "G-web"
+    },
+    "chrome_url_overrides": {
+        "newtab": "index.html"
+    },
+    "permissions": [
+        "storage",
+        "tabs",
+        "activeTab",
+        "scripting",
+        "alarms"
+    ],
+    "host_permissions": [
+        "https://suggestion.baidu.com/*",
+        "https://www.doubao.com/*",
+        "https://y.qq.com/*",
+        "https://music.163.com/*",
+        "https://www.kugou.com/*",
+        "https://www.youtube.com/*",
+        "https://www.bilibili.com/*",
+        "https://www.douyin.com/*",
+        "https://*.spotify.com/*",
+        "https://bing.img.run/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://www.doubao.com/*"],
+            "js": ["doubao-inject.js"],
+            "run_at": "document_idle"
+        }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "main.js",
+                "index.html",
+                "poster.jpg",
+                "icon.png",
+                "bing-logo.png",
+                "google-logo.png",
+                "baidu-logo.png",
+                "sogou-logo.png",
+                "bing-logo-small.png",
+                "google-logo-small.png",
+                "baidu-logo-small.png",
+                "sogou-logo-small.png",
+                "2025102523114053.png",
+                "2025102514322810.png",
+                "小猫/*.webm",
+                "小猫/*.png",
+                "page-media.js",
+                "content-media.js"
+            ],
+            "matches": [
+                "https://www.doubao.com/*",
+                "https://y.qq.com/*",
+                "https://music.163.com/*",
+                "https://www.kugou.com/*",
+                "https://www.youtube.com/*",
+                "https://www.bilibili.com/*",
+                "https://www.douyin.com/*",
+                "https://*.spotify.com/*"
+            ]
+        }
+    ],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: https: http: blob:"
+    }
 }
