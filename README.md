@@ -4,7 +4,7 @@
 <br>
 &nbsp&nbsp&nbsp&nbsp使用方法就是点击右上角绿色的code，之后点击download zip，或者<a href="https://github.com/shichen1234/G-web/archive/refs/heads/main.zip">点这儿<a>，解压后在扩展页面选择开发人员模式，然后在已安装的扩展下方点击加载解压缩的扩展，选择解压出来的文件夹，左上角有具体的功能菜单，里面所有功能都包括了，尽情使用吧(❁´◡`❁)<br>
 <br>
-&nbsp&nbsp&nbsp&nbsp以下就是客套话了，如果有好的壁纸或者想听歌曲，或者是好的建议，可以在<p style="color:blue">B站</p>私发给我，或者是发送到<p style="color:blue">qwer2414701603@gmail.com</p>这个邮箱，我会尽量添加和接纳的( •̀ ω •́ )✧<br>
+&nbsp&nbsp&nbsp&nbsp以下就是客套话了，如果有好的壁纸或者想听歌曲，或者是好的建议，可以在<a style="color:blue">B站</a>私发给我，或者是发送到<p style="color:blue">qwer2414701603@gmail.com</p>这个邮箱，我会尽量添加和接纳的( •̀ ω •́ )✧<br>
 <br>
 <h3>​G-web：重塑您的新标签页体验</h3><br>
 &nbsp&nbsp&nbsp&nbsp​G-web 是一款功能强大的全能型浏览器扩展，旨在通过将新标签页转化为高度个性化和交互式的仪表盘，彻底重塑您的浏览体验。它用一个充满活力的可定制界面取代了传统的新标签页，其中内置了一整套生产力工具、娱乐功能和迷人的互动元素，专为提升您的效率和浏览乐趣而设计。<br>
