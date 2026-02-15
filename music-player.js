@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   const DUAL_COLUMN_LYRIC_SONG_IDS = new Set([
-    12, 21, 22, 23, 24, 26, 31, 32, 35, 36, 37, 38, 40, 43, 44, 45, 48
+    12, 21, 22, 23, 24, 26, 31, 35, 36, 37, 38, 40, 43, 44, 45, 48
   ]);
 
   // music-player.js
