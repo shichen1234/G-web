@@ -190,9 +190,120 @@ searchInput.addEventListener("focus", () => {
     showBubble(prompts[Math.floor(Math.random() * prompts.length)]);
 });
 
+// [NEW] Helper function to check for special day greetings
+function checkSpecialDayGreeting() {
+    const today = new Date();
+    
+    // 1. Birthday check (highest priority)
+    const birthdayStr = localStorage.getItem('user_birthday_date');
+    if (birthdayStr) {
+        const parts = birthdayStr.split('-');
+        const bMonth = parseInt(parts[1], 10);
+        const bDay = parseInt(parts[2], 10);
+
+        if ((today.getMonth() + 1) === bMonth && today.getDate() === bDay) {
+            const specialGreetings = [
+                "生日快乐喵！🎂 今天你是全宇宙的主角，要开开心心哦！",
+                "喵呜！祝你生日快乐！🎉 许个愿望吧，小猫会帮你守护它的！",
+                "Happy Birthday！✨ 今天的小鱼干都分给你，祝你万事胜意喵！"
+            ];
+            const randomMsg = specialGreetings[Math.floor(Math.random() * specialGreetings.length)];
+            return { msg: randomMsg, class: 'bubble-birthday' };
+        }
+    }
+
+    // 2. Festival check (lunar and solar)
+    if (window.Solar && window.Lunar) {
+        const solar = Solar.fromDate(today);
+        const lunar = Lunar.fromDate(today);
+
+        const solarGreetings = {
+          "1-1": { msg: "元旦快乐喵！🎆 新的一年，希望你的猫罐头永远吃不完！", class: "bubble-yuandan" },
+          "2-14": { msg: "情人节快乐喵！💖 没有对象？没关系，你有我这只可爱的小猫咪呀！", class: "bubble-qingrenjie" },
+          "3-8": "妇女节快乐喵！👑 今天你最美，不接受反驳！",
+          "3-12": "植树节到了喵！🌳 要不要一起去种猫草？",
+          "4-1": "愚人节快乐！🤪 小猫才不会骗你呢... 除非有罐头！",
+          "4-5": "清明时节雨纷纷喵... 🌱 记得带伞哦。",
+          "5-1": { msg: "劳动节快乐！🛠️ 今天不抓老鼠，我们要一起躺平喵～", class: "bubble-wuYi" },
+          "5-4": "青年节快乐喵！💪 永远年轻，永远热泪盈眶！",
+          "5-20": "520快乐喵！❤️ 虽然我不懂爱，但我知道我喜欢你！",
+          "6-1": { msg: "六一儿童节快乐喵！🎈 谁还不是个几百个月的宝宝呢？", class: "bubble-ertong" },
+          "7-1": "建党节快乐喵！🚩 红旗飘飘，小猫敬礼！",
+          "8-1": "建军节快乐喵！🫡 向最可爱的人致敬！",
+          "9-10": "教师节快乐喵！👩‍🏫 老师辛苦啦，送你一朵小红花！",
+          "10-1":  { msg: "国庆节快乐！ 愿祖国繁荣昌盛，国泰民安！", class: "bubble-guoqing" },
+          "10-24": "程序员节快乐喵！💻 愿你的代码没有Bug，发量依然浓密！",
+          "10-31": { msg: "不给糖就捣蛋！🎃 快把你的小鱼干交出来！", class: "bubble-wanshengjie" }, 
+          "11-11": "双十一快乐喵！🛒 购物车满了吗？记得给小猫买零食哦！",
+          "12-24": "平安夜快乐喵！🍎 记得吃苹果，平平安安哦～",
+          "12-25":  { msg: "圣诞快乐喵！🎄 把袜子挂好，等着收礼物吧！", class: "bubble-shengdan" }
+        };
+        const lunarGreetings = {
+          "1-1":{ msg:"过年啦！🧨 恭喜发财，红包拿来买猫粮喵！新年快乐！", class: "bubble-chunjie" },
+          "1-15":{ msg: "元宵节快乐喵！🏮 猜灯谜？不如猜猜我今天吃了多少小鱼干？", class: "bubble-yuanxiao" },
+          "2-2": "龙抬头喵！🐉 要不要带我去理个发，剪个帅气猫头？",
+          "5-5": { msg: "端午安康！🐲 粽子虽好，可不要贪吃哦，把肉馅的留给我！", class: "bubble-duanwu" },
+          "7-7": { msg: "七夕快乐！🌌 今晚的星星会唱歌，你听到了吗？", class: "bubble-qixi" },
+          "7-15": "中元节喵... 👻 晚上早点回家，小猫会保护你的！",
+          "8-15": { msg: "中秋节快乐！🌕 月饼分我一半，不然...我就对着月亮告状说你欺负我！", class: "bubble-zhongqiu" },
+          "12-8": "腊八节快乐喵！🥣 过了腊八就是年，粥好喝吗？",
+          "12-23": "小年快乐喵！🍬 灶神爷爷上天言好事，我在凡间讨鱼吃～"
+        };
+        
+        const solarStr = `${solar.getMonth()}-${solar.getDay()}`;
+        const lunarStr = `${Math.abs(lunar.getMonth())}-${lunar.getDay()}`;
+        
+        let festivalData = null; 
+        
+        if (lunar.getFestivals().includes("除夕")) {
+             festivalData = { msg: "除夕快乐喵！🧨 今晚不许睡，陪我守岁抢红包！", class: "bubble-chunjie" };
+        } else {
+            if (solarGreetings[solarStr]) {
+              festivalData = solarGreetings[solarStr];
+            } else if (lunarGreetings[lunarStr]) {
+              festivalData = lunarGreetings[lunarStr];
+            }
+        }
+        
+        if (festivalData) {
+            if (typeof festivalData === 'string') {
+                return { msg: festivalData, class: '' };
+            }
+            return festivalData;
+        }
+    }
+    
+    return null;
+}
+
+
+// [MODIFIED] 问候语悬停触发
 greetingEl.addEventListener("mouseenter", () => {
-    const greetingText = greetingEl.textContent.trim();
-    showBubble("你好呀～"); // 简化演示，请保留原有的 switch 逻辑
+  // ✅ NEW: First, check for a special day greeting
+  const specialGreeting = checkSpecialDayGreeting();
+  if (specialGreeting) {
+    showBubble(specialGreeting.msg, false, true, specialGreeting.class);
+    return; // Show special greeting and stop
+  }
+  
+  // If not a special day, continue with the original logic
+  const greetingText = greetingEl.textContent.trim();
+
+  const replies = {
+    "早上好": ["早上好呀！", "新的一天开始啦～", "早安早安，今天也要元气满满！"],
+    "中午好": ["中午好呀～", "午饭时间到啦，吃饱才有力气喵！", "中午好，来休息一下吧～"],
+    "下午好": ["下午好呀！", "下午时光最适合发呆了～", "下午好，来杯咖啡或下午茶，享受片刻的悠闲吧。"],
+    "晚上好": ["晚上好呀～", "辛苦啦，今晚早点休息哦～", "夜晚是属于放松的时间～"],
+    "默认": ["你好呀～", "喵～你来啦！", "嘿嘿，在想什么呢？"]
+  };
+
+  let matchedKey = Object.keys(replies).find(key => greetingText.includes(key));
+  if (!matchedKey) matchedKey = "默认";
+
+  const options = replies[matchedKey];
+  const reply = options[Math.floor(Math.random() * options.length)];
+
+  showBubble(reply);
 });
 
 
@@ -435,27 +546,6 @@ searchInput.addEventListener("focus", () => {
   showBubble(randomPrompt);
 });
 
-// 问候语悬停触发
-greetingEl.addEventListener("mouseenter", () => {
-  const greetingText = greetingEl.textContent.trim();
-
-  const replies = {
-    "早上好": ["早上好呀！", "新的一天开始啦～", "早安早安，今天也要元气满满！"],
-    "中午好": ["中午好呀～", "午饭时间到啦，吃饱才有力气喵！", "中午好，来休息一下吧～"],
-    "下午好": ["下午好呀！", "下午时光最适合发呆了～", "下午好，来杯咖啡或下午茶，享受片刻的悠闲吧。"],
-    "晚上好": ["晚上好呀～", "辛苦啦，今晚早点休息哦～", "夜晚是属于放松的时间～"],
-    "默认": ["你好呀～", "喵～你来啦！", "嘿嘿，在想什么呢？"]
-  };
-
-  let matchedKey = Object.keys(replies).find(key => greetingText.includes(key));
-  if (!matchedKey) matchedKey = "默认";
-
-  const options = replies[matchedKey];
-  const reply = options[Math.floor(Math.random() * options.length)];
-
-  showBubble(reply);
-});
-
 document.addEventListener("keydown", (event) => {
   
   if (event.altKey && event.code === "KeyC") {
@@ -665,131 +755,21 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // ✅ [修正] 初始问候逻辑 (包含生日、公历节日、农历节日)
   if (catVisible && !hasShownInitialTip) {
-    let isSpecialMoment = false;
-    const today = new Date();
-    const todayKey = today.toLocaleDateString(); 
-
-    // 1. 生日判断 (最高优先级)
-    const birthdayStr = localStorage.getItem('user_birthday_date');
-    if (birthdayStr) {
-      const parts = birthdayStr.split('-');
-      const bMonth = parseInt(parts[1], 10);
-      const bDay = parseInt(parts[2], 10);
-
-      if ((today.getMonth() + 1) === bMonth && today.getDate() === bDay) {
-        const currentYear = today.getFullYear();
-        const lastShownYear = localStorage.getItem('last_birthday_greeting_year');
-
-        if (lastShownYear != currentYear) {
-          const specialGreetings = [
-            "生日快乐喵！🎂 今天你是全宇宙的主角，要开开心心哦！",
-            "喵呜！祝你生日快乐！🎉 许个愿望吧，小猫会帮你守护它的！",
-            "Happy Birthday！✨ 今天的小鱼干都分给你，祝你万事胜意喵！"
-          ];
-          const randomMsg = specialGreetings[Math.floor(Math.random() * specialGreetings.length)];
-          
-          // 生日功能调用正确，保持不变
-          showBubble(randomMsg, false, true, 'bubble-birthday');
-          localStorage.setItem('last_birthday_greeting_year', currentYear);
-          isSpecialMoment = true;
-        }
-      }
+    let greetingShown = false;
+    
+    // 1. Check for special day greetings by calling the new helper function
+    const specialGreeting = checkSpecialDayGreeting();
+    if (specialGreeting) {
+      showBubble(specialGreeting.msg, false, true, specialGreeting.class);
+      greetingShown = true;
     }
 
-    // 2. 节日判断 (公历 & 农历)
-    if (!isSpecialMoment && window.Solar && window.Lunar) {
-      const lastFestivalDate = localStorage.getItem('last_festival_greeting_date');
-
-      if (lastFestivalDate !== todayKey) {
-        const solar = Solar.fromDate(today);
-        const lunar = Lunar.fromDate(today);
-        
-        // 🔥 [修正] 将 festivalMsg 初始化为空，用于接收对象或字符串
-        let festivalData = null; 
-
-        // 公历节日配置 (修正了 class 名称的拼写错误)
-        const solarStr = `${solar.getMonth()}-${solar.getDay()}`;
-        const solarGreetings = {
-          "1-1": { msg: "元旦快乐喵！🎆 新的一年，希望你的猫罐头永远吃不完！", class: "bubble-yuandan" },
-          "2-14": { msg: "情人节快乐喵！💖 没有对象？没关系，你有我这只可爱的小猫咪呀！", class: "bubble-qingrenjie" },
-          "3-8": "妇女节快乐喵！👑 今天你最美，不接受反驳！",
-          "3-12": "植树节到了喵！🌳 要不要一起去种猫草？",
-          "4-1": "愚人节快乐！🤪 小猫才不会骗你呢... 除非有罐头！",
-          "4-5": "清明时节雨纷纷喵... 🌱 记得带伞哦。",
-          "5-1": { msg: "劳动节快乐！🛠️ 今天不抓老鼠，我们要一起躺平喵～", class: "bubble-wuYi" },
-          "5-4": "青年节快乐喵！💪 永远年轻，永远热泪盈眶！",
-          "5-20": "520快乐喵！❤️ 虽然我不懂爱，但我知道我喜欢你！",
-          "6-1": { msg: "六一儿童节快乐喵！🎈 谁还不是个几百个月的宝宝呢？", class: "bubble-ertong" },
-          "7-1": "建党节快乐喵！🚩 红旗飘飘，小猫敬礼！",
-          "8-1": "建军节快乐喵！🫡 向最可爱的人致敬！",
-          "9-10": "教师节快乐喵！👩‍🏫 老师辛苦啦，送你一朵小红花！",
-          "10-1":  { msg: "国庆节快乐！ 愿祖国繁荣昌盛，国泰民安！", class: "bubble-guoqing" },
-          "10-24": "程序员节快乐喵！💻 愿你的代码没有Bug，发量依然浓密！",
-          "10-31": { msg: "不给糖就捣蛋！🎃 快把你的小鱼干交出来！", class: "bubble-wanshengjie" }, 
-          "11-11": "双十一快乐喵！🛒 购物车满了吗？记得给小猫买零食哦！",
-          "12-24": "平安夜快乐喵！🍎 记得吃苹果，平平安安哦～",
-          "12-25":  { msg: "圣诞快乐喵！🎄 把袜子挂好，等着收礼物吧！", class: "bubble-shengdan" }
-        };
-
-        // 农历节日配置
-        const lunarStr = `${Math.abs(lunar.getMonth())}-${lunar.getDay()}`;
-        const lunarGreetings = {
-          "1-1":{ msg:"过年啦！🧨 恭喜发财，红包拿来买猫粮喵！新年快乐！", class: "bubble-chunjie" },
-          "1-15":{ msg: "元宵节快乐喵！🏮 猜灯谜？不如猜猜我今天吃了多少小鱼干？", class: "bubble-yuanxiao" },
-          "2-2": "龙抬头喵！🐉 要不要带我去理个发，剪个帅气猫头？",
-          "5-5": { msg: "端午安康！🐲 粽子虽好，可不要贪吃哦，把肉馅的留给我！", class: "bubble-duanwu" },
-          "7-7": { msg: "七夕快乐！🌌 今晚的星星会唱歌，你听到了吗？", class: "bubble-qixi" },
-          "7-15": "中元节喵... 👻 晚上早点回家，小猫会保护你的！",
-          "8-15": { msg: "中秋节快乐！🌕 月饼分我一半，不然...我就对着月亮告状说你欺负我！", class: "bubble-zhongqiu" },
-          "12-8": "腊八节快乐喵！🥣 过了腊八就是年，粥好喝吗？",
-          "12-23": "小年快乐喵！🍬 灶神爷爷上天言好事，我在凡间讨鱼吃～"
-        };
-        
-        // 特殊检测：除夕
-        if (lunar.getFestivals().includes("除夕")) {
-             festivalData = { msg: "除夕快乐喵！🧨 今晚不许睡，陪我守岁抢红包！", class: "bubble-chunjie" };
-        } else {
-            // 优先匹配公历，再匹配农历
-            if (solarGreetings[solarStr]) {
-              festivalData = solarGreetings[solarStr];
-            } else if (lunarGreetings[lunarStr]) {
-              festivalData = lunarGreetings[lunarStr];
-            }
-
-        }
-
-        // 🔥 [修正] 核心处理逻辑：解析 festivalData 并正确调用 showBubble
-        if (festivalData) {
-          let messageText = '';
-          let styleClass = '';
-
-          // 判断 festivalData 是对象还是字符串
-          if (typeof festivalData === 'object' && festivalData.msg) {
-              // 如果是对象，则分别提取消息和样式类
-              messageText = festivalData.msg;
-              styleClass = festivalData.class || ''; // 如果没有class，则为空
-          } else if (typeof festivalData === 'string') {
-              // 如果只是字符串，则直接作为消息
-              messageText = festivalData;
-          }
-
-          // 只有在确定有消息文本时才显示
-          if (messageText) {
-              // 使用提取出的变量调用 showBubble
-              showBubble(messageText, false, true, styleClass);
-          }
-          
-          localStorage.setItem('last_festival_greeting_date', todayKey);
-          isSpecialMoment = true;
-        }
-      }
-    }
-
-    // 3. 普通问候 (兜底逻辑)
-    if (!isSpecialMoment) {
+    // 2. If no special greeting was shown, show the default initial greeting
+    if (!greetingShown) {
       showBubble("喵喵！！（你好！！）", false, true);
     }
     
+    // Mark that the initial greeting routine has run to prevent it from running again in the same session
     hasShownInitialTip = true;
   }
 });
@@ -2670,4 +2650,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 3000);
 });
-

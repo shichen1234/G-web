@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 9, filename: "9--演员--薛之谦.mp3" },
     { id: 10, filename: "10--突然好想你--五月天.mp3" },
     { id: 11, filename: "11--大鱼--周深.mp3" },
-    { id: 12, filename: "12--モニタリング--DECO27、初音ミク.mp3" },
+    { id: 12, filename: "12--モニタリング (Best Friend Remix)--DECO27,初音ミク.mp3" },
     { id: 13, filename: "13--成都--赵雷.mp3" },
     { id: 14, filename: "14--海阔天空--Beyond.mp3" },
     { id: 15, filename: "15--小幸运--田馥甄.mp3" },
@@ -119,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 46, filename: "46--We Are the World--U.S.A. For Africa.mp3" },
     { id: 47, filename: "47--紫荆花盛开--梁咏琪、李荣浩.mp3" },
     { id: 48, filename: "48--夢と葉桜--初音ミク&青木月光.mp3" },
+    { id: 49, filename: "49--告白の夜--Ayasa绚沙.mp3" },
   ];
 
 songDatabase.forEach(song => {
