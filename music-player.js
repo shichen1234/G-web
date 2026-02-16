@@ -120,6 +120,17 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 47, filename: "47--紫荆花盛开--梁咏琪、李荣浩.mp3" },
     { id: 48, filename: "48--夢と葉桜--初音ミク&青木月光.mp3" },
     { id: 49, filename: "49--告白の夜--Ayasa绚沙.mp3" },
+    { id: 50, filename: "50--カタオモイ(单相思)--Aimer.mp3" },
+    { id: 51, filename: "51--我会等--承桓.mp3" },
+    { id: 52, filename: "52--那些年--胡夏.mp3" },
+    { id: 53, filename: "53--忆夏思乡--MoreanP.mp3" },
+    { id: 54, filename: "54--僕らの手には何もないけど、--RAM WIRE.mp3" },
+    { id: 55, filename: "55--動く、動く--久保ユリカ&水瀬いのり.mp3" },
+    { id: 56, filename: "56--Immortals--Fall Out Boy.mp3" },
+    { id: 57, filename: "57--下雨天--南拳妈妈.mp3" },
+    { id: 58, filename: "58--TICKING AWAY (VCT ANTHEM 2023) (流光似箭)--Grabbitz&无畏契约&bbno$.mp3" },
+    { id: 59, filename: "59--告白气球--周杰伦.mp3" },
+    { id: 60, filename: "60--青花瓷--周杰伦.mp3" }
   ];
 
 songDatabase.forEach(song => {
