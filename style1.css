@@ -1745,6 +1745,7 @@ input:checked + .slider:before {
 /* === AI 图标文字样式 === */
 /* === AI 图标文字样式（细边框 + 修长版） === */
 /* === AI 图标文字样式（实心填充版） === */
+/* === AI 图标文字样式（带白色边框） === */
 .ai-icon-text {
   /* 1. 字体选择：使用窄高风格字体 */
   font-family: 'DIN Condensed', 'Bahnschrift', 'Roboto Condensed', 'Arial Narrow', sans-serif;
@@ -1756,10 +1757,12 @@ input:checked + .slider:before {
   text-anchor: middle;
   dominant-baseline: central;
   
-  /* 3. 初始状态：实心填充 (使用柔和的科技蓝) */
-  fill: #8ab4f8;          /* ✅ 初始颜色：科技蓝，显眼但不刺眼 */
-  stroke: none;           /* ✅ 取消边框 */
-  
+  /* 3. 初始状态：蓝色填充 + 白色边框 */
+  fill: #72b2ff;          /* 初始颜色：科技蓝 */
+  stroke: white;            /* 新增：白色边框 */
+  stroke-width: 1;          /* 新增：边框宽度，可按需调整 */
+  paint-order: stroke;      /* 优化：让边框在填充层后面绘制，防止文字变细 */
+
   /* 4. 形态调整 */
   transform-box: fill-box;
   transform-origin: center;
@@ -1771,7 +1774,10 @@ input:checked + .slider:before {
 
 /* === 激活状态：白色实心 === */
 #aiSwitch.active .ai-icon-text {
-  fill: #ffffff;          /* ✅ 激活后变白 */
+  fill: #ffffff;          /* 激活后变白 */
+  stroke: white;            /* 边框也为白色 (将与填充色融合) */
+  stroke-width: 1;
+  paint-order: stroke;
   
   /* 激活时增加一点文字光晕，更有质感 */
   filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.6)); 
@@ -1782,6 +1788,7 @@ input:checked + .slider:before {
 #aiSwitch:hover .ai-icon-text {
   filter: brightness(1.2);
 }
+
 /* === 选项容器样式 (修改) === */
 .options-container {
   display: flex;
