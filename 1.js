@@ -712,7 +712,7 @@ function renderStaticWallpapers() {
     dailyPlaceholder.className = "wallpaper-placeholder special-external-daily";
     fragment.appendChild(dailyPlaceholder);
     // 1. Create ordinary static wallpaper placeholders (1-45)
-    for (let i = 1; i <= 66; i++) {
+    for (let i = 1; i <= 98; i++) {
         const placeholder = document.createElement("div");
         placeholder.className = "wallpaper-placeholder";
         placeholder.dataset.index = i;
