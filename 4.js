@@ -128,23 +128,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 6. 鼠标移动监听 (计算目标值 + 唤醒循环)
-    document.addEventListener('mousemove', (e) => {
-        // 只有开启了特效且未被全局暂停时，才计算
-        if (isParallaxPaused || localStorage.getItem('parallaxEnabled') !== 'true') return;
+// 4.js - 优化视差鼠标监听
+let lastFrameTime = 0;
 
-        let activeBg = (bgVid && bgVid.style.display !== 'none') ? bgVid : bgImg;
-        if (!activeBg) return;
+document.addEventListener('mousemove', (e) => {
+    // 限制每 16ms 只计算一次 (约 60fps)
+    const now = Date.now();
+    if (now - lastFrameTime < 16) return; 
+    lastFrameTime = now;
 
-        // 计算目标偏移量 (不直接修改 DOM，只更新数据)
-        // 45 是移动阻尼系数
-        activeBg.targetX = (window.innerWidth - e.clientX * 2) / 45;
-        activeBg.targetY = (window.innerHeight - e.clientY * 2) / 45;
+    if (isParallaxPaused || localStorage.getItem('parallaxEnabled') !== 'true') return;
 
-        // ⚡️ 核心唤醒：如果循环已停止，重新启动
-        if (!parallaxId) {
-            renderLoop();
-        }
-    }, { passive: true }); // passive 提升滚动性能
+    let activeBg = (bgVid && bgVid.style.display !== 'none') ? bgVid : bgImg;
+    if (!activeBg) return;
+
+    // 计算逻辑保持不变...
+    activeBg.targetX = (window.innerWidth - e.clientX * 2) / 45;
+    activeBg.targetY = (window.innerHeight - e.clientY * 2) / 45;
+
+    if (!parallaxId) {
+        renderLoop();
+    }
+}, { passive: true });
+
 });
 
 

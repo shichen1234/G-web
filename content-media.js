@@ -21,9 +21,9 @@
     };
     (document.head || document.documentElement).appendChild(script);
 
-    // ⚡ 优化: 提高节流时间到500ms (原来是300ms)
+    // 消息转发 - 添加节流
     let lastMessageTime = 0;
-    const MESSAGE_THROTTLE = 500;
+    const MESSAGE_THROTTLE = 300; // 300ms 节流
 
     window.addEventListener('message', (e) => {
         // 只接收来自当前窗口的消息
@@ -44,7 +44,7 @@
             metadata: e.data.payload,
             playbackState: e.data.playbackState
         }).catch(() => {
-            // 忽略错误(例如扩展已禁用)
+            // 忽略错误（例如扩展已禁用）
         });
-    }, { passive: true }); // ⚡ 添加passive优化
+    });
 })();

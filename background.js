@@ -85,14 +85,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   // 3. 内存清理请求
   if (message.action === 'requestCleanup') {
-    console.log('[G-web] 收到页面的内存清理请求');
     sendResponse({ status: 'acknowledged' });
     return true;
   }
 
   // 4. 壁纸缓存
   if (message.action === 'getDailyWallpaper') {
-    console.log('[G-web] 收到页面请求，开始缓存每日壁纸...');
     cacheDailyWallpaper()
       .then(() => sendResponse({ success: true }))
       .catch(error => sendResponse({ success: false, error: error.message }));
@@ -101,7 +99,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // 5. 🔧 修复：豆包AI查询处理（改进版）
   if (message.action === "openDoubao") {
-    console.log('[G-web Background] 收到豆包AI请求，查询内容:', message.query);
 
     // 验证查询内容
     if (!message.query || typeof message.query !== 'string' || message.query.trim() === '') {
@@ -120,14 +117,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
-      console.log('[G-web Background] ✅ 查询内容已存储');
 
       // 步骤2: 检查是否已有豆包标签页打开
       chrome.tabs.query({ url: "https://www.doubao.com/*" }, (tabs) => {
         if (tabs && tabs.length > 0) {
           // 如果已有标签页，激活它并刷新
           const existingTab = tabs[0];
-          console.log('[G-web Background] 发现已存在的豆包标签页，激活并刷新');
           
           chrome.tabs.update(existingTab.id, { active: true }, () => {
             // 刷新页面以触发注入脚本
@@ -135,7 +130,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           });
         } else {
           // 没有标签页，创建新的
-          console.log('[G-web Background] 创建新的豆包标签页');
           chrome.tabs.create({ 
             url: "https://www.doubao.com/chat/",
             active: true 
@@ -209,7 +203,6 @@ async function saveToIndexedDB(blob, key) {
       });
       
       tx.oncomplete = () => {
-        console.log(`[G-web] 壁纸已保存: ${key} (${(blob.size / 1024 / 1024).toFixed(2)} MB)`);
         resolve();
       };
       
@@ -262,7 +255,6 @@ async function deleteFromIndexedDB(key) {
       const request = tx.objectStore("Videos").delete(key);
       
       tx.oncomplete = () => {
-        console.log(`[G-web] 已删除: ${key}`);
         resolve();
       };
       
@@ -272,7 +264,6 @@ async function deleteFromIndexedDB(key) {
       };
     });
   } catch (error) {
-    console.error('[G-web] 删除异常:', error);
     throw error;
   }
 }
@@ -301,7 +292,6 @@ async function cleanOldWallpapers() {
             store.delete(key);
             deletedCount++;
           });
-          console.log(`[G-web] 清理了 ${deletedCount} 个旧壁纸`);
         }
       };
       
@@ -314,7 +304,6 @@ async function cleanOldWallpapers() {
 }
 
 async function cacheDailyWallpaper() {
-  console.log('[G-web] 开始执行每日壁纸安全更新...');
   const dailyApiUrl = "https://bing.img.run/1920x1080.php";
   const PENDING_KEY = 'daily_external_wallpaper_pending';
 
@@ -330,25 +319,20 @@ async function cacheDailyWallpaper() {
     }
 
     await saveToIndexedDB(imageBlob, PENDING_KEY);
-    console.log(`[G-web] 新壁纸已下载到临时仓库 (${(imageBlob.size / 1024).toFixed(1)} KB)`);
 
     const tempBlob = await getVideoFromDB(PENDING_KEY);
     if (!tempBlob) throw new Error("无法从临时仓库中读取新壁纸");
 
     await saveToIndexedDB(tempBlob, DAILY_WALLPAPER_KEY);
-    console.log('[G-web] 新壁纸已成功覆盖到正式仓库。');
 
     await deleteFromIndexedDB(PENDING_KEY);
-    console.log('[G-web] 已清理临时仓库。');
 
     const today = new Date().toISOString().slice(0, 10);
     await chrome.storage.local.set({ 'dailyWallpaperCacheDate': today });
-    console.log('[G-web] 每日壁纸安全更新完成！');
     
     await cleanOldWallpapers();
 
   } catch (error) {
-    console.error('[G-web] 缓存壁纸过程中发生错误:', error);
     await deleteFromIndexedDB(PENDING_KEY).catch(()=>{});
   } finally {
     imageBlob = null;
@@ -372,12 +356,10 @@ async function checkAndCacheWallpaper() {
 
 // ====== 触发器设置 ======
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('[G-web] 扩展安装/更新，缓存壁纸');
   cacheDailyWallpaper();
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  console.log('[G-web] 浏览器启动，检查壁纸');
   checkAndCacheWallpaper();
 });
 
@@ -388,12 +370,10 @@ chrome.alarms.create('dailyWallpaperAlarm', {
 
 chrome.alarms.onAlarm.addListener(alarm => {
   if (alarm.name === 'dailyWallpaperAlarm') {
-    console.log('[G-web] 每日闹钟触发，开始安全更新流程');
     cacheDailyWallpaper();
   }
   
   if (alarm.name === 'memoryCheckAlarm') {
-    console.log('[G-web] 内存检查触发');
     chrome.runtime.sendMessage({ 
       type: 'memoryCleanupSuggestion',
       timestamp: Date.now()
@@ -404,4 +384,16 @@ chrome.alarms.onAlarm.addListener(alarm => {
 chrome.alarms.create('memoryCheckAlarm', {
   delayInMinutes: 30,
   periodInMinutes: 30
+});
+
+chrome.windows.onFocusChanged.addListener((windowId) => {
+  chrome.tabs.query({ url: chrome.runtime.getURL('index.html') }, (tabs) => {
+    tabs.forEach(tab => {
+      if (windowId === chrome.windows.WINDOW_ID_NONE) {
+        chrome.tabs.sendMessage(tab.id, { action: "osFocusControl", state: "pause" }).catch(()=>{});
+      } else {
+        chrome.tabs.sendMessage(tab.id, { action: "osFocusControl", state: "play" }).catch(()=>{});
+      }
+    });
+  });
 });

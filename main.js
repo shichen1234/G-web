@@ -13,11 +13,9 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     window.isPageVisible = false;
     stopAllAnimations(); // 立即停止所有动画
-    console.log("[节能模式] 页面不可见，停止渲染");
   } else {
     window.isPageVisible = true;
     startAllAnimations(); // 恢复动画
-    console.log("[节能模式] 页面可见，恢复渲染");
   }
 });
 
@@ -32,7 +30,6 @@ function resetActivityTimer() {
   activeSleepTimer = setTimeout(() => {
     window.isUserActive = false;
     stopHighCostAnimations(); 
-    console.log("[节能模式] 用户闲置，暂停高耗能特效");
   }, 5000); 
 }
 
@@ -65,8 +62,12 @@ function stopHighCostAnimations() {
   if (window.pauseParallax) window.pauseParallax();
   // 背景视频视情况而定，如果为了极致 0%，这里也要暂停
 }
-
 function startAllAnimations() {
+  // 核心修改：如果当前窗口没有焦点，绝对不要恢复动画和视频！
+  if (!document.hasFocus()) { 
+      return; 
+  }
+
   // 恢复所有逻辑
   if (window.resumeMouseTrail) window.resumeMouseTrail();
   if (window.resumeParallax) window.resumeParallax();
@@ -74,22 +75,50 @@ function startAllAnimations() {
   const bgVideo = document.getElementById('bgVideo');
   // 只有在非每日图片模式且原本在播放时才恢复
   const wpType = localStorage.getItem("wallpaperType"); 
+  
+  // 再次检查可见性
   if (bgVideo && wpType !== 'daily_external' && window.isPageVisible) {
       bgVideo.play().catch(()=>{});
   }
 }
 
+
+// 精准计时器注册表：所有定时器创建后都在这里登记，卸载时只清理已知的
+const _timerRegistry = { timeouts: new Set(), intervals: new Set() };
+const _origSetTimeout = window.setTimeout.bind(window);
+const _origSetInterval = window.setInterval.bind(window);
+const _origClearTimeout = window.clearTimeout.bind(window);
+const _origClearInterval = window.clearInterval.bind(window);
+
+window.setTimeout = function(fn, delay, ...args) {
+  const id = _origSetTimeout(() => {
+    _timerRegistry.timeouts.delete(id);
+    fn(...args);
+  }, delay);
+  _timerRegistry.timeouts.add(id);
+  return id;
+};
+window.setInterval = function(fn, delay, ...args) {
+  const id = _origSetInterval(fn, delay, ...args);
+  _timerRegistry.intervals.add(id);
+  return id;
+};
+window.clearTimeout = function(id) {
+  _timerRegistry.timeouts.delete(id);
+  _origClearTimeout(id);
+};
+window.clearInterval = function(id) {
+  _timerRegistry.intervals.delete(id);
+  _origClearInterval(id);
+};
+
 window.addEventListener('beforeunload', () => {
-  // 清理所有定时器
-  for (let i = 0; i < 99999; i++) {
-    clearTimeout(i);
-    clearInterval(i);
-  }
-  
-  // 清理全局变量
-  if (zenTimeInterval) clearInterval(zenTimeInterval);
-  if (idleTimer) clearTimeout(idleTimer);
-  
+  // ✅ 只清理真实存在的定时器，避免暴力循环卡死浏览器
+  _timerRegistry.timeouts.forEach(id => _origClearTimeout(id));
+  _timerRegistry.intervals.forEach(id => _origClearInterval(id));
+  _timerRegistry.timeouts.clear();
+  _timerRegistry.intervals.clear();
+
   // 数据库连接关闭
   if (window.dbConnection) {
     try {
@@ -97,8 +126,7 @@ window.addEventListener('beforeunload', () => {
       window.dbConnection = null;
     } catch (e) {}
   }
-  
-  console.log('[G-web] 页面卸载完全清理完毕');
+
 });
 
 let zenTimeInterval = null;
@@ -455,28 +483,29 @@ document.addEventListener('DOMContentLoaded', () => {
   cacheZenElements();
   resetIdleTimer();
 });
-
 // =============================================
-// 🔋 硬件级性能优化: 窗口失焦时暂停视频 (优化版)
+// 🔋 强制省电策略：失去焦点立即暂停
 // =============================================
 window.addEventListener('blur', () => {
     const bgVideo = document.getElementById('bgVideo');
-    if (bgVideo && bgVideo.style.display !== 'none' && !bgVideo.paused) {
+    // 只要失去焦点，无条件尝试暂停
+    if (bgVideo && !bgVideo.paused) {
         bgVideo.pause();
-        console.log('[性能优化] 窗口失去焦点，视频暂停');
     }
+    
+    // 停止其他耗能动画
+    if (window.pauseMouseTrail) window.pauseMouseTrail();
+    if (window.pauseParallax) window.pauseParallax();
 }, { passive: true });
 
+
 window.addEventListener('focus', () => {
-    const bgVideo = document.getElementById('bgVideo');
-    if (bgVideo && bgVideo.style.display !== 'none' && bgVideo.paused) {
-        const wallpaperType = localStorage.getItem("wallpaperType");
-        if (wallpaperType !== "daily_external" && !bgVideo.src.includes('.jpg')) {
-            bgVideo.play().catch(() => {});
-            console.log('[性能优化] 窗口获得焦点，视频恢复');
-        }
-    }
+    // 只有当用户主动点回来时，才恢复所有动画
+    window.isPageVisible = true;
+    window.isUserActive = true;
+    startAllAnimations(); // 调用上面修改过的带锁函数
 }, { passive: true });
+
 
 document.addEventListener('visibilitychange', () => {
   const bgVideo = document.getElementById('bgVideo');

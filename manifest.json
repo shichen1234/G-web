@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
     "name": "G-web",
-    "version": "3.2.1",
-    "description": "更改新标签页为个人定制页面，还有一个可爱的私人猫猫（可通过 Alt+C 开启/关闭），音乐组件可以检测到浏览器目前所播放的音乐或者视频，左侧有快捷栏，右侧有快捷面板，左上角有功能菜单，记录了所有功能，务必把浏览器的图形加速打开，以免视频壁纸出现卡顿。",
+    "version": "3.2.2",
+    "description": "A personalized new tab page with a cat companion (Alt+C), music detector, quick-access sidebar and panel, and a feature menu.",
     "icons": {
         "16": "logo/icon.png",
         "48": "logo/icon.png",

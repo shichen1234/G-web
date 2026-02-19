@@ -6,19 +6,16 @@
     'use strict';
 
     if (window.__G_WEB_DOUBAO_INJECTED__) {
-        console.log('[G-web Inject] 脚本已注入，跳过');
         return;
     }
     window.__G_WEB_DOUBAO_INJECTED__ = true;
 
     chrome.storage.local.get('pending_query', function(data) {
         if (!data || !data.pending_query) {
-            console.log('[G-web Inject] 无待处理查询');
             return;
         }
 
         const query = data.pending_query;
-        console.log('[G-web Inject] 🎯 待处理查询:', query);
         chrome.storage.local.remove('pending_query');
 
         const MAX_ATTEMPTS = 80;
@@ -53,7 +50,6 @@
             }
 
             if (textarea && sendButton) {
-                console.log('[G-web Inject] ✅ 元素定位成功');
                 clearInterval(findAndFillInterval);
 
                 // ============================================
@@ -67,7 +63,6 @@
                 textarea.value = '';
                 textarea.dispatchEvent(new Event('input', { bubbles: true }));
                 
-                console.log('[G-web Inject] 🖊️ 开始模拟逐字输入...');
                 
                 setTimeout(() => {
                     // 获取原生setter
@@ -109,7 +104,6 @@
                             
                             // 显示进度
                             if (charIndex % 5 === 0 || charIndex === query.length) {
-                                console.log(`[G-web Inject] 📝 输入进度: ${charIndex}/${query.length}`);
                             }
                         } else {
                             // 输入完成
@@ -118,17 +112,11 @@
                             // 触发change事件
                             textarea.dispatchEvent(new Event('change', { bubbles: true }));
                             
-                            console.log('[G-web Inject] ✅ 输入完成:', currentText);
-                            console.log('[G-web Inject] 📊 验证 textarea.value:', textarea.value);
                             
                             // ============================================
                             // 🚀 发送消息（增强版）
                             // ============================================
                             setTimeout(() => {
-                                console.log('[G-web Inject] 🔍 检查发送按钮状态...');
-                                console.log('  - disabled属性:', sendButton.disabled);
-                                console.log('  - disabled特性:', sendButton.hasAttribute('disabled'));
-                                console.log('  - className:', sendButton.className);
                                 
                                 // 强制启用按钮
                                 sendButton.disabled = false;
@@ -143,7 +131,6 @@
                                     if (sendAttempt === 1) {
                                         // 第1次：直接点击
                                         sendButton.click();
-                                        console.log('[G-web Inject] 🔘 尝试1: 直接点击');
                                     } else if (sendAttempt === 2) {
                                         // 第2次：鼠标事件点击
                                         sendButton.dispatchEvent(new MouseEvent('click', {
@@ -151,7 +138,6 @@
                                             cancelable: true,
                                             view: window
                                         }));
-                                        console.log('[G-web Inject] 🔘 尝试2: 鼠标事件点击');
                                     } else if (sendAttempt === 3) {
                                         // 第3次：回车发送
                                         textarea.dispatchEvent(new KeyboardEvent('keydown', {
@@ -162,7 +148,6 @@
                                             bubbles: true,
                                             cancelable: true
                                         }));
-                                        console.log('[G-web Inject] ⌨️ 尝试3: 回车发送');
                                     } else if (sendAttempt === 4) {
                                         // 第4次：查找form并提交
                                         const form = textarea.closest('form');
@@ -171,11 +156,9 @@
                                                 bubbles: true,
                                                 cancelable: true
                                             }));
-                                            console.log('[G-web Inject] 📝 尝试4: 表单提交');
                                         }
                                     } else {
                                         clearInterval(trySend);
-                                        console.log('[G-web Inject] ✅ 已完成所有发送尝试');
                                     }
                                 }, 400); // 每400ms尝试一次
                                 
@@ -188,17 +171,10 @@
             } else if (attempts >= MAX_ATTEMPTS) {
                 clearInterval(findAndFillInterval);
                 console.error('[G-web Inject] ⏱️ 超时');
-                console.log('[G-web Inject] 调试:');
-                console.log('  - textarea:', !!textarea);
-                console.log('  - sendButton:', !!sendButton);
                 
                 if (textarea) {
-                    console.log('  - textarea.placeholder:', textarea.placeholder);
-                    console.log('  - textarea.id:', textarea.id);
-                    console.log('  - textarea.className:', textarea.className);
                 }
             } else if (attempts % 10 === 0) {
-                console.log(`[G-web Inject] 🔍 查找中... (${attempts}/${MAX_ATTEMPTS})`);
             }
         }, CHECK_INTERVAL);
     });

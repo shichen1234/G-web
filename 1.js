@@ -1,10 +1,8 @@
-// 1.js - 完整修改版
+// 1.js - 性能优化完整版 (全功能)
 
 // ============================================================
 // 📢 作者链接配置区域
 // ============================================================
-// 以后您只需要在这里按顺序填写真实的作者链接即可
-// 索引从 0 开始，对应壁纸编号 1, 2, 3...
 const wallpaperAuthorLinks = [
   'https://steamcommunity.com/sharedfiles/filedetails/?id=3043602786', 'https://steamcommunity.com/sharedfiles/filedetails/?id=3018438776', 'https://zhutix.com/animated/breeze-tree//', 'https://steamcommunity.com/sharedfiles/filedetails/?id=3434597685', 'https://steamcommunity.com/sharedfiles/filedetails/?id=3231822105', 'https://steamcommunity.com/sharedfiles/filedetails/?id=2358176341', 'https://steamcommunity.com/sharedfiles/filedetails/?id=3146924530', 'https://steamcommunity.com/sharedfiles/filedetails/?id=1661383396', 'https://steamcommunity.com/sharedfiles/filedetails/?id=2718086334', 'https://steamcommunity.com/sharedfiles/filedetails/?id=3466567674', // 1-10
   'https://steamcommunity.com/sharedfiles/filedetails/?id=3516806400', 'https://steamcommunity.com/sharedfiles/filedetails/?id=3549235003', 'https://steamcommunity.com/sharedfiles/filedetails/?id=3494551711', 'https://steamcommunity.com/sharedfiles/filedetails/?id=3417214460', 'https://zhutix.com/animated/beautiful-autumn/', 'https://steamcommunity.com/sharedfiles/filedetails/?id=2141213975', 'https://zhutix.com/animated/anime-living-room/', 'https://zhutix.com/animated/liweidan-dtts/', 'https://zhutix.com/animated/aa-12-girls-frontline/', 'https://zhutix.com/animated/blue-eyes-anime-girl-4k/', // 11-20
@@ -17,7 +15,7 @@ const wallpaperAuthorLinks = [
   'https://steamcommunity.com/sharedfiles/filedetails/?id=3429707117','https://steamcommunity.com/sharedfiles/filedetails/?id=2691915794','https://steamcommunity.com/sharedfiles/filedetails/?id=2841018591','https://steamcommunity.com/sharedfiles/filedetails/?id=3480156230','https://steamcommunity.com/sharedfiles/filedetails/?id=2995764284','https://steamcommunity.com/sharedfiles/filedetails/?id=3272631584','https://steamcommunity.com/sharedfiles/filedetails/?id=2902939420','https://steamcommunity.com/sharedfiles/filedetails/?id=3275856487','https://steamcommunity.com/sharedfiles/filedetails/?id=3211762136','https://steamcommunity.com/sharedfiles/filedetails/?id=3369151871',//81-90
   'https://steamcommunity.com/sharedfiles/filedetails/?id=2945859950','https://steamcommunity.com/sharedfiles/filedetails/?id=3639948534','https://steamcommunity.com/sharedfiles/filedetails/?id=2723647705','https://steamcommunity.com/sharedfiles/filedetails/?id=818696361','https://steamcommunity.com/sharedfiles/filedetails/?id=3158513965','https://steamcommunity.com/sharedfiles/filedetails/?id=3415535976','https://steamcommunity.com/sharedfiles/filedetails/?id=2961828444','https://steamcommunity.com/sharedfiles/filedetails/?id=3086767327'
 ];
-// ============================================================
+
 let hasShownInitialTip = false;
 let bubbleLocked = false;
 let bubbleDisabled = false;
@@ -25,7 +23,43 @@ let isMenuOperating = false;
 let clickCount = 0;
 let catVisible = true;
 let clickTimer = null;
-let isLocked = false; // 🔒 是否处于冷却状态
+let isLocked = false; 
+
+// ============================================================
+// 🚀 [性能优化核心] IndexedDB 预读取缓存
+// ============================================================
+let downloadedKeys = new Set();
+
+async function cacheDownloadedKeys() {
+    try {
+        // 假设 openDatabase 已经在 2.js 中定义且是全局的
+        if (typeof openDatabase !== 'function') return; 
+        
+        const db = await openDatabase();
+        const tx = db.transaction("Videos", "readonly");
+        const store = tx.objectStore("Videos");
+        
+        return new Promise(resolve => {
+            const request = store.getAllKeys();
+            request.onsuccess = () => {
+                downloadedKeys = new Set(request.result);
+                resolve();
+            };
+            request.onerror = (e) => {
+                console.error("[G-web] 读取壁纸 Key 失败", e);
+                resolve(); // 失败也继续，避免阻塞
+            };
+        });
+    } catch (e) {
+        console.error("[G-web] 缓存 Key 出错", e);
+    }
+}
+
+// 🚀 [性能优化] 同步检查函数
+function checkVideoExistsSync(key) {
+    return downloadedKeys.has(key);
+}
+
 // B站图标悬停
 document.addEventListener("DOMContentLoaded", function () {
   const engines = [
@@ -62,7 +96,6 @@ document.addEventListener("DOMContentLoaded", function () {
       bigLogo: "logo/sogou-logo.png",
       placeholder: "搜狗搜索..."
     }
-    // 继续加你想要的……
   ];
 
   let current = parseInt(localStorage.getItem("currentEngine") || "0", 10);
@@ -368,14 +401,15 @@ document.addEventListener("DOMContentLoaded", () => {
 function initWallpaperModal() {
     // Bind Tab click event
     tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
+      // 🚀 [性能优化] 标记为 async，等待 Key 加载
+      tab.addEventListener('click', async () => {
         // 1. Toggle Active style
         tabs.forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
 
         // 2. Switch data rendering
         const type = tab.dataset.type;
-        renderWallpapers(type);
+        await renderWallpapers(type); // 🚀 [性能优化] 等待加载
 
         // ✅ [New] After switching categories, automatically scroll back to top
         const rightPanel = document.querySelector('.wp-right-panel');
@@ -388,7 +422,12 @@ function initWallpaperModal() {
     // Default render static wallpapers
     renderWallpapers('static');
   }
-function renderWallpapers(type) {
+
+// 🚀 [性能优化] 渲染主函数：先加载 Key，再渲染
+async function renderWallpapers(type) {
+    // 1. 等待 IndexedDB 中的 ID 列表加载到内存
+    await cacheDownloadedKeys();
+
     grid.innerHTML = ''; // Clear current content
 
     // 1. Reset Grid style
@@ -448,7 +487,7 @@ function createAndReplacePlaceholder(placeholder, type) {
 
     const thumbBox = document.createElement("div");
     thumbBox.className = "lazy-video-thumb";
-    thumbBox.style.cssText = "position:relative;width:100%;height:90px;border-radius:8px;cursor:pointer;overflow:hidden;";
+    thumbBox.style.cssText = "position:relative;width:100%;height:130px;border-radius:8px;cursor:pointer;overflow:hidden;";
 
     const img = document.createElement("img");
     img.src = posterSrc;
@@ -516,13 +555,10 @@ function createAndReplacePlaceholder(placeholder, type) {
 
     tile.appendChild(thumbBox);
 
-    if(typeof checkVideoExists === 'function') {
-        checkVideoExists(dbKey).then(exists => {
-            if (exists) {
-                badge.style.display = "block";
-                tile.dataset.downloaded = "true";
-            }
-        });
+    // 🚀 [性能优化] 使用同步检查，不再产生数据库IO
+    if (checkVideoExistsSync(dbKey)) {
+        badge.style.display = "block";
+        tile.dataset.downloaded = "true";
     }
 
     // ============================================================
@@ -563,6 +599,9 @@ function createAndReplacePlaceholder(placeholder, type) {
         e.stopPropagation();
         if (confirm(`确定要删除这个壁纸缓存吗？`)) {
             await deleteVideoFromIndexedDB(dbKey);
+            // 🚀 [性能优化] 删除后同步更新内存 Set
+            downloadedKeys.delete(dbKey);
+            
             tile.dataset.downloaded = "false";
             badge.style.display = "none";
             popover.classList.remove("show");
@@ -625,6 +664,8 @@ tile.addEventListener("click", async (e) => {
         progressText.textContent = '保存中...';
         try {
             await saveVideoToIndexedDB(blob, dbKey);
+            // 🚀 [性能优化] 下载成功后更新内存 Set
+            downloadedKeys.add(dbKey);
             
             // ✅ 只有成功保存后，才更新状态
             tile.dataset.downloaded = "true";
@@ -671,7 +712,7 @@ function renderStaticWallpapers() {
     dailyPlaceholder.className = "wallpaper-placeholder special-external-daily";
     fragment.appendChild(dailyPlaceholder);
     // 1. Create ordinary static wallpaper placeholders (1-45)
-    for (let i = 1; i <= 65; i++) {
+    for (let i = 1; i <= 66; i++) {
         const placeholder = document.createElement("div");
         placeholder.className = "wallpaper-placeholder";
         placeholder.dataset.index = i;

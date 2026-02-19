@@ -104,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // =============================================
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'memoryCleanupSuggestion') {
-    console.log('[G-web] 收到内存清理建议');
     
     // 🔧 轻量级清理
     performLightCleanup();
@@ -126,7 +125,6 @@ function performLightCleanup() {
       const parsed = JSON.parse(fortuneRecord);
       if (parsed.date !== today) {
         // 过期数据，可以考虑清理
-        console.log('[G-web] 发现过期的运势数据');
       }
     }
   } catch (e) {
@@ -137,7 +135,6 @@ function performLightCleanup() {
   if (window.gc && typeof window.gc === 'function') {
     try {
       window.gc();
-      console.log('[G-web] 已触发垃圾回收');
     } catch (e) {
       // 忽略错误
     }
@@ -149,9 +146,7 @@ function performLightCleanup() {
 // =============================================
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    console.log('[G-web] 页面隐藏,暂停更新');
     // 可以在这里暂停一些不必要的更新
   } else {
-    console.log('[G-web] 页面显示,恢复更新');
   }
 }, { passive: true });

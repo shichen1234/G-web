@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.setZenModeForPlayer = function(isActive) {
     if (isZenModeForPlayer === isActive) return; // 状态未改变，则不执行任何操作
 
-    console.log(`播放器接收到禅模式状态更新: ${isActive}`);
     isZenModeForPlayer = isActive;
 
     // 检查当前是否有歌曲在播放
@@ -26,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const isDualColumnSong = DUAL_COLUMN_LYRIC_SONG_IDS.has(currentSong.id);
 
       if (isDualColumnSong || currentSong.transLrcFilename) {
-        console.log('因禅模式状态改变，重新渲染双列歌曲歌词...');
 
         // 【核心修改】使用 Promise.all 同时获取原版歌词和翻译歌词
         Promise.all([
@@ -53,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
               // 这样 parseLyrics 就会更新全局的 currentTransLyrics
               // 禅模式组件读取 currentTransLyrics 时就有数据了
               parseLyrics(originalLyrics, translatedLyrics);
-              console.log('歌词重载完成。翻译长度:', translatedLyrics ? translatedLyrics.length : 0);
             }
         }).catch(err => {
             console.error("重载歌词失败:", err);
@@ -231,7 +228,6 @@ songDatabase.forEach(song => {
 // music-player.js (找到并替换)
   function stopSong() {
     if (currentSongIndex === -1) return; // 如果没在播放，就什么也不做
-    console.log("执行停止操作...");
     
     // 1. 暂停播放
     audio.pause(); 
@@ -248,7 +244,6 @@ songDatabase.forEach(song => {
     localStorage.removeItem(LAST_SONG_TIME_KEY);
     localStorage.removeItem(LAST_SONG_PLAYING_KEY);
     
-    console.log("播放器已停止，并已清除自动播放记录。");
   }
 
 function broadcastMediaUpdateToMainWidget() {
@@ -748,11 +743,9 @@ ui.nextBtn.onclick = async () => {
   };
 
 audio.onended = async () => {
-    console.log('歌曲播放结束，开始播放下一首已下载歌曲...');
     const downloadedSongs = await getDownloadedSongs(); // 复用我们之前创建的函数
 
     if (downloadedSongs.length === 0) {
-        console.log('没有已下载的歌曲可循环。');
         setIsPlaying(false);
         return;
     }
@@ -777,7 +770,6 @@ audio.onended = async () => {
         const originalIndex = songDatabase.findIndex(s => s.filename === nextSongRecord.filename);
         if (originalIndex > -1) {
             // 4. 调用 playSong 播放
-            console.log(`正在从已下载列表循环播放: ${songDatabase[originalIndex].title}`);
             playSong(originalIndex);
         } else {
              console.error("在已下载列表中找到了歌曲，但在主数据库中找不到，逻辑可能存在问题。");
@@ -785,7 +777,6 @@ audio.onended = async () => {
         }
     } else {
         // 理论上，只要 downloadedSongs.length > 0，这里就不会执行
-        console.log('在已下载列表中找不到下一首歌曲，停止播放。');
         setIsPlaying(false);
     }
 };
@@ -794,7 +785,6 @@ audio.onended = async () => {
   async function playNext() {
     const downloadedSongs = await getDownloadedSongs();
     if (downloadedSongs.length === 0) {
-        console.log("没有已下载的歌曲可播放。");
         return;
     }
 
@@ -892,7 +882,7 @@ async function initializePlayer() {
         /*
         if (loaded && wasPlaying) {
             setTimeout(() => {
-                audio.play().catch(e => console.log('Autoplay was prevented by browser.', e));
+                audio.play().catch(e => ('Autoplay was prevented by browser.', e));
             }, 100);
         }
         */

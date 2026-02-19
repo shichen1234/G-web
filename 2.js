@@ -1,9 +1,10 @@
-// 2.js - 完整修改版
+// 2.js - 性能优化完整版 (IndexedDB 长连接)
 
 window.currentWallpaperUrl = null; 
 let savedBgVideoVolume = 0;
 let savedBgVideoMutedState = false;
 let fadeInterval = null;
+
 // Helper: 清理先前通过 URL.createObjectURL 创建的临时 URL
 function clearCurrentWallpaperUrl() {
   try {
@@ -13,7 +14,6 @@ function clearCurrentWallpaperUrl() {
     }
   } catch (e) {}
 }
-// 2.js - 修复声音版 (已集成视差修复)
 
 // 优化版：彻底清理资源 + 修复声音播放
 async function setBackgroundFromBlob(file) {
@@ -585,26 +585,54 @@ document.addEventListener("keydown", (event) => {
     }
   }
 });
-    // IndexedDB 背景视频存储
-    const DB_NAME = "WallpaperDB";
-    const DB_STORE_NAME = "Videos";
+
+// IndexedDB 背景视频存储
+const DB_NAME = "WallpaperDB";
+const DB_STORE_NAME = "Videos";
+
+// 🚀 [性能优化] 全局单例数据库连接
+let globalDb = null;
+
 function openDatabase() {
+  // 如果连接已存在且处于打开状态，直接复用
+  if (globalDb) return Promise.resolve(globalDb);
+
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 3); // ⚠️ 注意：版本号升级为 2
+    const request = indexedDB.open(DB_NAME, 3);
+    
     request.onupgradeneeded = function (e) {
       const db = e.target.result;
       if (!db.objectStoreNames.contains(DB_STORE_NAME)) {
-      db.createObjectStore(DB_STORE_NAME, { keyPath: "id" });
+        db.createObjectStore(DB_STORE_NAME, { keyPath: "id" });
       }
     };
+    
     request.onsuccess = function (e) {
-      resolve(e.target.result);
+      globalDb = e.target.result;
+      
+      // 监听连接断开，防止后续操作失败
+      globalDb.onclose = () => { 
+        console.warn("[G-web] IndexedDB 连接已关闭");
+        globalDb = null; 
+      };
+      
+      // 处理版本变更导致的连接关闭
+      globalDb.onversionchange = () => { 
+        console.warn("[G-web] IndexedDB 版本变更，关闭旧连接");
+        globalDb.close(); 
+        globalDb = null; 
+      };
+      
+      resolve(globalDb);
     };
+    
     request.onerror = function (e) {
+      console.error("[G-web] IndexedDB 打开失败:", e);
       reject(e);
     };
   });
 }
+
 // 2.js - 修复后的 saveVideoToIndexedDB 函数
 async function saveVideoToIndexedDB(file, key = "bgVideo") {
     // 1. 首先，在开启事务之前，完成所有需要等待的异步操作。
@@ -1307,7 +1335,6 @@ if ('mediaSession' in navigator) {
           savedBgVideoMutedState = bgVideo.muted;   // 保存当前静音状态 (通常为 false)
           bgVideo.muted = true;                     // 立即静音
           if (fadeInterval) clearInterval(fadeInterval); // 清除任何正在进行的淡入
-          console.log('[G-web] Music widget shown, background video muted.');
       }
       // =======================================================
 
@@ -1350,7 +1377,6 @@ if ('mediaSession' in navigator) {
                   }
                   bgVideo.volume = currentVolume;
               }, fadeDuration / steps);
-              console.log('[G-web] Music widget hidden, background video fading in to previous volume.');
           } else if (!bgVideo.muted && !savedBgVideoMutedState) {
               // 如果音乐组件显示时背景视频就没被静音（比如用户手动设置了），或者之前就是静音的
               // 那么直接恢复到之前的音量，不需要淡入
@@ -1802,7 +1828,6 @@ pop.querySelector('.delBtn').addEventListener('click', (e) => {
 
       // 6. Save back to localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-      console.log('Icon order updated and saved', newData.length);
     }
     function closeAllPopovers(){
       const open = document.querySelectorAll('.iconPopover.show');
@@ -2262,7 +2287,7 @@ function setWallpaperForWeather(weatherData) {
         const bgVideo = document.getElementById("bgVideo");
         const rainVideo = 'wallpapers/初始背景6.mp4';
         
-        // To avoid unnecessary reloads, only change if the current wallpaper is not already the rainy wallpaper
+        // To avoid unnecessary reloads, only change if the current wallpaper is not not already the rainy wallpaper
         if (!bgVideo.src.endsWith('初始背景6.mp4')) {
             bgVideo.src = rainVideo;
             bgVideo.load();
@@ -2348,7 +2373,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 4. Batch delete all marked expired caches
         if (itemsToRemove.length > 0) {
-            console.log(`🧹 Found and cleaned up ${itemsToRemove.length} expired weather caches...`);
             itemsToRemove.forEach(key => {
                 localStorage.removeItem(key);
             });
@@ -2357,7 +2381,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Execute cleanup function
     cleanupExpiredWeatherCache();
-});window.deleteWallpaperCompletely = async function(key) {
+});
+
+window.deleteWallpaperCompletely = async function(key) {
   const bgImage = document.getElementById("bgImage");
   const bgVideo = document.getElementById("bgVideo");
   
@@ -2373,20 +2399,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   
   try {
-    console.log(`🗑️ Starting to delete wallpaper: ${targetKey}`);
     
     // 1. Release Blob URL
     if (window.currentWallpaperUrl) {
       URL.revokeObjectURL(window.currentWallpaperUrl);
       window.currentWallpaperUrl = null;
-      console.log('✅ Blob URL released');
     }
     
     // 2. Clear image element
     if (bgImage) {
       bgImage.src = '';
       bgImage.removeAttribute('src');
-      console.log('✅ Image element cleared');
     }
     
     // 3. Clear video element
@@ -2395,30 +2418,25 @@ document.addEventListener("DOMContentLoaded", () => {
       bgVideo.src = '';
       bgVideo.load();  // Reload to release decoder
       bgVideo.removeAttribute('src');
-      console.log('✅ Video element cleared');
     }
     
     // 4. Delete IndexedDB data
     await deleteVideoFromIndexedDB(targetKey);
-    console.log('✅ IndexedDB data deleted');
     
     // 5. Clear localStorage cache
     if (localStorage.getItem("currentWallpaperKey") === targetKey) {
       localStorage.removeItem("wallpaperType");
       localStorage.removeItem("currentWallpaperKey");
-      console.log('✅ localStorage cache cleared');
     }
     
     // 6. Suggest garbage collection (if available)
     if (window.gc && typeof window.gc === 'function') {
       window.gc();
-      console.log('✅ Garbage collection suggested');
     }
     
     // 7. Restore default wallpaper
     if (typeof initializeDefaultWallpaperByTime === 'function') {
       initializeDefaultWallpaperByTime();
-      console.log('✅ Default wallpaper restored');
     }
     
     // 8. Show notification
@@ -2426,7 +2444,6 @@ document.addEventListener("DOMContentLoaded", () => {
       showBubble('Wallpaper deleted, default wallpaper restored喵～🗑️');
     }
     
-    console.log(`✅ Wallpaper deletion complete: ${targetKey}`);
     return true;
     
   } catch (error) {
@@ -2443,11 +2460,8 @@ document.addEventListener("DOMContentLoaded", () => {
  * @returns {Promise<number>} Number of deleted wallpapers
  */
 window.cleanupUnusedWallpapers = async function() {
-window.cleanupUnusedWallpapers = async function() {
-  let db = null;  // ✅ Add variable to close connection
-  
   try {
-    db = await openDatabase();
+    const db = await openDatabase(); // 使用全局复用连接
     const tx = db.transaction("Videos", "readwrite");
     const store = tx.objectStore("Videos");
     
@@ -2472,23 +2486,17 @@ window.cleanupUnusedWallpapers = async function() {
     
     return new Promise((resolve, reject) => {
       tx.oncomplete = () => {
-        if (db) db.close();  // ✅ Close connection
-        db = null;
-        console.log(`🧹 Cleanup complete, deleted ${keysToDelete.length} unused wallpapers`);
+        // ❌ 不要手动关闭连接！
         if (typeof showBubble === 'function' && keysToDelete.length > 0) {
-          showBubble(`Cleaned up ${keysToDelete.length} unused wallpapers喵～🧹`);
         }
         resolve(keysToDelete.length);
       };
       tx.onerror = () => {
-        if (db) db.close();  // ✅ Close on error as well
-        db = null;
         reject(tx.error);
       };
     });
     
   } catch (error) {
-    if (db) db.close();  // ✅ Close on catch as well
     console.error('❌ Failed to clean up unused wallpapers:', error);
     return 0;
   }
@@ -2499,10 +2507,8 @@ window.cleanupUnusedWallpapers = async function() {
  * @returns {Promise<object>} Memory usage information
  */
 window.getWallpaperMemoryInfo = async function() {
-  let db = null;  // ✅ Add variable to close connection
-  
   try {
-    db = await openDatabase();
+    const db = await openDatabase(); // 使用全局复用连接
     const tx = db.transaction("Videos", "readonly");
     const store = tx.objectStore("Videos");
     
@@ -2539,20 +2545,13 @@ window.getWallpaperMemoryInfo = async function() {
       details: details
     };
     
-    console.log('📊 Wallpaper memory usage information:', info);
-    
-    // ✅ Close connection before returning
-    if (db) db.close();
-    db = null;
-    
+    // ❌ 不要手动关闭连接！
     return info;
     
   } catch (error) {
-    if (db) db.close();  // ✅ Close on error as well
     console.error('❌ Failed to get memory information:', error);
     return null;
   }
-};
 };
 
 // =============================================
@@ -2646,7 +2645,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setTimeout(async () => {
     const count = await window.cleanupUnusedWallpapers();
     if (count > 0) {
-      console.log(`🧹 Auto cleaned up ${count} unused wallpapers`);
     }
   }, 3000);
 });
