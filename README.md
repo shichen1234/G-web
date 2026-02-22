@@ -2,7 +2,7 @@
 <br>
 &nbsp&nbsp&nbsp&nbsp大学生搓了半年（AI也没少用）的新标签页浏览器扩展，虽然说还有蛮多不足的，已经燃尽了(￣y▽￣)╭ Ohohoho.....<br>
 <br>
-&nbsp&nbsp&nbsp&nbsp使用方法就是点击右上角绿色的code，之后点击download zip，或者<a href="https://github.com/shichen1234/G-web/archive/refs/heads/main.zip">点这儿<a>，解压后在扩展页面选择开发人员模式，然后在已安装的扩展下方点击加载解压缩的扩展，选择解压出来的文件夹，左上角有具体的功能菜单，里面所有功能都包括了，尽情使用吧(❁´◡`❁)<br>
+&nbsp&nbsp&nbsp&nbsp使用方法就是<a href="https://github.com/shichen1234/G-web/archive/refs/heads/main.zip">点这儿<a>，然后获取启用就可以了，左上角有具体的功能菜单，里面所有功能都包括了，尽情使用吧(❁´◡`❁)<br>
 <br>
 &nbsp&nbsp&nbsp&nbsp下面是一些预览图
 <br>
