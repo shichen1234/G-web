@@ -477,7 +477,7 @@ function createAndReplacePlaceholder(placeholder, type) {
     const isStatic = type === 'static';
     const fileName = isStatic ? `${i}.jpg` : `${i}.mp4`;
     const onlineUrl = `${GITHUB_BASE}${fileName}`;
-    const posterSrc = isStatic ? `wallpapers/图片封面/${i}.jpg` : `wallpapers/视频封面/${i}.png`;
+    const posterSrc = isStatic ? `wallpapers/pictures/${i}.jpg` : `wallpapers/videos/${i}.png`;
     const dbKey = isStatic ? `static_${i}` : `wallpaper_${i}`;
 
     // --- Reuse your original wallpaper card creation logic ---
@@ -502,7 +502,7 @@ function createAndReplacePlaceholder(placeholder, type) {
 
     const gearBtn = document.createElement("button");
     gearBtn.className = "iconSettings";
-    gearBtn.innerHTML = '<img src="images/齿轮.png" alt="管理">';
+    gearBtn.innerHTML = '<img src="images/chilun.png" alt="管理">';
 
     const popover = document.createElement("div");
     popover.className = "iconPopover overlay";
@@ -712,7 +712,7 @@ function renderStaticWallpapers() {
     dailyPlaceholder.className = "wallpaper-placeholder special-external-daily";
     fragment.appendChild(dailyPlaceholder);
     // 1. Create ordinary static wallpaper placeholders (1-45)
-    for (let i = 1; i <= 71; i++) {
+    for (let i = 1; i <= 89; i++) {
         const placeholder = document.createElement("div");
         placeholder.className = "wallpaper-placeholder";
         placeholder.dataset.index = i;
@@ -739,7 +739,7 @@ function renderStaticWallpapers() {
 
                     const img = document.createElement("img");
                     // ✅ Your custom cover image
-                    img.src = "wallpapers/图片封面/特殊封面.png";
+                    img.src = "wallpapers/pictures/special image.png";
                     img.style.cssText = "width:100%;height:100%;object-fit:cover;transition:transform 0.3s;";
                     // Fallback: if cover image not found, use default poster
                     img.onerror = () => { img.src = 'wallpapers/poster.jpg'; };
@@ -833,7 +833,7 @@ function renderDynamicWallpapers() {
                     thumbBox.className = "lazy-video-thumb";
                     thumbBox.style.cssText = "position:relative;width:100%;height:90px;border-radius:8px;cursor:pointer;overflow:hidden;";
                     const img = document.createElement("img");
-                    img.src = "wallpapers/视频封面/初始壁纸封面.png";
+                    img.src = "wallpapers/videos/video special image.png";
                     img.style.cssText = "width:100%;height:100%;object-fit:cover;transition:transform 0.3s;";
                     img.onerror = () => { img.src = 'wallpapers/poster.jpg'; };
                     const timeLabel = document.createElement("div");

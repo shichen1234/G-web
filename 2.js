@@ -331,10 +331,10 @@ function playCatTransition(type, callback) {
     
     if (!transitionImg || !catImg || !catShadow) return;
 
-    const folder = "./小猫/";
-    const screenPng = folder + "屏风.png"; // ✅ 屏风图片路径
-    const expand = folder + "展开.gif";
-    const close = folder + "闭合.gif";
+    const folder = "./cat/";
+    const screenPng = folder + "pingfeng.png"; // ✅ 屏风图片路径
+    const expand = folder + "zhankai.gif";
+    const close = folder + "bihe.gif";
 
     if (type === "open") {
         // --- 1. 屏风渐显 (0.7秒) ---
@@ -428,15 +428,15 @@ document.addEventListener("keydown", (event) => {
 // 初始化与交互逻辑
 document.addEventListener("DOMContentLoaded", () => {
     const catImg = document.getElementById("catVideo");
-    const standbySrc = "./小猫/待机主要动作.gif";
+    const standbySrc = "./cat/daijizhuyaodongzuo.gif";
 
     // ✅ 新增：配置每个反应GIF的路径和专属时长 (单位: 毫秒)
     // 您可以在这里自由修改每个GIF的播放时间
     const reactionConfig = [
-        { path: "./小猫/微笑.gif", duration: 10130 },         // 微笑动画的时长
-        { path: "./小猫/脸红.gif", duration: 4730 },         // 脸红动画的时长
-        { path: "./小猫/待机次要动作.gif", duration: 10050 }, // 待机次要动作的时长
-        { path: "./小猫/忧愁.gif", duration: 8080 }          // "忧愁"作为普通随机反应时的时长
+        { path: "./cat/weixiao.gif", duration: 10130 },         // 微笑动画的时长
+        { path: "./cat/lianhong.gif", duration: 4730 },         // 脸红动画的时长
+        { path: "./cat/daijiciyaodongzuo.gif", duration: 10050 }, // 待机次要动作的时长
+        { path: "./cat/youchou.gif", duration: 8080 }          // "忧愁"作为普通随机反应时的时长
     ];
 
     let actionTimer = null; // 用于控制动作恢复的定时器
@@ -465,7 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 showBubble("喵呜呜……有点晕了喵～");
 
                 // 切换到忧愁 GIF (使用 dizzy 专属时长)
-                catImg.src = getGifUrl("./小猫/忧愁.gif");
+                catImg.src = getGifUrl("./cat/youchou.gif");
 
                 actionTimer = setTimeout(() => {
                     catImg.src = standbySrc;
@@ -1740,7 +1740,7 @@ if (closeX) {
 
       // Gear button
       const gearBtn = document.createElement('button'); gearBtn.type='button'; gearBtn.className = 'iconSettings';
-      const gearImg = document.createElement('img'); gearImg.src = 'images/齿轮.png'; 
+      const gearImg = document.createElement('img'); gearImg.src = 'images/chilun.png'; 
       gearBtn.appendChild(gearImg);
       wrapper.appendChild(gearBtn);
 
@@ -2130,7 +2130,7 @@ function createCustomIconElement(item) {
   gearBtn.type = 'button';
   gearBtn.className = 'iconSettings';
   const gearImg = document.createElement('img');
-  gearImg.src = 'images/齿轮.png'; 
+  gearImg.src = 'images/chilun.png'; 
   gearBtn.appendChild(gearImg);
   wrapper.appendChild(gearBtn);
 
@@ -2285,10 +2285,10 @@ function setWallpaperForWeather(weatherData) {
     // Check if the weather text contains "rain"
     if (weatherText && weatherText.includes('雨')) {
         const bgVideo = document.getElementById("bgVideo");
-        const rainVideo = 'wallpapers/初始背景6.mp4';
+        const rainVideo = 'wallpapers/video6.mp4';
         
         // To avoid unnecessary reloads, only change if the current wallpaper is not not already the rainy wallpaper
-        if (!bgVideo.src.endsWith('初始背景6.mp4')) {
+        if (!bgVideo.src.endsWith('video6.mp4')) {
             bgVideo.src = rainVideo;
             bgVideo.load();
             bgVideo.play().catch(()=>{});
@@ -2314,15 +2314,15 @@ function initializeDefaultWallpaperByTime() {
     let videoFile = '';
 
     if (hours >= 5 && hours < 8) {       // Dawn: 5-7 o'clock
-        videoFile = '初始背景1.mp4';
+        videoFile = 'video1.mp4';
     } else if (hours >= 8 && hours < 12) { // Morning: 8-11 o'clock
-        videoFile = '初始背景2.mp4';
+        videoFile = 'video2.mp4';
     } else if (hours >= 12 && hours < 16) { // Afternoon: 12-16 o'clock
-        videoFile = '初始背景3.mp4';
+        videoFile = 'video3.mp4';
     } else if (hours >= 16 && hours < 18) { // Dusk: 17-19 o'clock
-        videoFile = '初始背景4.mp4';
+        videoFile = 'video4.mp4';
     } else {                               // Night: 20-4 o'clock
-        videoFile = '初始背景5.mp4';
+        videoFile = 'video5.mp4';
     }
     bgVideo.src = `wallpapers/${videoFile}`;
     bgVideo.load();

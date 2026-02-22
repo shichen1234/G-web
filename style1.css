@@ -88,7 +88,7 @@ position: absolute;
 }
 /* 1. 基础指针设置：全局兜底 */
 html, body, * {
-  cursor: url('鼠标/Zhand.cur'), auto !important;
+  cursor: url('mouse/Zhand.cur'), auto !important;
 }
 
 /* 2. 可点击状态：全元素覆盖 (小手样式) */
@@ -145,7 +145,7 @@ button:not(:disabled) *,
 .cmd-item selected,
 .cmd-item.selected div span               /* 关闭叉号 */
 {
-  cursor: url('鼠标/Zlink.cur'), pointer !important;
+  cursor: url('mouse/Zlink.cur'), pointer !important;
 }
 
 /* 3. 输入框专用：确保所有输入框在悬停时显示 Zlink.cur */
@@ -160,7 +160,7 @@ input[type="file"],
 #birthdayDateInput {
   /* 👇 修改了这里 */
   /* 解释：url('路径') x坐标 y坐标, 后备样式 */
-  cursor: url('鼠标/Zbeam.png') 16 16, text !important;
+  cursor: url('mouse/Zbeam.png') 16 16, text !important;
 }
 
 /* 4. 搜索按钮及内部图标的禁用状态 (禁止样式) */
@@ -169,13 +169,13 @@ button:disabled *,
 #searchBtn:disabled,
 #searchBtn:disabled svg,
 #searchBtn:disabled path {
-  cursor: url('鼠标/Zunavail.cur'), not-allowed !important;
+  cursor: url('mouse/Zunavail.cur'), not-allowed !important;
   pointer-events: auto !important; 
 }
 
 /* 5. 针对右键菜单特定的样式 */
 .context-menu, .submenu {
-    cursor: url('鼠标/Zhand.cur'), auto !important;
+    cursor: url('mouse/Zhand.cur'), auto !important;
 }
 .menu-list li span, .submenu li span {
     cursor: inherit !important;
@@ -2189,15 +2189,15 @@ input[type="range"]#volumeSlider::-moz-range-track {
 #volumeSlider, 
 .volume-label, 
 #volumeValue {
-  cursor: url('鼠标/Zlink.cur'), pointer !important;
+  cursor: url('mouse/Zlink.cur'), pointer !important;
 }
 
 /* 针对滑动条滑块的兼容性处理 */
 input[type="range"]#volumeSlider::-webkit-slider-thumb {
-  cursor: url('鼠标/Zlink.cur'), pointer !important;
+  cursor: url('mouse/Zlink.cur'), pointer !important;
 }
 input[type="range"]#volumeSlider::-moz-range-thumb {
-  cursor: url('鼠标/Zlink.cur'), pointer !important;
+  cursor: url('mouse/Zlink.cur'), pointer !important;
 }
 /* ========== 禅模式优化样式 ========== */
 .zen-hidden {

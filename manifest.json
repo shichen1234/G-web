@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "G-web",
-    "version": "3.2.2",
-    "description": "A personalized new tab page with a cat companion (Alt+C), music detector, quick-access sidebar and panel, and a feature menu.",
+    "name": "G-web - 个性化新标签页与萌宠助手",
+    "version": "3.2.4",
+    "description": "更改新标签页为个人定制页面，还有一个可爱的私人猫猫（可通过 Alt+C 开启/关闭），音乐组件可以检测到浏览器目前所播放的音乐或者视频，左侧有快捷栏，右侧有快捷面板，左上角有功能菜单，记录了所有功能，务必把浏览器的图形加速打开，以免视频壁纸出现卡顿。",
     "icons": {
         "16": "logo/icon.png",
         "48": "logo/icon.png",
@@ -31,8 +31,17 @@
         "https://www.bilibili.com/*",
         "https://www.douyin.com/*",
         "https://*.spotify.com/*",
-        "https://bing.img.run/*"
+        "https://bing.img.run/*",
+        "https://*.bing.com/*",
+        "https://*.bing.net/*",
+        "https://api.seniverse.com/*",
+        "https://api.vvhan.com/*",
+        "https://v.api.aa1.cn/*",
+        "https://api.oioweb.cn/*",
+        "https://baike.baidu.com/*",
+        "https://wttr.in/*"
     ],
+
     "background": {
         "service_worker": "background.js"
     },
@@ -60,8 +69,8 @@
                 "sogou-logo-small.png",
                 "2025102523114053.png",
                 "2025102514322810.png",
-                "小猫/*.webm",
-                "小猫/*.png",
+                "cat/*.webm",
+                "cat/*.png",
                 "page-media.js",
                 "content-media.js"
             ],
@@ -73,11 +82,14 @@
                 "https://www.youtube.com/*",
                 "https://www.bilibili.com/*",
                 "https://www.douyin.com/*",
-                "https://*.spotify.com/*"
+                "https://*.spotify.com/*",
+                "https://api.vvhan.com/*",
+                "https://v.api.aa1.cn/*",
+                "https://api.oioweb.cn/*"
             ]
         }
     ],
-    "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: https: http: blob:"
-    }
+"content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: https: http: blob:; connect-src 'self' https://ghproxy.net https://api.seniverse.com https://bing.img.run https://*.bing.com https://*.bing.net https://v.api.aa1.cn https://api.oioweb.cn https://api.vvhan.com https://tenapi.cn;"
+}
 }

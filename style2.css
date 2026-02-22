@@ -228,6 +228,8 @@
 #fortuneWidget {
   background: transparent !important;
   border: none !important;
+  padding-top: 0px;
+  padding-bottom: 0px;
   box-shadow: none !important;
   backdrop-filter: none !important; /* 关掉毛玻璃，因为我们要用高清图 */
 }
@@ -236,7 +238,7 @@
 #fortuneWidget .front, 
 #fortuneWidget .back {
   /* 设置背景图路径 */
-  background-image: url('images/抽签背景.png') !important;
+  background-image: url('images/chouqian.png') !important;
   
   /* 确保图片铺满整个卡片 */
   background-size: cover;
@@ -274,7 +276,7 @@
 /* 1. 应用背景图到整个组件 */
 #birthdayWidget {
   /* 替换为你生成的图片 */
-  background-image: url('images/生日背景.png') !important;
+  background-image: url('images/shengri.png') !important;
   
   /* 图片布局设置 */
   background-size: cover;      /* 铺满 */
@@ -343,7 +345,7 @@
 
 #calendarWidget {
   /* 1. 设置背景图 */
-  background-image: url('images/日历背景.png') !important;
+  background-image: url('images/rili.png') !important;
   
   /* 图片布局 */
   background-size: cover;
@@ -431,10 +433,6 @@
    ========================================= */
 
 #snakeWidget {
-  /* 1. 设置背景图 (建议找一张深色科技感或草地背景图，或者直接用渐变) */
-  /* background-image: url('images/贪吃蛇背景.png') !important; */
-  
-  /* 这里暂时用深绿色渐变代替图片，你可以换回 url(...) */
   background: linear-gradient(135deg, #134E5E, #71B280) !important;
   
   background-size: cover !important;
@@ -618,7 +616,7 @@
    ========================================= */
 #todoWidget {
   /* 1. 设置背景图片路径 (相对于 css 文件的位置) */
-  background-image: url('images/备忘录背景.png') !important;
+  background-image: url('images/beiwanglu.png') !important;
   
   /* 2. 图片填充方式：cover 会自动裁剪以填满，contain 会完整显示但留白 */
   background-size: cover !important;
@@ -658,7 +656,7 @@
    ========================================= */
 #calcWidget {
   /* 1. 设置背景图片路径 */
-  background-image: url('images/计算器背景.png') !important;
+  background-image: url('images/jisuanqi.png') !important;
   
   /* 2. 图片铺满且居中 */
   background-size: cover !important;
@@ -825,7 +823,7 @@
 /* 1. 应用背景图到弹窗主体 */
 #wallpaperModal .modal-content {
   /* ✅ 设置背景图路径 */
-  background-image: url('images/更改壁纸背景.png') !important;
+  background-image: url('images/genggaibizhibeijing.png') !important;
 
   /* 图片布局 */
   background-size: cover !important;       /* 铺满整个弹窗 */
@@ -1071,11 +1069,11 @@ body::after {
   content: '';
   display: none;
   background-image: 
-    url('images/抽签背景.png'),
-    url('images/生日背景.png'),
-    url('images/日历背景.png'),
-    url('images/备忘录背景.png'),
-    url('images/计算器背景.png');
+    url('images/chouqian.png'),
+    url('images/shengri.png'),
+    url('images/rili.png'),
+    url('images/beiwanglu.png'),
+    url('images/jisuanqi.png');
 }
 /* style.css */
 
@@ -1517,7 +1515,7 @@ body::after {
   box-shadow: 0 5px 20px rgba(255, 182, 193, 0.5);
 }
 #catSpeechBubble.bubble-birthday::before {
-  background-image: url('images/蛋糕.png');
+  background-image: url('images/dangao.png');
   width: 50px;
   height: 50px;
   left: -20px;
@@ -1525,7 +1523,7 @@ body::after {
   transform: rotate(-15deg);
 }
 #catSpeechBubble.bubble-birthday::after {
-  background-image: url('images/彩带.png');
+  background-image: url('images/caidai.png');
   width: 100%;
   height: 40px;
   top: -20px;
@@ -1540,14 +1538,14 @@ body::after {
   box-shadow: 0 5px 20px rgba(230, 126, 34, 0.5);
 }
 #catSpeechBubble.bubble-chunjie::before {
-  background-image: url('images/鞭炮.png');
+  background-image: url('images/bianpao.png');
   width: 40px;
   height: 80px;
   left: -25px;
   top: -15px;
 }
 #catSpeechBubble.bubble-chunjie::after {
-  background-image: url('images/灯笼.png');
+  background-image: url('images/denglong.png');
   width: 50px;
   height: 50px;
   right: -25px;
@@ -1560,14 +1558,14 @@ body::after {
   border-color: #f5deb3;
 }
 #catSpeechBubble.bubble-yuanxiao::before {
-  background-image: url('images/汤圆.png');
+  background-image: url('images/tangyuan.png');
   width: 55px;
   height: 55px;
   right: -20px;
   bottom: 20px;
 }
 #catSpeechBubble.bubble-yuanxiao::after {
-  background-image: url('images/灯笼.png');
+  background-image: url('images/denglong.png');
   width: 45px;
   height: 45px;
   left: -20px;
@@ -1580,14 +1578,14 @@ body::after {
   border-color: #81c784;
 }
 #catSpeechBubble.bubble-duanwu::before {
-  background-image: url('images/粽子.png');
+  background-image: url('images/zongzi.png');
   width: 50px;
   height: 50px;
   left: -20px;
   bottom: -20px;
 }
 #catSpeechBubble.bubble-duanwu::after {
-  background-image: url('images/龙舟.png');
+  background-image: url('images/longzhou.png');
   width: 80px;
   height: 40px;
   right: -50px;
@@ -1599,14 +1597,14 @@ body::after {
   border-color: #9fa8da;
 }
 #catSpeechBubble.bubble-zhongqiu::before {
-  background-image: url('images/月饼.png');
+  background-image: url('images/yuebing.png');
   width: 50px;
   height: 50px;
   right: -15px;
   bottom: 20px;
 }
 #catSpeechBubble.bubble-zhongqiu::after {
-  background-image: url('images/玉兔.png');
+  background-image: url('images/yutu.png');
   width: 45px;
   height: 45px;
   left: -15px;
@@ -1619,14 +1617,14 @@ body::after {
   border-color: #ce93d8;
 }
 #catSpeechBubble.bubble-qixi::before {
-  background-image: url('images/喜鹊.png');
+  background-image: url('images/xique.png');
   width: 50px;
   height: 50px;
   right: -20px;
   top: -20px;
 }
 #catSpeechBubble.bubble-qixi::after {
-  background-image: url('images/爱心.png');
+  background-image: url('images/aixin.png');
   width: 40px;
   height: 40px;
   left: -10px;
@@ -1640,14 +1638,14 @@ body::after {
   border-color: #a5d6a7;
 }
 #catSpeechBubble.bubble-shengdan::before {
-  background-image: url('images/圣诞树.png');
+  background-image: url('images/shengdanshu.png');
   width: 50px;
   height: 60px;
   left: -25px;
   bottom: -10px;
 }
 #catSpeechBubble.bubble-shengdan::after {
-  background-image: url('images/雪花.png');
+  background-image: url('images/xuehua.png');
   width: 35px;
   height: 35px;
   right: -15px;
@@ -1660,7 +1658,7 @@ body::after {
   border-color: #90caf9;
 }
 #catSpeechBubble.bubble-yuandan::before {
-  background-image: url('images/烟花.png');
+  background-image: url('images/yanhua.png');
   width: 100%;
   height: 60px;
   top: -30px;
@@ -1674,14 +1672,14 @@ body::after {
   border-color: #fd8d3c;
 }
 #catSpeechBubble.bubble-guoqing::before {
-  background-image: url('images/国旗.png');
+  background-image: url('images/guoqi.png');
   width: 50px;
   height: 50px;
   left: -15px;
   top: -15px;
 }
 #catSpeechBubble.bubble-guoqing::after {
-  background-image: url('images/鸽子.png');
+  background-image: url('images/gezi.png');
   right: 0px;
   bottom: 20px;
   width: 50px;
@@ -1693,14 +1691,14 @@ body::after {
   border-color: #80deea;
 }
 #catSpeechBubble.bubble-ertong::before {
-  background-image: url('images/气球.png');
+  background-image: url('images/qiqiu.png');
   width: 50px;
   height: 60px;
   left: -20px;
   top: -25px;
 }
 #catSpeechBubble.bubble-ertong::after {
-  background-image: url('images/棒棒糖.png');
+  background-image: url('images/bangbangtang.png');
   width: 40px;
   height: 40px;
   right: -15px;
@@ -1713,14 +1711,14 @@ body::after {
   border-color: #f8bbd0;
 }
 #catSpeechBubble.bubble-qingrenjie::before {
-  background-image: url('images/巧克力.png');
+  background-image: url('images/qiaokeli.png');
   width: 50px;
   height: 50px;
   left: -20px;
   bottom: -25px;
 }
 #catSpeechBubble.bubble-qingrenjie::after {
-  background-image: url('images/爱心.png');
+  background-image: url('images/aixin.png');
   width: 45px;
   height: 45px;
   right: -18px;
@@ -1734,7 +1732,7 @@ body::after {
   box-shadow: 0 5px 20px rgba(211, 84, 0, 0.4);
 }
 #catSpeechBubble.bubble-wanshengjie::before {
-  background-image: url('images/南瓜.png');
+  background-image: url('images/nangua.png');
   width: 50px;
   height: 45px;
   left: -20px;
@@ -1742,7 +1740,7 @@ body::after {
   transform: rotate(-10deg);
 }
 #catSpeechBubble.bubble-wanshengjie::after {
-  background-image: url('images/幽灵.png');
+  background-image: url('images/youling.png');
   width: 40px;
   height: 40px;
   right: -15px;
@@ -1838,170 +1836,11 @@ body::after {
     90% { opacity: 1; }
     100% { transform: translateY(-100vh); opacity: 0; }
 }
-
-
-/* --- 1. 春节 & 除夕 --- */
-/* 使用 .festival-chunjie 类 */
-body.festival-chunjie::before,
-body.festival-chunjie::after {
-  content: '';
-  position: fixed;
-  top: 10px;
-  width: 150px;
-  height: 150px;
-  background-image: url('images/灯笼挂饰.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  z-index: 9999;
-  pointer-events: none;
-  animation: gentle-sway 5s ease-in-out infinite;
-}
-body.festival-chunjie::before { left: 30px; }
-body.festival-chunjie::after {
-  right: 30px;
-  animation-name: gentle-sway-flipped; /* 使用翻转动画 */
-}
-
-/* --- 2. 元宵节 --- */
-/* 使用 .festival-yuanxiao 类 */
-body.festival-yuanxiao::after {
-  content: '';
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 120px;
-  height: 120px;
-  background-image: url('images/汤圆装饰.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  z-index: 9999;
-  pointer-events: none;
-  animation: gentle-float 8s ease-in-out infinite;
-}
-
-/* --- 3. 端午节 --- */
-/* 使用 .festival-duanwu 类 */
-body.festival-duanwu::before {
-    content: '';
-    position: fixed;
-    top: 20px;
-    left: 20px;
-    width: 100px;
-    height: 100px;
-    background-image: url('images/粽子挂饰.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    z-index: 9999;
-    pointer-events: none;
-    animation: gentle-sway 6s ease-in-out infinite;
-}
-body.festival-duanwu::after {
-    content: '';
-    position: fixed;
-    bottom: 10px;
-    left: 5%;
-    width: 180px;
-    height: 90px;
-    background-image: url('images/龙舟装饰.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    z-index: 9999;
-    pointer-events: none;
-    animation: boat-rock 10s ease-in-out infinite;
-}
-
-
-/* --- 4. 七夕节 --- */
-/* 使用 .festival-qixi 类 */
-body.festival-qixi::after {
-    content: '';
-    position: fixed;
-    top: 5%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    height: 100px;
-    background-image: url('images/喜鹊桥.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    z-index: 9999;
-    pointer-events: none;
-    opacity: 0.9;
-}
-
-/* --- 5. 中秋节 --- */
-/* 使用 .festival-zhongqiu 类 */
-body.festival-zhongqiu::before {
-  content: '';
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  width: 130px;
-  height: 130px;
-  background-image: url('images/月兔挂饰.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  z-index: 9999;
-  pointer-events: none;
-  animation: gentle-float 10s ease-in-out infinite alternate;
-}
-
-/* --- 6. 国庆节 --- */
-/* 使用 .festival-guoqing 类 */
-body.festival-guoqing::before,
-body.festival-guoqing::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    width: 160px;
-    height: 240px; /* 适应长条形的灯笼 */
-    background-image: url('images/国庆灯笼.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    z-index: 9999;
-    pointer-events: none;
-    animation: gentle-sway 7s ease-in-out infinite;
-}
-body.festival-guoqing::before { left: 5px; }
-body.festival-guoqing::after {
-    right: 5px;
-    animation-name: gentle-sway-flipped;
-}
-
-/* --- 7. 生日 --- */
-/* 使用 .festival-birthday 类 */
-body.festival-birthday::before,
-body.festival-birthday::after {
-    content: '';
-    position: fixed;
-    bottom: -200px; /* 初始位置在屏幕外 */
-    width: 150px;
-    height: 200px;
-    background-image: url('images/生日气球.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    z-index: 9999;
-    pointer-events: none;
-    animation-name: float-up;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-}
-body.festival-birthday::before {
-    left: 10%;
-    animation-duration: 15s;
-}
-body.festival-birthday::after {
-    right: 10%;
-    transform: scaleX(-1);
-    animation-duration: 20s;
-    animation-delay: 5s;
-}
-
 /* =========================================
    🎵 音乐播放器样式 (布局修正版)
    ========================================= */
 #musicPlayerWidget {
-  background-image: url('images/音乐播放器背景.png') !important;
+  background-image: url('images/yinyuebofangqi.png') !important;
   width: 468px;
   box-sizing: border-box;
   border: 1px solid rgba(255, 255, 255, 0.362);
@@ -2376,3 +2215,23 @@ body.festival-birthday::after {
 .wp-right-panel::-webkit-scrollbar-thumb:hover {
   background-color: #00b7ff; /* 悬停时变为稍亮一点的蓝色 */
 }
+/* =========================================
+   🌤️/📰/📜 新增三大组件样式
+   ========================================= */
+
+/* 组件内部自定义滚动条 (新闻和历史列表) */
+.custom-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 5px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+
