@@ -2,7 +2,7 @@
 <br>
 &nbsp&nbsp&nbsp&nbsp大学生搓了半年（AI也没少用）的新标签页浏览器扩展，虽然说还有蛮多不足的，已经燃尽了(￣y▽￣)╭ Ohohoho.....<br>
 <br>
-&nbsp&nbsp&nbsp&nbsp使用方法就是<a href="https://github.com/shichen1234/G-web/archive/refs/heads/main.zip">点这儿<a>，然后获取启用就可以了，左上角有具体的功能菜单，里面所有功能都包括了，尽情使用吧(❁´◡`❁)<br>
+&nbsp&nbsp&nbsp&nbsp使用方法就是<a href="[https://github.com/shichen1234/G-web/archive/refs/heads/main.zip](https://microsoftedge.microsoft.com/addons/detail/gweb-%E4%B8%AA%E6%80%A7%E5%8C%96%E6%96%B0%E6%A0%87%E7%AD%BE%E9%A1%B5%E4%B8%8E%E8%90%8C%E5%AE%A0%E5%8A%A9%E6%89%8B/lfbikpcfmfimdobgkopcnammkfmifinp)">点这儿<a>，然后获取启用就可以了，左上角有具体的功能菜单，里面所有功能都包括了，尽情使用吧(❁´◡`❁)<br>
 <br>
 &nbsp&nbsp&nbsp&nbsp下面是一些预览图
 <br>
