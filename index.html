@@ -389,6 +389,31 @@
 
   </div>
 </div>
+<div id="aiChatWidget" class="birthday-container draggable-widget" style="margin: 0 15px 15px 15px; width: 440px;">
+  <div class="birthday-section" style="display: flex; flex-direction: column; height: 320px;">
+    <h4 style="margin-top: 0; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+      🤖 AI 助理喵
+      <button id="clearChatBtn" style="background: none; border: none; color: rgb(255, 255, 255); font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: color 0.2s, background 0.2s;">
+        清除记录
+      </button>
+    </h4>
+
+    <div id="chatMessages" style="flex: 1; overflow-y: auto; background: rgba(255, 255, 255, 0); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px;">
+      
+      <div id="initialWelcomeMessage" style="align-self: flex-start; background:linear-gradient(135deg, #4fadffb5, #ffffff25); padding: 8px 12px; border-radius: 12px 12px 12px 2px; max-width: 85%; font-size: 13px; color: white; line-height: 1.5; user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text;">
+        你好喵！我是你的专属 AI 猫猫，有什么可以帮你的吗？
+      </div>
+
+    </div>
+
+    <div class="input-group" style="display: flex; gap: 8px; align-items: center;">
+      <button id="imgModeBtn" title="切换图片生成模式" style="flex-shrink: 0; width: 36px; height: 36px; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.25); border-radius: 20px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: background 0.2s, border-color 0.2s; color: white;">🖼️</button>
+      <input type="text" id="chatInput" placeholder="输入你想说的话..." autocomplete="off" style="flex: 1; padding: 10px; border-radius: 6px; border: none; background: rgba(255,255,255,0.15); color: white; font-size: 13px; outline: none;">
+      <button id="chatSendBtn" style="height: 33px; background: #0b74de; color: white; border: none; border-radius: 6px; padding: 0 18px; cursor: pointer; font-weight: bold; transition: background 0.2s;">发送</button>
+    </div>
+  </div>
+</div>
+
 <div id="todoCalcRow" class="widget-row draggable-widget" style="display: flex; gap: 10px; margin: 0 15px 15px; width: calc(100% - 30px);">
   
   <div id="todoWidget" class="birthday-container" style="flex: 1; margin: 0; display: flex; flex-direction: column;">
@@ -429,8 +454,6 @@
     </div>
   </div>
 </div>
-
-
 <div id="fortuneWidget" class="birthday-container draggable-widget flip-container" style="margin: 0 15px 15px 15px; width: 440px; height: 140px; perspective: 1000px;">
   <div class="flipper">
     <div class="front birthday-section" style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
