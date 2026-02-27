@@ -872,21 +872,116 @@ function openLeftPanel() {
 
     // 🔥 修复：这里改为调用 openLeftPanel()
     { id: 'app', icon: '🪟', title: '快捷应用栏', desc: '打开快捷应用，可拖动改变位置，最下面可自定义添加网站 (左侧快捷栏)', action: () => openLeftPanel() },
+// --- 组件功能介绍 (自动定位版) ---
 { 
       id: 'music', 
       icon: '🎵', 
       title: '音乐播放器', 
       desc: '打开右侧面板查看内置的本地音乐播放器 (右侧面板)', 
-      action: () => openRightPanel() 
+      action: () => {
+        openRightPanel();
+        setTimeout(() => {
+          // 对应 HTML 中的 musicPlayerWidget
+          const el = document.getElementById('musicPlayerWidget'); 
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 350);
+      } 
     },
-    // --- 组件功能介绍 (全部调用 openRightPanel) ---
-    { id: 'todo', icon: '📝', title: '备忘录', desc: '记录待办事项 (右侧面板)', action: () => openRightPanel() },
-    { id: 'calc', icon: '🧮', title: '计算器', desc: '简单的数值计算 (右侧面板)', action: () => openRightPanel() },
-    { id: 'birthday', icon: '🎂', title: '记录生日', desc: '记录生日 (右侧面板)', action: () => openRightPanel() },
-    { id: 'dino', icon: '🐍', title: '小游戏', desc: '摸鱼贪吃蛇游戏 (右侧面板)', action: () => openRightPanel() },
-    { id: 'calendar', icon: '📅', title: '日历', desc: '查看农历与节日 (右侧面板)', action: () => openRightPanel() },
-    { id: 'fortune', icon: '🎐', title: '每日一签', desc: '抽取今日运势 (右侧面板)', action: () => openRightPanel() },
+{ 
+      id: 'ai-assistant', 
+      icon: '🐱', 
+      title: 'AI 聊天喵', 
+      desc: '哼，既然你求我了，那就勉强帮你一下吧喵！ (右侧面板)', 
+      action: () => {
+        openRightPanel();
+        const tsundereMsgs = ["干嘛？没事别随便点我喵！💢", "想让我画画？先说好，不满意不许抱怨喵！", "哼，真是拿你没办法喵～"];
+        const randomMsg = tsundereMsgs[Math.floor(Math.random() * tsundereMsgs.length)];
+        setTimeout(() => {
+          // 这里的 ID 必须对应 index.html 中的 AI 聊天区域
+          const el = document.getElementById('chatMessages')?.parentElement; 
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (typeof appendMessage === 'function') appendMessage(randomMsg, false);
+        }, 350); // 稍微增加延迟，确保面板展开动画完成
+      } 
+    },    { 
+      id: 'todo', 
+      icon: '📝', 
+      title: '备忘录', 
+      desc: '记录待办事项 (右侧面板)', 
+      action: () => {
+        openRightPanel();
+        setTimeout(() => {
+          const el = document.getElementById('todoWidget');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+      } 
+    },
     { 
+      id: 'calc', 
+      icon: '🧮', 
+      title: '计算器', 
+      desc: '简单的数值计算 (右侧面板)', 
+      action: () => {
+        openRightPanel();
+        setTimeout(() => {
+          // 定位到备忘录同级或计算器容器
+          const el = document.getElementById('todoWidget'); 
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+      } 
+    },
+    { 
+      id: 'birthday', 
+      icon: '🎂', 
+      title: '记录生日', 
+      desc: '记录生日 (右侧面板)', 
+      action: () => {
+        openRightPanel();
+        setTimeout(() => {
+          const el = document.getElementById('birthdayWidget');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+      } 
+    },
+{ 
+      id: 'dino', 
+      icon: '🐍', 
+      title: '小游戏', 
+      desc: '摸鱼贪吃蛇游戏 (右侧面板)', 
+      action: () => {
+        openRightPanel();
+        setTimeout(() => {
+          // 对应 HTML 中的 snakeWidget
+          const el = document.getElementById('snakeWidget');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 350);
+      } 
+    },    { 
+      id: 'calendar', 
+      icon: '📅', 
+      title: '日历', 
+      desc: '查看农历与节日 (右侧面板)', 
+      action: () => {
+        openRightPanel();
+        setTimeout(() => {
+          const el = document.getElementById('calendarWidget');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+      } 
+    },
+    { 
+      id: 'fortune', 
+      icon: '🎐', 
+      title: '每日一签', 
+      desc: '抽取今日运势 (右侧面板)', 
+      action: () => {
+        openRightPanel();
+        setTimeout(() => {
+          const el = document.getElementById('fortuneWidget');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+      } 
+    },    { 
       id: 'music-hint', 
       icon: '🎵', 
       title: '音乐组件', 

@@ -151,149 +151,108 @@ document.addEventListener('visibilitychange', () => {
   }
 }, { passive: true });
 // ======================================================
-// 🤖 AI 聊天组件逻辑
+// 🤖 AI 聊天组件逻辑（修复版）
 // ======================================================
 document.addEventListener('DOMContentLoaded', () => {
   const chatInput = document.getElementById('chatInput');
   const chatSendBtn = document.getElementById('chatSendBtn');
   const chatMessages = document.getElementById('chatMessages');
-  const clearChatBtn = document.getElementById('clearChatBtn'); // Get the new button
-  const initialWelcomeMessageHtml = document.getElementById('initialWelcomeMessage'); // Get the initial welcome message HTML element
+  const clearChatBtn = document.getElementById('clearChatBtn');
 
-  if (!chatInput || !chatSendBtn || !chatMessages || !clearChatBtn || !initialWelcomeMessageHtml) return;
+  if (!chatInput || !chatSendBtn || !chatMessages || !clearChatBtn) return;
 
   const CHAT_STORAGE_KEY = 'ai_chat_history';
-  let chatHistory = []; // Array to store message objects
+  let chatHistory = [];
 
-  // Helper to append message to DOM and save to history
-  function appendMessage(text, isUser, save = true) {
+  // ── 核心：追加消息，返回整行 div ──
+  function appendMessage(text, isUser, saveToStorage = true) {
     const msgDiv = document.createElement('div');
-    msgDiv.style.alignSelf = isUser ? 'flex-end' : 'flex-start';
-    msgDiv.style.background = isUser ? 'linear-gradient(135deg, #ffffff25, #4fadffb5)' : 'linear-gradient(135deg, #4fadffb5, #ffffff25 )';
-    msgDiv.style.borderRadius = isUser ? '12px 12px 2px 12px' : '12px 12px 12px 2px';
-    msgDiv.style.padding = '8px 12px';
-    msgDiv.style.maxWidth = '85%';
-    msgDiv.style.fontSize = '13px';
-    msgDiv.style.lineHeight = '1.5';
-    msgDiv.style.wordBreak = 'break-word';
-    msgDiv.style.color = 'white';
-    msgDiv.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-    // Ensure text is selectable and copyable
-    msgDiv.style.userSelect = 'text';
-    msgDiv.style.webkitUserSelect = 'text';
-    msgDiv.style.mozUserSelect = 'text';
-    msgDiv.style.msUserSelect = 'text';
-
-    msgDiv.textContent = text;
+    msgDiv.className = `chat-row ${isUser ? 'user-row' : 'ai-row'}`;
+    const avatarSrc = isUser ? 'images/head1.png' : 'images/head2.png';
+    msgDiv.innerHTML = `
+      <img src="${avatarSrc}" class="chat-avatar">
+      <div class="chat-bubble">${text}</div>
+    `;
     chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 
-    // Smooth scroll to latest message
-    chatMessages.scrollTo({
-      top: chatMessages.scrollHeight,
-      behavior: 'smooth'
-    });
-
-    if (save) {
+    if (saveToStorage) {
       chatHistory.push({ text, isUser });
-      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory));
+      try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
     }
-
     return msgDiv;
   }
 
-  // Load chat history from localStorage on page load
+  // ── 显示初始欢迎消息（使用标准气泡样式） ──
+  function appendWelcomeMessage() {
+    appendMessage('你好喵！我是你的专属 AI 猫猫，有什么可以帮你的吗？', false, false);
+  }
+
+  // ── 从 localStorage 加载历史记录 ──
   function loadChatHistory() {
     try {
-      const storedHistory = localStorage.getItem(CHAT_STORAGE_KEY);
-      if (storedHistory) {
-        chatHistory = JSON.parse(storedHistory);
-        // Clear the initial "你好喵！" message from HTML before loading saved history
-        chatMessages.innerHTML = ''; // Clear existing DOM content
-        chatHistory.forEach(msg => appendMessage(msg.text, msg.isUser, false)); // Don't re-save when loading
+      const stored = localStorage.getItem(CHAT_STORAGE_KEY);
+      if (stored) {
+        chatHistory = JSON.parse(stored);
+        chatMessages.innerHTML = '';
+        chatHistory.forEach(msg => appendMessage(msg.text, msg.isUser, false));
       } else {
-        // If no history, ensure the initial welcome message is displayed
-        chatMessages.innerHTML = ''; // Clear any previous content
-        chatMessages.appendChild(initialWelcomeMessageHtml.cloneNode(true)); // Append a clone of the initial message
+        chatMessages.innerHTML = '';
+        appendWelcomeMessage();
       }
     } catch (e) {
-      console.error('[G-web] Error loading chat history:', e);
-      localStorage.removeItem(CHAT_STORAGE_KEY); // Clear potentially corrupted history
-      chatHistory = []; // Reset history in memory
-      chatMessages.innerHTML = ''; // Clear existing DOM content
-      chatMessages.appendChild(initialWelcomeMessageHtml.cloneNode(true)); // Display initial message
+      console.error('[G-web] 加载聊天记录失败:', e);
+      localStorage.removeItem(CHAT_STORAGE_KEY);
+      chatHistory = [];
+      chatMessages.innerHTML = '';
+      appendWelcomeMessage();
     }
   }
 
-  // Handle clearing the chat history
+  // ── 清除记录（带浏览器确认弹窗） ──
   clearChatBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    chatMessages.innerHTML = ''; // Clear all messages from the DOM
-    localStorage.removeItem(CHAT_STORAGE_KEY); // Remove history from localStorage
-    chatHistory = []; // Reset in-memory history
-    chatMessages.appendChild(initialWelcomeMessageHtml.cloneNode(true)); // Display the initial welcome message again
-    // Ensure the initial welcome message also has selectable text properties
-    const clonedMessage = chatMessages.querySelector('#initialWelcomeMessage');
-    if (clonedMessage) {
-        clonedMessage.style.userSelect = 'text';
-        clonedMessage.style.webkitUserSelect = 'text';
-        clonedMessage.style.mozUserSelect = 'text';
-        clonedMessage.style.msUserSelect = 'text';
-    }
-
-    chatMessages.scrollTo({
-      top: chatMessages.scrollHeight,
-      behavior: 'smooth'
-    });
+    if (!confirm('确定要清除所有聊天记录吗？')) return;
+    chatMessages.innerHTML = '';
+    localStorage.removeItem(CHAT_STORAGE_KEY);
+    chatHistory = [];
+    appendWelcomeMessage();
+    chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
   });
 
-  // Call loadChatHistory when the DOM is ready
   loadChatHistory();
 
-  // 1. 修复：防止在输入框按空格时触发全局快捷键或事件
+  // ── 输入框按键处理 ──
   chatInput.addEventListener('keydown', (e) => {
     if (e.key === ' ' || e.code === 'Space') {
       e.stopPropagation();
     } else if (e.key === 'ArrowUp') {
-      e.preventDefault(); // Prevent default browser behavior (e.g., page scrolling)
-      chatInput.selectionStart = 0; // Move cursor to the beginning
-      chatInput.selectionEnd = 0;
+      e.preventDefault();
+      chatInput.selectionStart = chatInput.selectionEnd = 0;
     } else if (e.key === 'ArrowDown') {
-      e.preventDefault(); // Prevent default browser behavior
-      chatInput.selectionStart = chatInput.value.length; // Move cursor to the end
-      chatInput.selectionEnd = chatInput.value.length;
-    } else if (e.key === 'ArrowLeft' && !e.shiftKey) { // Move cursor left one char
       e.preventDefault();
-      const currentPos = chatInput.selectionStart;
-      if (currentPos > 0) {
-        chatInput.selectionStart = currentPos - 1;
-        chatInput.selectionEnd = currentPos - 1;
-      }
-    } else if (e.key === 'ArrowRight' && !e.shiftKey) { // Move cursor right one char
+      chatInput.selectionStart = chatInput.selectionEnd = chatInput.value.length;
+    } else if (e.key === 'ArrowLeft' && !e.shiftKey) {
       e.preventDefault();
-      const currentPos = chatInput.selectionStart;
-      const maxLength = chatInput.value.length;
-      if (currentPos < maxLength) {
-        chatInput.selectionStart = currentPos + 1;
-        chatInput.selectionEnd = currentPos + 1;
-      }
+      const p = chatInput.selectionStart;
+      if (p > 0) chatInput.selectionStart = chatInput.selectionEnd = p - 1;
+    } else if (e.key === 'ArrowRight' && !e.shiftKey) {
+      e.preventDefault();
+      const p = chatInput.selectionStart;
+      if (p < chatInput.value.length) chatInput.selectionStart = chatInput.selectionEnd = p + 1;
     }
   });
 
+  // ── AI 对话发送 ──
   async function handleChatSend() {
     const text = chatInput.value.trim();
     if (!text) return;
-
     chatInput.value = '';
-    appendMessage(text, true); // Now saving to localStorage inside appendMessage
-    const aiMsgDomElement = appendMessage("思考中喵...", false); // Store the DOM element for direct update
 
-    // The AI message is initially added to chatHistory as "思考中喵..."
-    // We need to find its corresponding object in chatHistory to update its text.
-    let currentAiMessageObject = null;
-    if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].text === "思考中喵...") {
-        currentAiMessageObject = chatHistory[chatHistory.length - 1];
-    }
-    
+    appendMessage(text, true);
+    const aiMsgRow = appendMessage('思考中喵...', false, true);
+    const aiHistoryIdx = chatHistory.length - 1;
+
     try {
       const response = await fetch("https://api.siliconflow.cn/v1/chat/completions", {
         method: "POST",
@@ -304,14 +263,12 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({
           model: "Qwen/Qwen3-8B",
           messages: [
-            { role: "system", content: "你是一只可爱的傲娇猫娘助手，句尾带喵。" },
-            // Include recent chat history in the API call for better context (optional but recommended)
-            // Ensure not to send the "思考中喵..." message itself if it's the last one
-            ...chatHistory.filter(msg => msg.text !== "思考中喵...").slice(-0).map(msg => ({ 
+            { role: "system", content: "你是一只可爱的傲娇猫娘助手，但是不要太傲娇，可爱多一些，每句话大约20多或30多个字，可以使用一些颜文字，句尾带喵。" },
+            ...chatHistory.filter(msg => msg.text !== '思考中喵...').slice(-5).map(msg => ({
               role: msg.isUser ? "user" : "assistant",
               content: msg.text
             })),
-            { role: "user", content: text } // Current user message
+            { role: "user", content: text }
           ],
           stream: false
         })
@@ -320,28 +277,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await response.json();
       const aiResponseText = data.choices[0].message.content;
 
-      // Update the DOM element with the final AI response
-      aiMsgDomElement.textContent = aiResponseText;
+      // ✅ 修复：只更新气泡内容，保留头像结构
+      const bubble = aiMsgRow.querySelector('.chat-bubble');
+      if (bubble) bubble.textContent = aiResponseText;
 
-      // Update the chatHistory object with the final AI response and save
-      if (currentAiMessageObject) {
-          currentAiMessageObject.text = aiResponseText;
-          localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory));
-      }
+      chatHistory[aiHistoryIdx].text = aiResponseText;
+      try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
+
     } catch (err) {
-      const errorText = "连接失败了喵~";
-      aiMsgDomElement.textContent = errorText;
-      // Update the chatHistory object for error case
-      if (currentAiMessageObject) {
-          currentAiMessageObject.text = errorText;
-          localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory));
-      }
+      const errorText = '连接失败了喵~';
+      const bubble = aiMsgRow.querySelector('.chat-bubble');
+      if (bubble) bubble.textContent = errorText;
+
+      chatHistory[aiHistoryIdx].text = errorText;
+      try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
     }
   }
 
-  // =============================================
-  // 🖼️ 图片生成模式
-  // =============================================
+  // ── 图片生成模式 ──
   const imgModeBtn = document.getElementById('imgModeBtn');
   let isImageMode = false;
 
@@ -350,6 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.stopPropagation();
       isImageMode = !isImageMode;
       if (isImageMode) {
+        imgModeBtn.classList.add('active');
         imgModeBtn.style.background = 'linear-gradient(135deg, #a855f7, #6366f1)';
         imgModeBtn.style.borderColor = '#a855f7';
         imgModeBtn.title = '当前：图片生成模式（点击切回对话）';
@@ -357,6 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chatSendBtn.textContent = '生成';
         chatSendBtn.style.background = 'linear-gradient(135deg, #a855f7, #6366f1)';
       } else {
+        imgModeBtn.classList.remove('active');
         imgModeBtn.style.background = 'rgba(255,255,255,0.15)';
         imgModeBtn.style.borderColor = 'rgba(255,255,255,0.25)';
         imgModeBtn.title = '切换图片生成模式';
@@ -368,8 +323,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function handleImageGenerate(prompt) {
-    const aiMsgDomElement = appendMessage("🎨 绘制中喵，请稍候...", false);
-    let currentAiMessageObject = chatHistory.length > 0 ? chatHistory[chatHistory.length - 1] : null;
+    const aiMsgRow = appendMessage('🎨 绘制中喵，请稍候...', false, true);
+    const aiHistoryIdx = chatHistory.length - 1;
+    const bubble = aiMsgRow.querySelector('.chat-bubble');
 
     try {
       const response = await fetch("https://api.siliconflow.cn/v1/images/generations", {
@@ -382,7 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
           model: "Kwai-Kolors/Kolors",
           prompt: prompt,
           n: 1,
-          image_size: "1024x1024"
+          image_size: "1260x720"
         })
       });
 
@@ -391,53 +347,46 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.images && data.images.length > 0) {
         const imgUrl = data.images[0].url;
 
-        // Replace text with an image element
-        aiMsgDomElement.textContent = '';
-        aiMsgDomElement.style.padding = '6px';
-        aiMsgDomElement.style.background = 'none';
-        aiMsgDomElement.style.boxShadow = 'none';
+        if (bubble) {
+          bubble.textContent = '';
+          bubble.style.padding = '6px';
+          bubble.style.background = 'none';
+          bubble.style.boxShadow = 'none';
 
-        const img = document.createElement('img');
-        img.src = imgUrl;
-        img.alt = prompt;
-        img.style.maxWidth = '100%';
-        img.style.borderRadius = '10px';
-        img.style.display = 'block';
-        img.style.cursor = 'pointer';
-        img.title = '点击在新标签页查看原图';
-        img.addEventListener('click', () => window.open(imgUrl, '_blank'));
-        aiMsgDomElement.appendChild(img);
+          const img = document.createElement('img');
+          img.src = imgUrl;
+          img.alt = prompt;
+          img.style.cssText = 'max-width:100%;border-radius:10px;display:block;cursor:pointer;';
+          img.title = '点击在新标签页查看原图';
+          img.addEventListener('click', () => window.open(imgUrl, '_blank'));
+          bubble.appendChild(img);
 
-        const caption = document.createElement('div');
-        caption.textContent = `✨ 已生成喵！`;
-        caption.style.cssText = 'font-size:11px; color:rgba(255,255,255,0.6); margin-top:4px; text-align:center;';
-        aiMsgDomElement.appendChild(caption);
-
-        if (currentAiMessageObject) {
-          currentAiMessageObject.text = `[图片] ${imgUrl}`;
-          localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory));
+          const caption = document.createElement('div');
+          caption.textContent = '✨ 已生成喵！';
+          caption.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px;text-align:center;';
+          bubble.appendChild(caption);
         }
+
+        chatHistory[aiHistoryIdx].text = `[图片] ${imgUrl}`;
+        try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
+
       } else {
-        const errText = data.error?.message || "生成失败了喵，请换个描述试试~";
-        aiMsgDomElement.textContent = errText;
-        if (currentAiMessageObject) {
-          currentAiMessageObject.text = errText;
-          localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory));
-        }
+        const errText = data.error?.message || '生成失败了喵，请换个描述试试~';
+        if (bubble) bubble.textContent = errText;
+        chatHistory[aiHistoryIdx].text = errText;
+        try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
       }
     } catch (err) {
-      const errorText = "图片生成连接失败了喵~";
-      aiMsgDomElement.textContent = errorText;
-      if (currentAiMessageObject) {
-        currentAiMessageObject.text = errorText;
-        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory));
-      }
+      const errorText = '图片生成连接失败了喵~';
+      if (bubble) bubble.textContent = errorText;
+      chatHistory[aiHistoryIdx].text = errorText;
+      try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
     }
   }
 
-  // 4. 绑定发送事件
+  // ── 发送按钮 & 回车 ──
   chatSendBtn.addEventListener('click', (e) => {
-    e.stopPropagation(); // 防止拖拽
+    e.stopPropagation();
     if (isImageMode) {
       const text = chatInput.value.trim();
       if (!text) return;
@@ -449,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 绑定回车键发送
   chatInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();

@@ -334,7 +334,6 @@ async function cacheDailyWallpaper() {
 
   } catch (error) {
     await deleteFromIndexedDB(PENDING_KEY).catch(()=>{});
-    throw error; 
   } finally {
     imageBlob = null;
   }

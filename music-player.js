@@ -630,7 +630,7 @@ if (window.isZenMode || window.isAutoZenActive) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: song.title,
         artist: song.artist,
-        artwork: [{ src: COVER_IMAGE, sizes: '512x512', type: 'image/png' }]
+        artwork: [{ src: COVER_IMAGE, sizes: '128x128', type: 'image/png' }]
       });
 
       navigator.mediaSession.setActionHandler('play', () => audio.play());

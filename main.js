@@ -30,7 +30,7 @@ function resetActivityTimer() {
   activeSleepTimer = setTimeout(() => {
     window.isUserActive = false;
     stopHighCostAnimations(); 
-  }, 5000); 
+  }, 8500); 
 }
 
 // 监听轻量级事件 (使用 passive 提升滚动性能)
