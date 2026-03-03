@@ -2418,3 +2418,39 @@ body::after {
   border-style: solid;
   border-color: transparent #ffd6e0 transparent transparent;
 }
+/* =========================================
+   🖼️ AI 专属头像框样式
+   ========================================= */
+
+/* AI 头像的外层容器 */
+.ai-avatar-wrapper {
+  position: relative;
+  width: 50px;  /* 容器宽度与头像框一致 */
+  height: 50px; /* 保持正方形以便于垂直居中 */
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -10px; /* 微调：抵消变宽的20px，防止气泡被挤压得太靠右 */
+}
+
+/* AI 的本体头像保持 40px 不变 */
+.ai-avatar-wrapper .chat-avatar {
+  width: 40px;
+  height: 40px;
+  margin: 0; /* 清除默认的 margin 影响 */
+  position: relative;
+  z-index: 1; /* 放在底层 */
+}
+
+/* 叠加的头像框图片 */
+.ai-avatar-wrapper .avatar-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* 绝对居中对齐 */
+  width: 50px;      /* 强制 60px 宽度 */
+  height: auto;     /* 高度自适应 */
+  z-index: 2;       /* 盖在头像上方 */
+  pointer-events: none; /* 防止遮挡头像的右键或点击事件 */
+}

@@ -2647,4 +2647,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (count > 0) {
     }
   }, 3000);
+  chrome.runtime.sendMessage({ action: 'getDailyWallpaper' }, (response) => {
+    if (response && response.success) {
+      console.log('[Frontend] 后台已完成壁纸检查/更新');
+    }
+  });
 });

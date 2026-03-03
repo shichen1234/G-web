@@ -339,18 +339,27 @@ async function cacheDailyWallpaper() {
   }
 }
 
+// 1. 添加辅助函数，获取本地日期（解决 8 小时时区差）
+function getLocalDateString() {
+  const d = new Date();
+  // 格式化为 2024-05-20
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// 2. 替换原来的检查函数
 async function checkAndCacheWallpaper() {
   try {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getLocalDateString(); // 获取本地当前日期
     const result = await chrome.storage.local.get('dailyWallpaperCacheDate');
     
     if (result.dailyWallpaperCacheDate !== today) {
+      console.log('[G-web] 检测到新的一天，准备更新壁纸...');
       await cacheDailyWallpaper();
     } else {
-      console.log('[G-web] 今日壁纸已缓存');
+      console.log('[G-web] 今日壁纸已在缓存中');
     }
   } catch(e) {
-    console.error("[G-web] 检查壁纸缓存出错:", e);
+    console.error("[G-web] 检查壁纸更新出错:", e);
   }
 }
 
@@ -363,9 +372,14 @@ chrome.runtime.onStartup.addListener(() => {
   checkAndCacheWallpaper();
 });
 
+// 3. 修正定时任务：在每天凌晨 00:00 准时触发
+const now = new Date();
+// 设置为明天的 00:00:00
+const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
+
 chrome.alarms.create('dailyWallpaperAlarm', {
-  when: new Date(new Date().setHours(28, 0, 0, 0)).getTime(),
-  periodInMinutes: 24 * 60
+  when: tomorrow.getTime(),
+  periodInMinutes: 24 * 60 // 之后每 24 小时执行一次
 });
 
 chrome.alarms.onAlarm.addListener(alarm => {
