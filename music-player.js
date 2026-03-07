@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   const DUAL_COLUMN_LYRIC_SONG_IDS = new Set([
-    12, 21, 22, 23, 24, 26, 31, 35, 36, 37, 38, 40, 43, 44, 45, 48,50,54,55,56,58
+    12, 21, 22, 23, 24, 26, 31, 35, 36, 37, 38, 40, 43, 44, 45, 48,50,54,55,56,58,62
   ]);
 
   // music-player.js
@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ================= 配置区 =================
   const GITHUB_BASE = 'https://ghproxy.net/https://raw.githubusercontent.com/shichen1234/music/main/';
   const PROXY_BASE = ''; 
-  const COVER_IMAGE = 'logo/icon.png';
+  const COVER_IMAGE = 'logo/icon.gif';
   
   // 🎵 歌曲列表数据库
   // 您说有50首，这里为了演示写了3首，您可以按照格式补全到50首
@@ -127,7 +127,9 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 57, filename: "57--下雨天--南拳妈妈.mp3" },
     { id: 58, filename: "58--TICKING AWAY (VCT ANTHEM 2023) (流光似箭)--Grabbitz&无畏契约&bbno$.mp3" },
     { id: 59, filename: "59--告白气球--周杰伦.mp3" },
-    { id: 60, filename: "60--青花瓷--周杰伦.mp3" }
+    { id: 60, filename: "60--青花瓷--周杰伦.mp3" },
+    { id: 61, filename: "61--关键词--林俊杰.mp3" },
+    { id: 62, filename: "62--Thank you for dears.--GET IN THE RING.mp3" },
   ];
 
 songDatabase.forEach(song => {
