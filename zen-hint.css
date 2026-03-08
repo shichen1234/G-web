@@ -1,0 +1,117 @@
+/* =========================================
+   ⌨️ 禅模式 - 快捷键提示按钮 & 弹窗
+   ========================================= */
+
+/* 提示按钮：默认隐藏，由 JS 控制显隐与位置 */
+#zenHintBtn {
+  position: fixed;
+  width: 28px;
+  height: 28px;
+  border: none;            /* 无边框 */
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 20px;
+  font-weight: 300;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  /* 默认隐藏，JS 来控制 */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease, color 0.2s ease;
+  user-select: none;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+}
+
+#zenHintBtn:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* 弹出提示面板 - 跟随按钮，定位在其右侧下方 */
+#zenHintPopup {
+  position: fixed;
+  /* 初始位置由 JS 控制；用 CSS 控制显隐动画 */
+  bottom: 170px;
+  right: 20px;
+  width: 210px;
+  background: rgba(12, 12, 18, 0);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 13px 15px 11px;
+  z-index: 201;
+  color: rgb(255, 255, 255);
+  font-size: 12.5px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  /* 默认隐藏 */
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6px) scale(0.97);
+  transform-origin: bottom right;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+#zenHintPopup.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+/* 每行快捷键 */
+.zen-hint-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.zen-hint-row kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  flex-shrink: 0;
+}
+
+.zen-hint-row span {
+  opacity: 0.75;
+  font-size: 12px;
+}
+
+/* 分割线 */
+.zen-hint-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 7px 0 6px;
+}
+
+/* 重置提示 */
+.zen-hint-tip {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.42);
+  line-height: 1.6;
+}
+
+.zen-hint-tip kbd {
+  display: inline;
+  padding: 1px 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.55);
+}
