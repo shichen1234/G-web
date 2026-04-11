@@ -8,6 +8,8 @@
   <!-- 添加在其他 meta 标签之后 -->
 <link rel="stylesheet" href="style1.css">
 <link rel="stylesheet" href="style2.css">
+<link rel="stylesheet" href="zen-hint.css">
+<link rel="stylesheet" href="liquid-style.css">
 </head>
 <body>
   <!-- 可把额外图标图片放到和 index.html 同目录，示例文件名 2025102523114053.png -->
@@ -16,11 +18,28 @@
   <a href="https://space.bilibili.com/702430325" target="_blank">
   <img id="biliIcon" src="logo/2025102514322810.png" alt="bilibili" title="作者B站主页" style="user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;"/>
 </a>
-<img id="bgImage" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-2;display:none;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;" />
+<img id="bgImage" src="wallpapers/poster.jpg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-2;display:block;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;" />
+<canvas id="liquidCanvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; display: none;"></canvas>
 <video id="bgVideo" muted loop poster="wallpapers/poster.jpg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-1;display:none;user-select:none;-webkit-user-select:none;" disablePictureInPicture controlsList="nodownload">
   <!-- The 'src' will be set by JavaScript -->
   Your browser does not support the video tag.
 </video>
+<!-- 🌐 网页壁纸沙盒 iframe -->
+<iframe
+  id="bgWebFrame"
+  src="sandbox.html"
+  scrolling="no"
+  style="position:fixed; top:0; left:0; width:100vw; height:100vh; border:none; z-index:0; display:none; pointer-events:auto;"
+></iframe>
+<!-- Alt+W 交互模式提示条 -->
+<div id="webWpInteractiveTip" style="
+  position:fixed;top:24px;left:50%;transform:translateX(-50%);
+  background:rgba(10,10,20,0.72);backdrop-filter:blur(10px);
+  color:white;padding:9px 22px;border-radius:24px;font-size:13px;
+  z-index:9999;letter-spacing:0.3px;opacity:0;transition:opacity 0.3s ease;
+  pointer-events:none;border:1px solid rgba(255,255,255,0.15);
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);white-space:nowrap;
+"></div>
   <!-- ✅ 新增问候语和北京时间显示 -->
    
   <div id="greetingMessage" style="text-shadow: 0 3px 15px rgba(0,0,0,0.7);">问候加载中...</div>
@@ -64,6 +83,7 @@
 </div>
 <!-- 唱片元素（位于音乐组件左侧，半被覆盖） -->
 <div id="mediaWidget">
+  
   <div class="cover" id="mediaCover"></div>
   <div class="meta">
     <div class="title" id="mediaTitle">无标题</div>
@@ -157,6 +177,9 @@
         <div class="wp-tab" data-type="dynamic">
           <span>🎬 动态壁纸</span>
         </div>
+                <div class="wp-tab" data-type="web">
+          <span>🌐 网页壁纸<span style="font-size: 12px;">(测试)</span></span>
+        </div>
         <div class="wp-tab" data-type="custom">
           <span>📂 自定义壁纸</span>
         </div>
@@ -174,6 +197,13 @@
                 </label>
                 <span class="parallax-label">背景视差</span>
             </div>
+<div class="liquid-setting-item">
+    <label class="liquid-switch">
+        <input type="checkbox" id="liquidToggleBtn">
+        <span class="liquid-slider"></span>
+    </label>
+    <span>&nbsp;&nbsp;水波特效</span>
+</div>
     
             <!-- 中间：音量控制 -->
             <div class="volume-option" style="display: flex; align-items: center; gap: 8px;">
@@ -196,12 +226,18 @@
           <div class="envelope-inner">
             <span id="closeTipPopup">×</span>
             <h3 class="envelope-title">🐾 小猫的壁纸百科：</h3>
-            <div class="envelope-content-text">
+<div class="envelope-content-text">
               <p style="font-size: 16px;">🌟 <strong>这里有哪些壁纸种类？</strong></p>
-              <p>主人可以随心切换<strong>静态美图</strong>、<strong>丝滑视频</strong>和<strong>自定义的壁纸</strong>作为背景喵！</p>
+              <p>主人可以随心切换<strong>静态美图</strong>、<strong>丝滑视频</strong>和<strong>可以互动的网页壁纸</strong>作为背景喵！还可以自己上传<strong>自定义壁纸</strong>喵！</p>
+              
               <p style="font-size: 16px; margin-top: 15px;">✨ <strong>什么是“背景视差”？</strong></p>
               <p>这是一个超神奇的魔法！开启后，背景会随着主人的<strong>鼠标滑动</strong>而轻轻晃动，</p>
               <p>让你的桌面瞬间变得有有趣，深邃又灵动喵！</p>
+
+              <p style="font-size: 16px; margin-top: 15px;">🌊 <strong>什么是“水波特效”？</strong></p>
+              <p>它能让静态壁纸像水面一样泛起温柔的涟漪，看着超级治愈喵！不过这个很吃电脑性能，酌情选择哦～</p>
+              <p style="font-size: 13px; color: #777;">（偷偷提醒主人：这个魔法只会在静态壁纸上显灵的哦～）</p>
+
               <hr>
               <p>快去亲手试试看吧，打扮得漂亮一点喵！😽😽😽</p>
               <h3 style="text-align: right;">猫猫 &nbsp; 留</h3>
@@ -245,12 +281,17 @@
 
 <div id="quickPanel" class="collapsed">
   <button class="openBtn">▶</button>
-  <div class="panel">
+  <div class="panel" style="position:relative;">
     <div class="icons">
       <h3 style="color:white;">快捷应用</h3>
       <div class="iconWrapper addWrapper">
         <button type="button" class="addBtn" title="添加快捷方式">+</button>
       </div>
+    </div>
+    <div id="quickPanelScrollHint" class="hidden">
+      <div class="scroll-arrow"></div>
+      <div class="scroll-arrow"></div>
+      <div class="scroll-arrow"></div>
     </div>
   </div>
 </div>
@@ -389,7 +430,7 @@
 
   </div>
 </div>
-<div id="aiChatWidget" class="birthday-container draggable-widget" style="margin: 0 15px 15px 15px; width: 440px;">
+<div id="aiChatWidget" class="birthday-container draggable-widget" style="margin: 0 15px 15px 15px; width: 435px;">
   <div class="birthday-section" style="display: flex; flex-direction: column; height: 320px;">
     <h4 style="margin-top: 0; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
       😺 AI 聊天喵
@@ -463,21 +504,92 @@
     </div>
   </div>
 </div>
-<div id="snakeWidget" class="birthday-container draggable-widget" style="margin: 0 15px 15px 15px; width: 450px; padding: 10px;">
-  <div class="birthday-section" style="text-align: center;">
-    <h4 style="text-shadow: 1px 1px 1px black; margin: 0 0 10px 0; font-size: 14px; opacity: 0.9;">🐍 小游戏：贪吃蛇大作战</h4>
+
+<div id="gameCenterWidget" class="birthday-container draggable-widget" style="margin: 0 15px 15px 15px; width: 440px; overflow: hidden; border-radius: 16px; background: rgba(0,0,0,0.2);">
+  
+  <div id="gameLobbyView" class="birthday-section" style="display: block; width: 470px; height: 260px; background-image: url('images/youxi.png'); background-size: cover; background-position: center; position: relative; padding: 15px; margin: -15px; box-sizing: border-box; border-radius: 16px;">
+    <div style="position: absolute; top:0; left:0;  background: rgba(0,0,0,0.3); z-index: 0; border-radius: 16px; "></div>
     
-    <canvas id="snakeCanvas" width="600" height="150" style="width: 100%; height: 120px; border-radius: 8px; background: rgba(0,0,0,0.3); cursor: pointer; display: block; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);"></canvas>
-    
-    <div style="font-size: 13px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; color: rgba(255,255,255,0.9); font-weight: bold;">
-      <span style="opacity: 0.8; font-size: 12px; font-weight: normal;">🎮 WASD / 方向键控制</span>
-      
-      <div style="display: flex; gap: 15px;">
-        <span style="color: #69f0ae;">得分: <span id="currentSnakeScore">0</span></span>
-        <span style="opacity: 0.6;">最高: <span id="snakeHighScore">0</span></span>
+    <div style="position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column;">
+      <h4 style="margin: 0 0 15px 0; color: white; text-shadow: 2px 2px 4px #000; font-size: 16px; text-align: center;">🎮 游戏中心</h4>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; flex: 1;">
+  <button class="game-entry-btn" data-target="contra">🔫 魂斗罗30命S弹版</button>
+  <button class="game-entry-btn" data-target="mario">🍄 超级玛丽</button>
+  <button class="game-entry-btn" data-target="snake">🐍 贪吃蛇</button>
+  <button class="game-entry-btn" data-target="memory">🃏 记忆翻牌</button>
+</div>
+    </div>
+  </div>
+
+  <div id="contraView" class="birthday-section" style="display: none; position: relative; margin: -14px; border-radius: 16px; padding: 15px; background-image: url('images/hundouluo.png'); background-size: cover; background-position: center; background-blend-mode: multiply; background-color: rgba(0, 0, 0, 0);">
+<button class="back-lobby-btn" data-target="lobby">⬅ 返回大厅</button>    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: relative; z-index: 1;">
+      <h4 style="margin: 0; font-size: 14px; color: #fff; text-shadow: 1px 1px 2px black;">🔫 魂斗罗30命S弹版 (Contra)</h4>
+      <button id="nes-mute-contra" title="游戏声音" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 4px; padding: 2px 7px; cursor: pointer; font-size: 13px; margin-right: 6px; margin-top: 4px;">🔊</button><button id="load-contra" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 12px; margin-right: 100px; margin-top: 4px;">点击载入</button>
+    </div>
+    <canvas id="contra-canvas" width="256" height="240" style="width: 100%; background: #000; border-radius: 8px; image-rendering: pixelated; position: relative; z-index: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.5);"></canvas>
+    <div style="font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 8px; line-height: 1.4; position: relative; z-index: 1; text-shadow: 1px 1px 1px black;">
+      操作：WASD移动 | J射击 | K跳跃 | Shift选择 | 回车开始
+    </div>
+  </div>
+
+  <div id="marioView" class="birthday-section" style="display: none;margin: -15px; position: relative; border-radius: 16px; padding: 15px; background-image: url('images/chaojimali.png'); background-size: cover; background-position: center; background-blend-mode: multiply; background-color: rgba(0, 0, 0, 0);">
+<button class="back-lobby-btn" data-target="lobby">⬅ 返回大厅</button>    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: relative; z-index: 1;">
+      <h4 style="margin: 0; font-size: 14px; color: #fff; text-shadow: 1px 1px 2px black;">🍄 超级玛丽 (Mario)</h4>
+      <button id="nes-mute-mario" title="游戏声音" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(0,0,0,0.3); color: #000; border-radius: 4px; padding: 2px 7px; cursor: pointer; font-size: 13px; margin-right: 6px; margin-top: 4px;">🔊</button><button id="load-mario" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(0 0 0 / 40%); color: rgb(0, 0, 0); border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 12px; margin-right: 100px; margin-top: 4px;">点击载入</button>
+    </div>
+    <canvas id="mario-canvas" width="256" height="240" style="width: 100%; background: #000; border-radius: 8px; image-rendering: pixelated; position: relative; z-index: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.5);"></canvas>
+    <div style="font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 8px; line-height: 1.4; position: relative; z-index: 1; text-shadow: 1px 1px 1px black;">
+      操作：WASD移动 | J加速/火球 | K跳跃 | Shift选择 | 回车开始
+    </div>
+  </div>
+
+  <div id="snakeView" class="birthday-section" style="display: none; position: relative; height: 200px; margin: -17px; border-radius: 16px; padding: 15px; background: linear-gradient(135deg, #134E5E, #71B280);">
+<button class="back-lobby-btn" data-target="lobby">⬅ 返回大厅</button>    <div style="text-align: center;">
+      <h4 style="text-shadow: 1px 1px 2px black; margin: 0 0 10px 0; font-size: 14px; color: white;">🐍 贪吃蛇大作战</h4>
+      <canvas id="snakeCanvas" width="600" height="150" style="width: 100%; height: 120px; margin-top: 30px; border-radius: 8px; background: rgba(0,0,0,0.4); cursor: pointer; display: block; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);"></canvas>
+      <div style="font-size: 13px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; color: rgba(255,255,255,0.9); font-weight: bold;">
+        <span style="opacity: 0.8; font-size: 12px; font-weight: normal;">🎮 WASD / 方向键控制</span>
+        <div style="display: flex; gap: 15px;">
+          <span style="color: #69f0ae;">得分: <span id="currentSnakeScore">0</span></span>
+          <span style="opacity: 0.6;">最高: <span id="snakeHighScore">0</span></span>
+        </div>
       </div>
     </div>
   </div>
+<div id="memoryView" class="birthday-section" style="display: none; position: relative; margin: -17px; border-radius: 16px; padding: 15px;   background-image: url('images/fanpai.png') !important;
+ min-height: 300px;">
+  <button class="back-lobby-btn" data-target="lobby">⬅ 返回大厅</button>
+
+  <div class="memory-ui-container">
+    <h4 style="margin: 0 0 15px 0; font-size: 16px; color: white; text-align: left; padding-left: 5px;">🃏 记忆翻牌</h4>
+    
+    <div class="memory-controls">
+      <div class="diff-group">
+        <button class="memory-diff-btn active" data-pairs="9">简单</button>
+        <button class="memory-diff-btn" data-pairs="12">中等</button>
+        <button class="memory-diff-btn" data-pairs="15">困难</button>
+      </div>
+      <button id="memoryRestartBtn" class="memory-icon-btn" title="重新开始">🔄</button>
+    </div>
+
+    <div class="memory-stats">
+      <span>翻牌: <strong id="memoryFlips">0</strong></span>
+      <span>匹配: <strong id="memoryMatches">0</strong>/<strong id="memoryTotal">9</strong></span>
+      <span>⏱ <strong id="memoryTimer">00:00</strong></span>
+    </div>
+
+    <div id="memoryBestRow" class="memory-best">
+      🏆 记录: <span id="bestFlips9">--</span> | <span id="bestFlips12">--</span> | <span id="bestFlips15">--</span>
+    </div>
+
+    <div id="memoryBoard" class="memory-grid"></div>
+    
+    <div id="memoryWinBanner" style="display:none;" class="win-banner">
+      🎉 <span id="memoryWinStats"></span>
+    </div>
+  </div>
+</div>
+
 </div>
 <div id="calendarWidget" class="birthday-container draggable-widget" style="margin: 0 15px 15px 15px; width: 440px;">
   <div class="birthday-section">
@@ -528,6 +640,11 @@
     <li data-action="trail-laser">⚡️ 极光射线</li>
     <li class="separator"></li>
     <li data-action="trail-off" style="color:#ff6b6b">🚫 关闭特效</li>
+    <li class="separator"></li>
+    <li id="memeToggleItem" data-action="trail-meme" class="meme-toggle-item">
+      <span id="memeCheckIcon" class="meme-check-icon">☐</span>
+      <span>表情包点击</span>
+    </li>
   </ul>
 </li>
          <li class="separator"></li>
@@ -630,6 +747,18 @@
 <div id="zenLyricsWidget">
   <div id="zenLyricsContent"></div>
 </div>
+
+<!-- 禅模式快捷键提示按钮 & 弹窗 -->
+<button id="zenHintBtn" title="禅模式快捷键提示" aria-label="禅模式快捷键提示">?</button>
+<div id="zenHintPopup" role="tooltip" aria-hidden="true">
+  <div class="zen-hint-row"><kbd>Space</kbd><span>播放 / 暂停</span></div>
+  <div class="zen-hint-row"><kbd>←</kbd><span>上一首</span></div>
+  <div class="zen-hint-row"><kbd>→</kbd><span>下一首</span></div>
+  <div class="zen-hint-divider"></div>
+  <div class="zen-hint-tip">只能够控制右侧面板的音乐播放器组件的音乐，无法控制外部网页的音乐</div>
+</div>
+<!-- ⚠️ 密钥配置文件，已加入 .gitignore，不提交到 Git -->
+<script src="config.js"></script>
 <script src="lunar.js"></script>
  <script src="main.js"></script>
  <script src="2.js"></script>
@@ -638,5 +767,19 @@
  <script src="4.js"></script>
  <script src="5.js"></script>
  <script src="music-player.js"></script>
+
+<!-- 禅模式糯米关怀通知 -->
+<div id="zenCareNotif">
+  <img id="zenCareAvatar" src="images/head2.png" alt="糯米">
+  <div id="zenCareBody">
+    <span id="zenCareName">糯米</span>
+    <span id="zenCareText">记得喝水哦喵～</span>
+  </div>
+</div>
+<script src="lib/jsnes.min.js"></script>
+<script src="game-loader.js"></script>
+ <script src="6.js"></script>
+ <script type="module" src="main-shuibo.js"></script>
+ <script src="jszip.min.js"></script>
 </body>
 </html>

@@ -303,22 +303,22 @@ async function handleChatSend() {
       console.error("[G-web] 农历换算失败:", e);
     }
 
-    const currentTimeStr = `\n${timeContext}\n如果用户询问日期、农历或节日，请务必参考上方系统提供的精准信息回答喵！`;
-    // 👆 --- 【修复结束】 --- 👆
-
-    const systemPrompt = "你是一只可爱的傲娇猫娘助手，名叫糯米，可爱多一些，每句话大约20多或30多个字，可以使用一些颜文字，情感起伏一些，带些人情味，句尾带喵。" 
-                         + currentTimeStr 
+    const systemPrompt = "你是一只可爱的傲娇猫娘助手，名叫糯米，可爱多一些，每句话大约20多或30多个字，可以使用一些颜文字，情感起伏一些，带些人情味，如果用户询问日期、农历或节日，只有提到关键词[日期,农历,节日]才能使用回答相关的东西句尾带喵。" 
                          + GWEB_FEATURES 
-                         + getMemoryContext();
+                         + getMemoryContext()
+                         + "\n请根据用户输入进行回答，保持语气可爱且有趣，适当使用一些网络流行语和颜文字。"
+                         + "\n如果用户输入包含敏感词，请委婉拒绝回答，并引导用户说些其他话题。"
+                         + "\n" + timeContext;
 
     try {      const response = await fetch("https://api.siliconflow.cn/v1/chat/completions", {
         method: "POST",
         headers: {
-          "Authorization": "Bearer sk-nqexskrybwapgftpgtfielefdndguizpqarnwcsdilpisfyd",
+          "Authorization": "Bearer " + ((window.APP_CONFIG && window.APP_CONFIG.AI_KEY) || ""),
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
           model: "Qwen/Qwen3-8B",
+          enable_thinking: false,
           messages: [
             { role: "system", content: systemPrompt },
             ...chatHistory.filter(msg => msg.text !== '思考中喵...').slice(-5).map(msg => ({
@@ -332,7 +332,8 @@ async function handleChatSend() {
       });
 
       const data = await response.json();
-      const aiResponseText = data.choices[0].message.content;
+      // 过滤掉 Qwen3 思维链 <think>...</think> 块，只保留实际回答
+      let aiResponseText = (data.choices[0].message.content || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
 
       // ✅ 只更新气泡内容，保留头像结构
       const bubble = aiMsgRow.querySelector('.chat-bubble');
@@ -379,69 +380,104 @@ async function handleChatSend() {
     });
   }
 
+  // ── SiliconFlow 图像生成（稳定可靠，约0.01元/张） ──
   async function handleImageGenerate(prompt) {
-    const aiMsgRow = appendMessage('🎨 绘制中喵，请稍候...', false, true);
-    const aiHistoryIdx = chatHistory.length - 1;
-    const bubble = aiMsgRow.querySelector('.chat-bubble');
+    // ── 1. 加载状态：用标准 AI 对话气泡 ──
+    const loadingRow = appendMessage('🎨 生成中喵，请稍候...', false, true);
+    const loadingIdx = chatHistory.length - 1;
 
+    // ── 2. 中文检测：含中文则先翻译成英文 ──
+    let englishPrompt = prompt;
+    if (/[\u4e00-\u9fa5]/.test(prompt)) {
+      try {
+        const res = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': "Bearer " + ((window.APP_CONFIG && window.APP_CONFIG.AI_KEY) || ""),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'Qwen/Qwen3-8B',
+            enable_thinking: false,
+            messages: [
+              { role: 'system', content: 'Translate the user text into an English image generation prompt. Output ONLY the English prompt, nothing else.' },
+              { role: 'user', content: prompt }
+            ],
+            stream: false,
+            max_tokens: 200
+          })
+        });
+        const d = await res.json();
+        const t = (d.choices[0].message.content || '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+        if (t) englishPrompt = t;
+      } catch(e) { /* 翻译失败则用原文 */ }
+    }
+
+    // ── 3. 调用 SiliconFlow 图像生成 API ──
     try {
-      const response = await fetch("https://api.siliconflow.cn/v1/images/generations", {
-        method: "POST",
+      const res = await fetch('https://api.siliconflow.cn/v1/images/generations', {
+        method: 'POST',
         headers: {
-          "Authorization": "Bearer sk-nqexskrybwapgftpgtfielefdndguizpqarnwcsdilpisfyd",
-          "Content-Type": "application/json"
+          'Authorization': "Bearer " + ((window.APP_CONFIG && window.APP_CONFIG.AI_KEY) || ""),
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: "Kwai-Kolors/Kolors",
-          prompt: prompt,
-          n: 1,
-          image_size: "1260x720"
+          model: 'Kwai-Kolors/Kolors',
+          prompt: englishPrompt,
+          image_size: '1280x720',
+          num_inference_steps: 25,
+          num_images: 1
         })
       });
 
-      const data = await response.json();
-
-      if (data.images && data.images.length > 0) {
-        const imgUrl = data.images[0].url;
-
-        if (bubble) {
-          bubble.textContent = '';
-          bubble.style.padding = '6px';
-          bubble.style.background = 'none';
-          bubble.style.boxShadow = 'none';
-
-          const img = document.createElement('img');
-          img.src = imgUrl;
-          img.alt = prompt;
-          img.style.cssText = 'max-width:100%;border-radius:10px;display:block;cursor:pointer;';
-          img.title = '点击在新标签页查看原图';
-          img.addEventListener('click', () => window.open(imgUrl, '_blank'));
-          bubble.appendChild(img);
-
-          const caption = document.createElement('div');
-          caption.textContent = '✨ 已生成喵！';
-          caption.style.cssText = 'font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px;text-align:center;';
-          bubble.appendChild(caption);
-        }
-
-        chatHistory[aiHistoryIdx].text = `[图片] ${imgUrl}`;
-        try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
-
-      } else {
-        const errText = data.error?.message || '生成失败了喵，请换个描述试试~';
-        if (bubble) bubble.textContent = errText;
-        chatHistory[aiHistoryIdx].text = errText;
-        try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
+      if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error(`API ${res.status}: ${errBody.slice(0, 120)}`);
       }
-    } catch (err) {
-      const errorText = '图片生成连接失败了喵~';
-      if (bubble) bubble.textContent = errorText;
-      chatHistory[aiHistoryIdx].text = errorText;
+
+      const data = await res.json();
+      const imgUrl = data?.images?.[0]?.url;
+      if (!imgUrl) throw new Error('响应中没有图片 URL');
+
+      // ── 4. 成功：移除加载气泡，插入全宽图片卡 ──
+      loadingRow.remove();
+      chatHistory.splice(loadingIdx, 1);
+
+      const card = document.createElement('div');
+      card.style.cssText = 'width:100%;display:flex;flex-direction:column;align-items:center;margin:4px 0;';
+
+      const img = document.createElement('img');
+      img.src = imgUrl;
+      img.alt = prompt;
+      img.title = '点击在新标签页查看原图';
+      img.style.cssText = 'width:100%;border-radius:10px;display:block;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,0.35);';
+      img.addEventListener('click', () => window.open(imgUrl, '_blank'));
+
+      // ── 5. 已生成喵 小字 ──
+      const badge = document.createElement('div');
+      badge.style.cssText = 'margin-top:6px;font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.5px;';
+      badge.textContent = '✨ 已生成喵';
+
+      card.appendChild(img);
+      card.appendChild(badge);
+      chatMessages.appendChild(card);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      chatHistory.push({ text: `[图片] ${imgUrl}`, isUser: false });
       try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
+
+    } catch (err) {
+      // ── 6. 失败：气泡内更新为错误提示（保持对话样式） ──
+      const bubble = loadingRow.querySelector('.chat-bubble');
+      const errText = `图片生成失败了喵，换个描述或稍后再试试～`;
+      if (bubble) bubble.textContent = errText;
+      chatHistory[loadingIdx].text = errText;
+      try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
+      console.error('[G-web 图片生成]', err);
     }
   }
 
-  // ── 7. 集中处理按键与发送逻辑（全合并，防冲突） ──
+    // ── 7. 集中处理按键与发送逻辑（全合并，防冲突） ──
   chatSendBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     if (isImageMode) {

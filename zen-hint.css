@@ -115,3 +115,87 @@
   font-size: 10.5px;
   color: rgba(255, 255, 255, 0.55);
 }
+/* 游戏按钮悬停背景图 */
+.game-entry-btn {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.2s ease, transform 0.2s ease;
+}
+
+.game-entry-btn[data-target="contra"]:hover {
+  background-image: url('images/game1.png');
+}
+
+.game-entry-btn[data-target="mario"]:hover {
+  background-image: url('images/game2.png');
+}
+
+.game-entry-btn[data-target="snake"]:hover {
+  background-image: url('images/game3.png');
+}
+
+.game-entry-btn[data-target="memory"]:hover {
+  background-image: url('images/game4.png');
+}
+.game-entry-btn:hover {
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+  color: white;
+}
+/* =========================================
+   🧘 禅模式 - 左下角时间组件 (尺寸/样式精修版)
+   ========================================= */
+
+#zenTimeWidget {
+  /* 定位到左下角 */
+  top: auto !important;
+  left: 40px !important;    
+  bottom: 40px !important;  
+  
+  /* 移除原来的中心点缩放，改为从左侧微微滑入的初始状态 */
+  transform: translateX(-20px) scale(0.95) !important;
+  
+  /* 布局对齐：靠左对齐 */
+  text-align: left !important;
+  align-items: flex-start !important;
+  gap: 2px !important; /* 缩紧整体行间距，更紧凑 */
+  
+  /* 统一换成 1.html 中的优雅无衬线字体 */
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif !important;
+}
+
+/* 进场动画：滑入并恢复原始大小 */
+#zenTimeWidget.visible {
+  transform: translateX(0) scale(1) !important;
+}
+
+/* 1. 时间数字：采用 1.html 的轻盈风格 */
+#zenTime {
+  font-family: inherit !important; /* 抛弃原来的等宽字体 (Consolas) */
+  font-size: 82px !important;      /* 尺寸改小，参考 1.html */
+  font-weight: 200 !important;     /* 极细字重，核心质感来源 */
+  letter-spacing: 0 !important;    /* 移除之前的挤压字间距 */
+  line-height: 1 !important;
+  text-shadow: rgba(0, 0, 0, 0.7) 0px 3px 15px !important; /* 加入柔和的阴影，增强立体感 */
+  /* 注：没有写 text-shadow，所以完美继承了你原有的阴影 */
+}
+
+/* 2. 日期：参考 1.html 的副标题尺寸 */
+#zenDate {
+  font-size: 26px !important;
+  font-weight: 300 !important;
+  letter-spacing: 1px !important;
+  opacity: 0.9 !important;
+  text-shadow: rgba(0, 0, 0, 0.7) 0px 3px 15px !important;
+  /* 同样继承原有阴影 */
+}
+
+/* 3. 星期与天气：尺寸比日期再稍微小一圈，拉开层次 */
+#zenInfo {
+  font-size: 20px !important;
+  font-weight: 300 !important;
+  opacity: 0.75 !important;
+  margin-top: 6px !important; /* 和上方日期稍微拉开一点点呼吸空间 */
+  text-shadow: rgba(0, 0, 0, 0.7) 0px 3px 15px !important;
+  /* 同样继承原有阴影 */
+}

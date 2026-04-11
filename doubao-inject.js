@@ -1,182 +1,141 @@
 // =============================================
-// 🚀 豆包AI自动填充脚本 - 终极版（模拟真实用户输入）
+// 🚀 豆包AI自动填充脚本 v4 - 粘贴事件方案
 // =============================================
-
-(function() {
+(function () {
     'use strict';
 
-    if (window.__G_WEB_DOUBAO_INJECTED__) {
-        return;
-    }
+    if (window.__G_WEB_DOUBAO_INJECTED__) return;
     window.__G_WEB_DOUBAO_INJECTED__ = true;
 
-    chrome.storage.local.get('pending_query', function(data) {
-        if (!data || !data.pending_query) {
-            return;
-        }
+    chrome.storage.local.get(['pending_query', 'pending_query_type'], function (data) {
+        if (!data || !data.pending_query) return;
 
-        const query = data.pending_query;
-        chrome.storage.local.remove('pending_query');
+        const query   = data.pending_query;
+        const isImage = (data.pending_query_type === 'image');
+        chrome.storage.local.remove(['pending_query', 'pending_query_type']);
 
-        const MAX_ATTEMPTS = 80;
-        const CHECK_INTERVAL = 300;
-        let attempts = 0;
+        console.log('[G-web Inject] 启动, 模式:', isImage ? '画图' : '聊天', '内容:', query);
 
-        const findAndFillInterval = setInterval(() => {
-            attempts++;
+        const MAX_WAIT = 30000;
+        const INTERVAL = 300;
+        let elapsed = 0;
 
-            const textarea = 
+        const timer = setInterval(() => {
+            elapsed += INTERVAL;
+            if (elapsed > MAX_WAIT) {
+                clearInterval(timer);
+                console.error('[G-web Inject] 超时：找不到输入框或发送按钮');
+                return;
+            }
+
+            // ── 找输入框 ──────────────────────────────────
+            const slateEditor = document.querySelector('div[data-slate-editor]');
+            const textarea    =
                 document.querySelector('textarea[placeholder*="发消息"]') ||
-                document.querySelector('textarea[placeholder*="提问"]') ||
-                document.querySelector('textarea[placeholder*="输入"]') ||
-                document.querySelector('#root textarea') ||
-                document.querySelector('main textarea') ||
+                document.querySelector('textarea[placeholder*="提问"]')   ||
+                document.querySelector('textarea[placeholder*="输入"]')   ||
                 document.querySelector('textarea');
 
-            let sendButton = 
+            const inputEl = (isImage ? slateEditor : textarea) || slateEditor || textarea;
+            if (!inputEl) return;
+
+            // ── 找发送按钮 ────────────────────────────────
+            const sendBtn =
                 document.querySelector('#flow-end-msg-send') ||
-                document.querySelector('button[type="submit"]');
+                document.querySelector('button[type="submit"]') ||
+                document.querySelector('button[aria-label*="发送"]');
+            if (!sendBtn) return;
 
-            if (!sendButton && textarea) {
-                const buttons = Array.from(document.querySelectorAll('button'));
-                sendButton = buttons.find(btn => {
-                    const text = (btn.textContent || '').trim();
-                    const ariaLabel = btn.getAttribute('aria-label') || '';
-                    return text.includes('发送') || 
-                           ariaLabel.includes('发送') ||
-                           ariaLabel.includes('send') ||
-                           btn.querySelector('svg');
-                }) || Array.from(textarea.closest('form, div')?.querySelectorAll('button') || []).pop();
+            clearInterval(timer);
+            console.log('[G-web Inject] 找到输入框:', inputEl.tagName,
+                inputEl.hasAttribute('data-slate-editor') ? '(Slate)' : '(textarea)');
+
+            if (inputEl.tagName === 'TEXTAREA') {
+                fillTextarea(inputEl, query, () => doSend(sendBtn, inputEl));
+            } else {
+                fillSlate(inputEl, query, () => doSend(sendBtn, inputEl));
             }
 
-            if (textarea && sendButton) {
-                clearInterval(findAndFillInterval);
-
-                // ============================================
-                // 🎭 终极方案：逐字符模拟真实用户输入
-                // ============================================
-                
-                textarea.focus();
-                textarea.click();
-                
-                // 清空输入框
-                textarea.value = '';
-                textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                
-                
-                setTimeout(() => {
-                    // 获取原生setter
-                    const nativeSetter = Object.getOwnPropertyDescriptor(
-                        window.HTMLTextAreaElement.prototype, 
-                        "value"
-                    ).set;
-                    
-                    let currentText = '';
-                    let charIndex = 0;
-                    
-                    // 逐字符输入
-                    const typeInterval = setInterval(() => {
-                        if (charIndex < query.length) {
-                            currentText += query[charIndex];
-                            
-                            // 更新值
-                            nativeSetter.call(textarea, currentText);
-                            textarea.value = currentText;
-                            
-                            // 触发事件（模拟真实输入）
-                            textarea.dispatchEvent(new InputEvent('beforeinput', {
-                                inputType: 'insertText',
-                                data: query[charIndex],
-                                bubbles: true,
-                                cancelable: true
-                            }));
-                            
-                            textarea.dispatchEvent(new InputEvent('input', {
-                                inputType: 'insertText',
-                                data: query[charIndex],
-                                bubbles: true,
-                                cancelable: false
-                            }));
-                            
-                            textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                            
-                            charIndex++;
-                            
-                            // 显示进度
-                            if (charIndex % 5 === 0 || charIndex === query.length) {
-                            }
-                        } else {
-                            // 输入完成
-                            clearInterval(typeInterval);
-                            
-                            // 触发change事件
-                            textarea.dispatchEvent(new Event('change', { bubbles: true }));
-                            
-                            
-                            // ============================================
-                            // 🚀 发送消息（增强版）
-                            // ============================================
-                            setTimeout(() => {
-                                
-                                // 强制启用按钮
-                                sendButton.disabled = false;
-                                sendButton.removeAttribute('disabled');
-                                sendButton.classList.remove('disabled');
-                                
-                                // 尝试多种发送方式
-                                let sendAttempt = 0;
-                                const trySend = setInterval(() => {
-                                    sendAttempt++;
-                                    
-                                    if (sendAttempt === 1) {
-                                        // 第1次：直接点击
-                                        sendButton.click();
-                                    } else if (sendAttempt === 2) {
-                                        // 第2次：鼠标事件点击
-                                        sendButton.dispatchEvent(new MouseEvent('click', {
-                                            bubbles: true,
-                                            cancelable: true,
-                                            view: window
-                                        }));
-                                    } else if (sendAttempt === 3) {
-                                        // 第3次：回车发送
-                                        textarea.dispatchEvent(new KeyboardEvent('keydown', {
-                                            key: 'Enter',
-                                            code: 'Enter',
-                                            keyCode: 13,
-                                            which: 13,
-                                            bubbles: true,
-                                            cancelable: true
-                                        }));
-                                    } else if (sendAttempt === 4) {
-                                        // 第4次：查找form并提交
-                                        const form = textarea.closest('form');
-                                        if (form) {
-                                            form.dispatchEvent(new Event('submit', {
-                                                bubbles: true,
-                                                cancelable: true
-                                            }));
-                                        }
-                                    } else {
-                                        clearInterval(trySend);
-                                    }
-                                }, 400); // 每400ms尝试一次
-                                
-                            }, 800); // 输入完成后等待800ms
-                        }
-                    }, 30); // 每30ms输入一个字符（模拟快速打字）
-                    
-                }, 300);
-
-            } else if (attempts >= MAX_ATTEMPTS) {
-                clearInterval(findAndFillInterval);
-                console.error('[G-web Inject] ⏱️ 超时');
-                
-                if (textarea) {
-                }
-            } else if (attempts % 10 === 0) {
-            }
-        }, CHECK_INTERVAL);
+        }, INTERVAL);
     });
 
+    // ── Slate 填充：模拟粘贴事件（最可靠）────────────────
+    function fillSlate(el, text, onDone) {
+        el.focus();
+        el.click();
+
+        setTimeout(() => {
+            // 先清空：全选 + 模拟输入空字符串覆盖
+            document.execCommand('selectAll', false, null);
+
+            // 核心：用 ClipboardEvent paste 写入
+            // Slate 内置了完整的 paste 处理器，这是最可靠的注入方式
+            const dt = new DataTransfer();
+            dt.setData('text/plain', text);
+
+            const pasteEvent = new ClipboardEvent('paste', {
+                clipboardData: dt,
+                bubbles      : true,
+                cancelable   : true,
+            });
+
+            const pasted = el.dispatchEvent(pasteEvent);
+            console.log('[G-web Inject] paste 事件触发结果:', pasted, '当前内容:', el.textContent.slice(0, 30));
+
+            // 给 Slate 600ms 处理粘贴并更新 React 状态
+            setTimeout(() => {
+                console.log('[G-web Inject] 填充后内容:', el.textContent.slice(0, 50));
+                onDone();
+            }, 600);
+        }, 500);
+    }
+
+    // ── textarea 填充 ────────────────────────────────────
+    function fillTextarea(el, text, onDone) {
+        el.focus();
+        el.value = '';
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+
+        setTimeout(() => {
+            const nativeSetter = Object.getOwnPropertyDescriptor(
+                window.HTMLTextAreaElement.prototype, 'value'
+            ).set;
+            let i = 0;
+            const t = setInterval(() => {
+                if (i < text.length) {
+                    nativeSetter.call(el, text.slice(0, i + 1));
+                    el.dispatchEvent(new InputEvent('input', {
+                        inputType: 'insertText', data: text[i], bubbles: true
+                    }));
+                    i++;
+                } else {
+                    clearInterval(t);
+                    el.dispatchEvent(new Event('change', { bubbles: true }));
+                    setTimeout(onDone, 600);
+                }
+            }, 30);
+        }, 300);
+    }
+
+    // ── 发送 ─────────────────────────────────────────────
+    function doSend(btn, inputEl) {
+        console.log('[G-web Inject] 准备发送, 按钮 disabled:', btn.disabled);
+        btn.disabled = false;
+        btn.removeAttribute('disabled');
+
+        // 点击一次，400ms 后用 Enter 兜底
+        btn.click();
+        setTimeout(() => {
+            btn.dispatchEvent(new MouseEvent('click', {
+                bubbles: true, cancelable: true, view: window
+            }));
+        }, 400);
+        setTimeout(() => {
+            inputEl.dispatchEvent(new KeyboardEvent('keydown', {
+                key: 'Enter', code: 'Enter', keyCode: 13,
+                bubbles: true, cancelable: true
+            }));
+            console.log('[G-web Inject] 发送指令完毕');
+        }, 800);
+    }
 })();

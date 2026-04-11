@@ -705,6 +705,10 @@ function gameLoop() {
     const panel = document.getElementById('quickPanelright');
     if (panel && panel.classList.contains('collapsedright')) return;
 
+    // 只有贪吃蛇视图可见时，键盘控制才生效
+    const snakeView = document.getElementById('snakeView');
+    if (!snakeView || snakeView.style.display === 'none' || snakeView.style.display === '') return;
+
     const keys = ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","KeyW","KeyS","KeyA","KeyD","Space"];
     if(keys.indexOf(e.code) > -1) e.preventDefault();
 
@@ -1346,3 +1350,119 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 });
+
+
+// ═══════════════════════════════════════════════════════════
+// 🎭  表情包点击特效系统  (自动休眠 · localStorage 持久化)
+// ═══════════════════════════════════════════════════════════
+;(function () {
+
+  /* ── 配置 ── */
+  const LS_KEY  = 'memeClickEnabled';
+  const EMOJIS  = [
+    '😂','😁','😀','🥰','🥹','😤','😘','😜','🤗','🙃',
+    '😅','🫶','💅','🤌','✨','🐱','🤯','🥲','😬','🫡',
+    '🤩','😎','🥳','😻','🙈','🎉','💥','🔥','👻','🤔',
+    '🌚','😆','','🧸','🌈','🍉','🐸','🦄','💫','🐶'
+  ];
+
+  /* ── 状态 ── */
+  let enabled = localStorage.getItem(LS_KEY) === 'true';
+
+  /* ── UI 同步：更新菜单勾选框外观 ── */
+  function syncUI () {
+    const item = document.getElementById('memeToggleItem');
+    const icon = document.getElementById('memeCheckIcon');
+    if (!item || !icon) return;
+    if (enabled) {
+      icon.textContent = '☑';
+      item.classList.add('meme-on');
+    } else {
+      icon.textContent = '☐';
+      item.classList.remove('meme-on');
+    }
+  }
+
+  /* ── 随机取 2 个不重复 emoji ── */
+  function pickTwo () {
+    const pool = EMOJIS.slice().sort(() => Math.random() - 0.5);
+    return [pool[0], pool[1]];
+  }
+
+  /* ── 生成单个飞出表情 ── */
+  function spawnOne (x, y, emoji, side) {
+    const el = document.createElement('div');
+    el.className = 'meme-pop';
+    el.textContent = emoji;
+
+    /* side: -1=左 / +1=右；飞行角度随机在各自半侧 */
+    const spreadDeg  = (Math.random() * 55 + 20) * side;   // ±20°~75°
+    const upDeg      = -(Math.random() * 55 + 25);          // 总体向上 -25°~-80°
+    const totalDeg   = upDeg + spreadDeg;
+    const rad        = totalDeg * Math.PI / 180;
+    const dist       = Math.random() * 90 + 100;            // 100~190px
+
+    const tx  = Math.cos(rad) * dist;
+    const ty  = Math.sin(rad) * dist;
+    const mx  = tx * 0.5;
+    const my  = ty * 0.5 - 18;                              // 中途额外上弹
+    const rot = (Math.random() - 0.5) * 70;                 // 最终旋转
+    const mr  = rot * 0.35;                                  // 中途旋转
+
+    el.style.setProperty('--tx', `${tx}px`);
+    el.style.setProperty('--ty', `${ty}px`);
+    el.style.setProperty('--mx', `${mx}px`);
+    el.style.setProperty('--my', `${my}px`);
+    el.style.setProperty('--rr', `${rot}deg`);
+    el.style.setProperty('--mr', `${mr}deg`);
+
+    /* 定位到点击坐标（减半字号使其居中） */
+    el.style.left = `${x - 16}px`;
+    el.style.top  = `${y - 16}px`;
+
+    /* 两个表情轻微错开，更有层次感 */
+    el.style.animationDelay = side === -1 ? '0ms' : '55ms';
+
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove(), { once: true });
+  }
+
+  /* ── 全局点击监听 ── */
+  document.addEventListener('mousedown', function (e) {
+    if (!enabled || e.button !== 0) return;
+
+    /* 排除交互元素 —— 不打断正常操作 */
+    const tag = e.target.tagName.toLowerCase();
+    if (['input','textarea','button','select','a','label'].includes(tag)) return;
+    if (e.target.closest(
+      '#customContextMenu, #inputContextMenu, #wallpaperModal, ' +
+      '#cmdPaletteOverlay, #welcomeModal, #copyrightModal'
+    )) return;
+
+    const [e1, e2] = pickTwo();
+    spawnOne(e.clientX, e.clientY, e1, -1);  // 左
+    spawnOne(e.clientX, e.clientY, e2,  1);  // 右
+  });
+
+  /* ── 菜单点击：切换开关 ── */
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('#memeToggleItem')) return;
+    enabled = !enabled;
+    localStorage.setItem(LS_KEY, enabled);
+    syncUI();
+    if (typeof showBubble === 'function') {
+      showBubble(enabled
+        ? '表情包点击已开启，快点击屏幕试试喵！🎭'
+        : '表情包点击已关闭喵～🤫'
+      );
+    }
+  });
+
+  /* ── DOM 就绪后初始化 UI ── */
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncUI);
+  } else {
+    syncUI();
+  }
+
+})();

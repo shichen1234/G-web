@@ -543,20 +543,9 @@ document.addEventListener('DOMContentLoaded', () => {
       w.setAttribute('draggable', 'false');
     });
   }
-  // --- 3. 面板开关逻辑 (防卡顿最终版) ---
+  // --- 3. 面板开关逻辑 ---
   function toggleRightPanel(forceClose = false) {
     const musicWidget = document.getElementById('mediaWidget');
-    const panelContent = panel.querySelector('.panelright'); // 获取内部内容容器
-
-    // ⚡️ 性能优化核心：动画开始前，暂时移除毛玻璃和阴影
-    // 这会让 GPU 渲染帧率从 30fps 提升到 60fps+
-    if (panelContent) {
-        panelContent.style.backdropFilter = 'none';
-        panelContent.style.webkitBackdropFilter = 'none';
-        panelContent.style.boxShadow = 'none'; 
-        // 稍微降低透明度补偿视觉，避免背景全黑太突兀
-        panelContent.style.background = 'rgba(0, 0, 0, 0.85)'; 
-    }
 
     // 1. 执行开关操作 (CSS transform 动画)
     if (forceClose) {
@@ -582,25 +571,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     }
-
-    // ⚡️ 性能优化核心：动画结束 (400ms) 后，悄悄恢复特效
-    // 420ms 比 CSS 的 0.4s 稍长，确保停稳后再渲染
-    setTimeout(() => {
-        if (panelContent) {
-            // 清空行内样式，让 CSS 类中定义的高级特效重新生效
-            panelContent.style.backdropFilter = '';
-            panelContent.style.webkitBackdropFilter = '';
-            panelContent.style.boxShadow = '';
-            panelContent.style.background = ''; // 恢复原来的背景色
-        }
-        
-        // 额外优化：如果面板打开了，通知贪吃蛇等组件可以开始刷新画面了
-        const isClosed = panel.classList.contains('collapsedright');
-        if (!isClosed) {
-             // 如果你有组件需要在打开时唤醒，可以在这里处理
-             // 例如: if (window.resumeSnakeGame) window.resumeSnakeGame();
-        }
-    }, 420);
   }
 
 
@@ -945,14 +915,14 @@ function openLeftPanel() {
     },
 { 
       id: 'dino', 
-      icon: '🐍', 
-      title: '小游戏', 
-      desc: '摸鱼贪吃蛇游戏 (右侧面板)', 
+      icon: '🎮', 
+      title: '游戏中心', 
+      desc: '摸鱼休闲小游戏 (右侧面板)', 
       action: () => {
         openRightPanel();
         setTimeout(() => {
           // 对应 HTML 中的 snakeWidget
-          const el = document.getElementById('snakeWidget');
+          const el = document.getElementById('gameCenterWidget');
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 350);
       } 

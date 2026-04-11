@@ -131,6 +131,7 @@ button:not(:disabled) *,
 #todoList li span,    
 #goSurprise,
 .reset-link,
+.liquid-slider,
 /* --- 新增：壁纸选择页面相关 --- */
 .wallpaper-grid img,       /* 预设壁纸图片 */
 .video-tile,               /* 动态壁纸容器 */
@@ -378,16 +379,36 @@ button:disabled *,
   transform: scale(1.05);
 }
 /* 快捷栏 添加按钮 样式 */
-#quickPanel .addWrapper { width: 48px; height: 48px; margin-top:10px; }
+#quickPanel .addWrapper { width: 56px; height: 56px; }
+#quickPanel .addWrapper .iconLabel { display: none; }
 #quickPanel .addBtn {
-  width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.04); color:#fff; border: 1px dashed rgba(255,255,255,0.08); cursor:pointer; font-size:20px;
+  width:56px; height:56px; border-radius:12px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.04); color:#fff; border: 1px dashed rgba(255,255,255,0.08); cursor:pointer; font-size:20px;
 }
 #quickPanel .addBtn:hover { transform: translateY(-2px); background: rgba(255,255,255,0.06); }
 
+/* 图标名称标签 */
+#quickPanel .icons .iconLabel {
+  display: block;
+  width: 60px;
+  text-align: center;
+  font-size: 11px;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+  letter-spacing: 0.2px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* 自定义图标：容器与齿轮/弹层样式 🔧 */
-#quickPanel .icons .iconWrapper { will-change: transform; position: relative; width:48px; height:48px; margin-top:10px; display:inline-block; border-radius:12px; overflow:visible; }
-#quickPanel .icons .iconWrapper img { width:48px; height:48px; border-radius:12px; display:block; }
-#quickPanel .icons .iconSettings { position:absolute; right:-3px; bottom:-7px; width:20px; height:20px; padding:0; border:none; background:rgba(0,0,0,0.35); border-radius:50%; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(.9); transition:opacity .16s ease, transform .16s ease; pointer-events:none; }
+#quickPanel .icons .iconWrapper { will-change: transform; position: relative; width:56px; height:auto; border-radius:12px; overflow:visible; display:flex; flex-direction:column; align-items:center; gap:5px; }
+#quickPanel .icons .iconWrapper img { width:56px; height:56px; border-radius:18px; display:block; }
+#quickPanel .icons .iconSettings { position:absolute; right:0px; top:36px; width:18px; height:18px; padding:0; border:none; background:rgba(0,0,0,0.55); border-radius:50%; display:flex; align-items:center; justify-content:center; opacity:0; transform:scale(.85); transition:opacity .16s ease, transform .16s ease; pointer-events:none; z-index:10; }
 #quickPanel .icons .iconSettings img { width:14px; height:14px; display:block; object-fit:contain; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.3)); }
 #quickPanel .icons .iconWrapper:hover .iconSettings { opacity:1; transform:scale(1); pointer-events:auto; }
 
@@ -427,20 +448,20 @@ button:disabled *,
   position: absolute !important;
   left: 0 !important;
   top: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
+  width: 56px !important;
+  height: 56px !important;
   min-width: auto !important;
   max-width: none !important;
   padding: 0 !important;
   border-radius: 12px !important;
-  background: rgba(0,0,0,0.36) !important; /* 透明遮罩 */
+  background: rgba(0,0,0,0.36) !important;
   box-shadow: 0 8px 18px rgba(0,0,0,0.35) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 10px !important;
   opacity:0; visibility:hidden; transform:none; transition:opacity .12s ease;
-  z-index: 60 !important; /* 确保覆盖同层图标 */
+  z-index: 60 !important;
 }
 #quickPanel .icons .iconWrapper .iconPopover.overlay.show { opacity:1; visibility:visible; }
 #quickPanel .icons .iconWrapper .iconPopover.overlay button {border: 0; min-width: 56px; height:40px; border-radius:9px; font-weight:700; display:flex; align-items:center; gap:8px; padding:6px 10px; justify-content:center; color: #fff; }
@@ -1188,22 +1209,28 @@ form input[type="text"]:focus {
   /* 宽度收起时仅显示右箭头，展开时显示图标列 */
   #quickPanel {
     position: fixed;
-    width: 140px;
+    width: 490px;
     left: 0;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%) translateZ(0);
     z-index: 9000;
     display: flex;
     align-items: center;
     gap: 6px;
     pointer-events: auto;
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: width, transform;
+    transition: width 0.5s cubic-bezier(0.2, 0.9, 0.2, 1),
+                transform 0.5s cubic-bezier(0.2, 0.9, 0.2, 1);
   }
   #quickPanel.open {
-  left: 0;            /* 展开 */
+  left: 0;
 }
   /* 收起状态：只保留打开箭头 */
-  #quickPanel.collapsed { width: 48px;  height: 70vh;}
+  #quickPanel.collapsed {
+    width: 48px;
+    height: 70vh;
+    will-change: auto;
+  }
 
   /* 打开箭头按钮（默认隐藏，仅在 hover 或展开时显示） */
   #quickPanel .openBtn {
@@ -1239,26 +1266,36 @@ form input[type="text"]:focus {
     flex-direction: column;
     align-items: flex-start;
     gap: 6px;
-    width: 58px;
-    padding: 15px 8px 10px;
+    width: 440px;
+    padding: 14px 12px 14px;
     background: rgba(0,0,0,0.36);
     backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     border-radius: 10px;
-    transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease;
-    max-height: 70vh;
+    transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease, visibility 0.22s;
+    max-height: 36vh;
     overflow: hidden;
+    visibility: visible;
   }
   /* 收起时隐藏面板 */
-  #quickPanel.collapsed .panel { width: 0; padding: 0; opacity: 0; transform: translateX(-8px); pointer-events: none; }
+  #quickPanel.collapsed .panel {
+    width: 0;
+    padding: 0;
+    opacity: 0;
+    transform: translateX(-8px);
+    pointer-events: none;
+    visibility: hidden;
+    transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease, visibility 0.22s;
+  }
 #quickPanel .icons {
-  display: flex;
-  flex-direction: column; /* 纵向排列 */
-  align-items: center;    /* 居中对齐 */
-  overflow-y: auto;  max-height: 70vh;      /* 最大高度，超出时可滚动 */
-  gap: 8px; 
-  scrollbar-width: none; 
-  /* ✅ 新增：针对 IE/Edge 旧版的隐藏代码 */
-  -ms-overflow-style: none;              /* 直接控制标题与图标、图标与图标之间的间距 */
+  display: grid;
+  grid-template-columns: repeat(6, 56px);
+  gap: 14px 16.5px;        /* 行间距14px，列间距12px，类似Windows固定应用 */
+  overflow-y: auto;
+  max-height: 60vh;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  width: 100%;
 }
   /* 图标容器：允许垂直滚动，但隐藏可见滚动条（仍可滚动） */
 /* ============================================================
@@ -1280,20 +1317,20 @@ form input[type="text"]:focus {
   /* 初始宽度 (展开状态) */
   width: 560px;
   
-  /* 🚀 性能优化：添加 will-change 告诉浏览器这个元素的宽度会变 */
-  will-change: width, transform;
-  
-  /* 动画过渡：保持您喜欢的曲线 */
-  transition: width 0.5s cubic-bezier(0.2, 0.9, 0.2, 1), 
-              transform 0.5s cubic-bezier(0.2, 0.9, 0.2, 1);
+  /* ✅ 修复：只对 transform 过渡，width 动画会触发 layout reflow 导致卡顿 */
+  will-change: transform;
+  transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
-/* 2. 收起状态 */
-#quickPanelright.collapsedright { 
-  width: 48px;  
+/* 2. 收起状态
+   ✅ 修复核心：不再缩小 width，而是把整个容器向右平移 512px
+   - 容器宽 560px，平移 512px 后只有左侧 48px（按钮区域）留在屏幕内
+   - 纯 transform 动画，全程在 GPU 合成器线程，零 layout reflow
+   - 不设 will-change: auto，保留合成层，避免长时间不操作后的冷启动卡顿 */
+#quickPanelright.collapsedright {
+  transform: translateY(-50%) translateX(512px) translateZ(0);
   height: 70vh;
-  /* 收起时不需要监听宽度变化了，节省资源 */
-  will-change: auto; 
+  will-change: transform;
 }
 
 /* 3. 开关按钮 */
@@ -1345,25 +1382,26 @@ form input[type="text"]:focus {
   -webkit-backdrop-filter: blur(6px);
   border-radius: 10px;
   
-  /* 动画过渡 */
-  transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease;
+  /* ✅ 修复：只过渡 opacity（width 动画由容器 transform 替代，不需要了）
+     will-change: opacity 确保 backdrop-filter 合成层始终存活 */
+  will-change: opacity;
+  transition: opacity 0.25s ease;
   
   max-height: 100vh;
   overflow: hidden;
   z-index: 1;
 }
 
-/* 5. 收起时的面板主体 */
-#quickPanelright.collapsedright .panelright { 
-  width: 0; 
-  padding: 0; 
-  opacity: 0; 
-  transform: translateX(-8px); 
-  pointer-events: none; 
-  
-  /* ✅ 核心优化：彻底隐藏，让浏览器停止渲染内部的高斯模糊 */
-  visibility: hidden; 
-  transition: width 0.22s ease, opacity 0.2s ease, transform 0.22s ease, visibility 0.22s;
+/* 5. 收起时的面板主体
+   ✅ 修复：
+   - 移除 width:0 动画（已由容器 translateX 替代，不再需要）
+   - 移除 visibility:hidden（会丢弃 backdrop-filter 合成层）
+   - 移除 padding:0（配合 width:0 用的，现在不需要了）
+   - 只保留 opacity:0 + pointer-events:none，合成层始终存活 */
+#quickPanelright.collapsedright .panelright {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
 }
 
 /* 6. 图标区域滚动条优化 */
@@ -1386,16 +1424,16 @@ form input[type="text"]:focus {
 
 /* 7. 图标样式 */
 #quickPanel .icons h3 {
-  margin: 0 0 0 2px;
+  grid-column: 1 / -1;  /* 横跨全部3列 */
+  margin: 0 0 4px 0;
   padding-bottom: 0px;
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 #quickPanel .icons a {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 20px;
+  width: 56px;
+  height: 56px;
   display: block;
   border-radius: 12px;
   overflow: hidden;
@@ -2287,3 +2325,255 @@ input[type="range"]#volumeSlider::-moz-range-thumb {
 }
 
 /* [end of code block for style1.css] */
+
+/* =============================================
+   📲 禅模式糯米关怀通知
+   ============================================= */
+#zenCareNotif {
+  position: fixed;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-110px);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 260px;
+  max-width: 340px;
+  padding: 11px 18px 11px 14px;
+  background: rgba(61, 68, 93, 0.556);
+  backdrop-filter: blur(18px) saturate(1.6);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.3);
+  pointer-events: none;
+  transition: transform 0.55s cubic-bezier(0.34, 1.3, 0.64, 1),
+              opacity 0.55s ease;
+  opacity: 0;
+}
+#zenCareNotif.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+#zenCareNotif.hiding {
+  transform: translateX(-50%) translateY(-110px);
+  opacity: 0;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 1, 1),
+              opacity 0.4s ease;
+}
+#zenCareAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,0.18);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+#zenCareBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+#zenCareName {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.5px;
+}
+#zenCareText {
+  font-size: 14px;
+  color: #fff;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* =============================================
+   🃏 记忆翻牌游戏
+   ============================================= */
+#memoryWidget {
+  background-image: url('images/fanpai.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-blend-mode: multiply !important;
+  background-color: rgba(0,0,0,0.18) !important;
+}
+#memoryWidget .memory-diff-btn {
+  padding: 3px 9px;
+  font-size: 11px;
+  background: rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s;
+  white-space: nowrap;
+}
+#memoryWidget .memory-diff-btn.active {
+  background: rgba(11,116,222,0.38);
+  border-color: rgba(11,116,222,0.7);
+  color: #fff;
+}
+#memoryWidget #memoryRestartBtn {
+  background: rgba(255,255,255,0.09);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: white;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+#memoryWidget #memoryRestartBtn:hover {
+  background: rgba(255,255,255,0.2);
+}
+.memory-card {
+  aspect-ratio: 1;
+  cursor: pointer;
+  margin: 6px 10px;
+  perspective: 500px;
+  max-height: 54px;
+}
+.memory-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.32s cubic-bezier(0.4,0,0.2,1);
+  border-radius: 6px;
+}
+.memory-card.flipped .memory-card-inner,
+.memory-card.matched .memory-card-inner {
+  transform: rotateY(180deg);
+}
+.memory-card-front,
+.memory-card-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  user-select: none;
+}
+.memory-card-front {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.2);
+  font-size: 22px;
+  transition: background 0.18s;
+}
+.memory-card:not(.flipped):not(.matched):hover .memory-card-front {
+  background: rgba(255,255,255,0.16);
+}
+.memory-card-back {
+  background: rgba(11,116,222,0.28);
+  border: 1px solid rgba(11,116,222,0.45);
+  transform: rotateY(180deg);
+}
+.memory-card.matched .memory-card-back {
+  background: rgba(105,240,174,0.18);
+  border-color: rgba(105,240,174,0.45);
+  animation: matchPop 0.3s ease;
+}
+@keyframes matchPop {
+  0%   { transform: rotateY(180deg) scale(1); }
+  50%  { transform: rotateY(180deg) scale(1.14); }
+  100% { transform: rotateY(180deg) scale(1); }
+}
+
+/* =============================================
+   ⬇️ 快捷面板 · 滚动提示箭头
+   ============================================= */
+#quickPanelScrollHint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+#quickPanelScrollHint.hidden {
+  opacity: 0;
+}
+#quickPanelScrollHint .scroll-arrow {
+  width: 22px;
+  height: 22px;
+  border-right: 2.5px solid rgba(255,255,255,0.7);
+  border-bottom: 2.5px solid rgba(255,255,255,0.7);
+  transform: rotate(45deg);
+  animation: scrollBounce 1.2s ease-in-out infinite;
+}
+#quickPanelScrollHint .scroll-arrow:nth-child(2) {
+  animation-delay: 0.2s;
+  opacity: 0.6;
+}
+#quickPanelScrollHint .scroll-arrow:nth-child(3) {
+  animation-delay: 0.4s;
+  opacity: 0.3;
+}
+@keyframes scrollBounce {
+  0%, 100% { transform: rotate(45deg) translateY(0); opacity: 1; }
+  50%       { transform: rotate(45deg) translateY(5px); opacity: 0.5; }
+}
+
+/* =============================================
+   🏆 翻牌最高记录标签
+   ============================================= */
+#memoryBestRow {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 6px;
+}
+#memoryBestRow span strong {
+  color: #ffd54f;
+}
+/* =========================================
+   🌐 网页壁纸沙盒 (iframe) 层级定义
+   ========================================= */
+
+/* 1. 确保最底层的图片和视频壁纸在最下面 (-1) */
+body {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -1; /* 最底层 */
+}
+
+/* 2. 网页壁纸夹在中间 (0) */
+#bgWebFrame {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    border: none;
+    z-index: 0; /* 高于背景的 -1，低于所有 UI 组件 的 10 */ 
+}
+/* 让主要桌面 UI 组件浮在壁纸上方，防止被 z-index:0 的背景遮挡 */
+#extraIcon, 
+#biliIcon, 
+#greetingMessage, 
+#beijingTime, 
+#weekDay, 
+.top-left-bar, 
+#catBox {
+    z-index: 10;
+}

@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   const DUAL_COLUMN_LYRIC_SONG_IDS = new Set([
-    12, 21, 22, 23, 24, 26, 31, 35, 36, 37, 38, 40, 43, 44, 45, 48,50,54,55,56,58,62
+    12, 21, 22, 23, 24, 26, 31, 35, 36, 37, 38, 40, 43, 44, 45, 46,48,50,54,55,56,58,62,66,75,76,77,78,79,84,85,86,87
   ]);
 
   // music-player.js
@@ -130,6 +130,35 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 60, filename: "60--青花瓷--周杰伦.mp3" },
     { id: 61, filename: "61--关键词--林俊杰.mp3" },
     { id: 62, filename: "62--Thank you for dears.--GET IN THE RING.mp3" },
+    { id: 63, filename: "63--天外来物--薛之谦.mp3" },
+    { id: 64, filename: "64--挥着翅膀的女孩--容祖儿.mp3" },
+    { id: 65, filename: "65--虹之间--金贵晟.mp3" },
+    { id: 66, filename: "66--勇者--YOASOBI.mp3" },
+    { id: 67, filename: "67--等你下课(with 杨瑞代)--周杰伦.mp3" },
+    { id: 68, filename: "68--你的酒馆对我打了烊--陈雪凝.mp3" },
+    { id: 69, filename: "69--我爱你不问归期--白小白.mp3" },
+    { id: 70, filename: "70--说好不哭(with五月天阿信)--周杰伦.mp3" },
+    { id: 71, filename: "71--去有风的地方--郁可唯.mp3" },
+    { id: 72, filename: "72--和光同尘--周深.mp3" },
+    { id: 73, filename: "73--让我留在你身边--唐汉霄.mp3" },
+    { id: 74, filename: "74--房间(新版)--刘瑞琦.mp3" },
+    { id: 75, filename: "75--SnowMix♪--まらしぃ&初音ミク.mp3" },
+    { id: 76, filename: "76--썸--昭宥[Sistar]&郑基高&릴보이 (lIlBOI).mp3" },
+    { id: 77, filename: "77--You (=I)--BOL4.mp3" },
+    { id: 78, filename: "78--妄想感傷代償連盟--DECO.27&初音ミク.mp3" },
+    { id: 79, filename: "79--Way Back Home--숀 (SHAUN).mp3" },
+    { id: 80, filename: "80--Everywhere We Go--陈冠希&MC仁&厨房仔&应采儿.mp3" },
+    { id: 81, filename: "81--it's 6pm but I miss u already--bbbluelee.mp3" },
+    { id: 82, filename: "82--悬溺--葛东琪.mp3" },
+    { id: 83, filename: "83--模特--李荣浩.mp3" },
+    { id: 84, filename: "84--夢笑顔--茶太.mp3" },
+    { id: 85, filename: "85--こころをこめて--手嶌葵.mp3" },
+      { id: 86, filename: "86--最后の雨(Album Version)--Ms.OOJA.mp3" },
+      { id: 87, filename: "87--ラメ降る夜--ayaho.mp3" },
+      { id: 88, filename: "88--Papillon--Secret Garden.mp3" },
+      { id: 89, filename: "89--光与影的对白--洛天依.mp3" },
+      { id: 90, filename: "90--勾指起誓--洛天依,ilem.mp3" },
+      { id: 91, filename: "91--雨爱--杨丞琳.mp3" },
   ];
 
 songDatabase.forEach(song => {
@@ -608,6 +637,7 @@ if (window.isZenMode || window.isAutoZenActive) {
     if (isNaN(audio.duration)) return;
     ui.progress.value = audio.currentTime;
     ui.progress.max = audio.duration;
+    ui.progress.style.setProperty('--progress', (audio.currentTime / audio.duration * 100).toFixed(2) + '%');
     ui.currTime.textContent = formatTime(audio.currentTime);
     ui.totalTime.textContent = formatTime(audio.duration);
     syncLyrics();
@@ -737,6 +767,12 @@ ui.nextBtn.onclick = async () => {
   audio.onplay = () => setIsPlaying(true);
   
   audio.onpause = () => {
+    // 🔑 关键修复（Bug 1）：歌曲自然播放结束时，浏览器会同时触发 onended 和 onpause。
+    // onpause 比 onended 先处理完，若此处发送 mediaClear，主页面组件会在切歌瞬间消失。
+    // audio.ended === true 说明是歌曲播完触发的暂停，不是用户主动暂停，直接跳过。
+    // 后续由 audio.onended 来接管加载下一首的逻辑。
+    if (audio.ended) return;
+
     // 1. 更新播放状态为“暂停”
     setIsPlaying(false);
     
@@ -821,14 +857,14 @@ audio.onended = async () => {
 async function initializePlayer() {
     const musicPlayerContainer = document.getElementById('musicPlayerWidget');
 
-    // --- 这部分是之前修复开关位置的代码，保持不变 ---
-    if (musicPlayerContainer) {
-        musicPlayerContainer.style.position = 'relative';
-        
+    // --- 将"固定"开关移至右侧面板顶部齿轮的左侧 ---
+    const panelGearBtn = document.getElementById('panelSettingBtn');
+    if (panelGearBtn && panelGearBtn.parentElement) {
         const pinToggleContainer = document.createElement('div');
         pinToggleContainer.className = 'pin-panel-container';
+        pinToggleContainer.id = 'pinPanelContainer';
         pinToggleContainer.title = '开启后可阻止在无操作时自动进入禅模式';
-        
+
         pinToggleContainer.innerHTML = `
             <span class="pin-panel-label">固定</span>
             <label class="switch small-switch">
@@ -836,7 +872,8 @@ async function initializePlayer() {
                 <span class="slider"></span>
             </label>
         `;
-        musicPlayerContainer.appendChild(pinToggleContainer);
+        // 插入到齿轮按钮的左侧（before it in DOM）
+        panelGearBtn.parentElement.insertBefore(pinToggleContainer, panelGearBtn);
 
         ui.pinPanelToggle = document.getElementById('pinPanelCheckbox');
     }
@@ -860,7 +897,7 @@ async function initializePlayer() {
             }
             
             if (typeof showBubble === 'function') {
-                showBubble(isChecked ? '播放器已固定，将不会自动进入禅模式' : '播放器已取消固定');
+                showBubble(isChecked ? '右侧面板已固定，将不会自动进入禅模式' : '右侧面板已取消固定');
             }
         });
     }
@@ -893,6 +930,225 @@ async function initializePlayer() {
 
   initializePlayer();
 
+  // ══════════════════════════════════════════════════════════════════════
+  // 🎵 底部节奏可视化器 — 跳动横线 + 彩虹配色，仅内置播放器触发
+  // ══════════════════════════════════════════════════════════════════════
+  ;(function setupBeatVisualizer() {
+
+    // ── 1. 创建画布 ──
+    const cvs = document.createElement('canvas');
+    cvs.id = 'beat-viz-canvas';
+    document.body.appendChild(cvs);
+    const cx = cvs.getContext('2d');
+
+    // ── 2. 参数 ──
+    const BARS      = 64;    // 横线数量
+    const VIZ_H     = 110;   // 画布高度(px)
+    const LINE_H    = 4;     // 横线自身厚度(px)
+    const PEAK_H    = 3;     // 峰值指示线厚度(px)
+    const FALL_SPD  = 0.018; // 峰值每帧下落速度（占画布高度比例）
+    const REST_Y    = 0.88;  // 无声时横线停在距底部 12% 处（0=顶, 1=底）
+
+    // ── 3. 状态 ──
+    let actx = null, ans = null, buf = null;
+    let rafId = null, active = false, ftid = null;
+
+    // 每条横线的当前高度（0~1，相对画布）和峰值
+    const lineY  = new Float32Array(BARS).fill(REST_Y); // 当前横线位置
+    const peakY  = new Float32Array(BARS).fill(REST_Y); // 峰值线位置（比横线高一点后缓落）
+
+    // ── 4. 自适应尺寸 ──
+    function resize() {
+      cvs.width  = window.innerWidth;
+      cvs.height = VIZ_H;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // ── 5. 懒加载 Web Audio ──
+    function initAudio() {
+      if (actx) { if (actx.state === 'suspended') actx.resume(); return; }
+      try {
+        actx = new (window.AudioContext || window.webkitAudioContext)();
+        ans  = actx.createAnalyser();
+        ans.fftSize               = 2048;
+        ans.smoothingTimeConstant = 0.75;
+        const src = actx.createMediaElementSource(audio);
+        src.connect(ans);
+        ans.connect(actx.destination);
+        buf = new Uint8Array(ans.frequencyBinCount);
+        window.GwebMusicPlayer.analyser = ans;
+        window.GwebMusicPlayer.audioCtx = actx;
+      } catch(e) { console.warn('[BeatViz]', e); }
+    }
+
+    // ── 6. 显示/隐藏 ──
+    function show() {
+      if (active) return;
+      if (ftid) { clearTimeout(ftid); ftid = null; }
+      active = true;
+      cvs.classList.add('viz-on');
+      if (!rafId) paint();
+    }
+    function hide() {
+      if (!active) return;
+      active = false;
+      cvs.classList.remove('viz-on');
+      ftid = setTimeout(() => {
+        if (!active) {
+          cancelAnimationFrame(rafId); rafId = null;
+          cx.clearRect(0, 0, cvs.width, cvs.height);
+        }
+        ftid = null;
+      }, 700);
+    }
+
+    // ── 7. 对数频率映射 ──
+    function getLogBinIndex(barIdx, totalBars, totalBins) {
+      const minBin = 1;
+      const maxBin = Math.floor(totalBins * 0.72);
+      const t = barIdx / totalBars;
+      return Math.round(minBin * Math.pow(maxBin / minBin, t));
+    }
+
+    // ── 8. 绘制帧 ──
+    function paint() {
+      rafId = requestAnimationFrame(paint);
+      if (!ans || !buf) return;
+
+      const W = cvs.width;
+      const H = cvs.height;
+      cx.clearRect(0, 0, W, H);
+      ans.getByteFrequencyData(buf);
+
+      // 全局能量
+      let total = 0;
+      for (let k = 0; k < buf.length; k++) total += buf[k];
+      const avgE = (total / buf.length) / 255;
+
+      // 底部轻透背景
+      const bg = cx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0,   'rgba(0,0,0,0)');
+      bg.addColorStop(0.5, 'rgba(0,4,18,.08)');
+      bg.addColorStop(1,   'rgba(0,6,24,.24)');
+      cx.fillStyle = bg;
+      cx.fillRect(0, 0, W, H);
+
+      const slotW   = W / BARS;
+      const lineW   = slotW * 0.72;   // 横线宽度（比槽略窄，留出间隙）
+      const offsetX = slotW * 0.14;   // 居中偏移
+
+      for (let i = 0; i < BARS; i++) {
+        // 对数映射取频率均值
+        const binStart = getLogBinIndex(i,     BARS, buf.length);
+        const binEnd   = getLogBinIndex(i + 1, BARS, buf.length);
+        let sum = 0, cnt = 0;
+        for (let k = binStart; k <= binEnd && k < buf.length; k++, cnt++) sum += buf[k];
+        const v = cnt ? (sum / cnt) / 255 : 0; // 0~1 能量
+
+        // 目标 Y（归一化）：能量越高线越靠上（0=顶部）
+        // 底部留 8px 保底间距，顶部至少保留 10px
+        const targetY = REST_Y - v * (REST_Y - 0.08);
+
+        // 横线：快速跟随目标，向上弹 / 缓慢回落
+        if (targetY < lineY[i]) {
+          lineY[i] = targetY;                         // 能量升 → 立即跟上
+        } else {
+          lineY[i] += (targetY - lineY[i]) * 0.12;   // 能量降 → 缓慢回落
+        }
+
+        // 峰值线：只向上更新，之后以固定速度下落
+        if (lineY[i] < peakY[i]) {
+          peakY[i] = lineY[i];                        // 刷新峰值
+        } else {
+          peakY[i] = Math.min(REST_Y, peakY[i] + FALL_SPD); // 峰值下落
+        }
+
+        const x      = i * slotW + offsetX;
+        const lY     = lineY[i]  * H;   // 横线像素 Y
+        const pY     = peakY[i]  * H;   // 峰值线像素 Y
+
+        // 彩虹色
+        const hue = (i / (BARS - 1)) * 270;
+        const lig = 58 + v * 10;
+        const alp = Math.max(0.25, 0.45 + v * 0.50);
+
+        // ── 主横线 ──
+        cx.shadowBlur  = 8 + v * 16;
+        cx.shadowColor = `hsla(${hue}, 90%, 75%, 0.70)`;
+        cx.fillStyle   = `hsla(${hue}, 90%, ${lig}%, ${alp})`;
+        cx.fillRect(x, lY, lineW, LINE_H);
+
+        // ── 峰值指示线（更亮更细，在主线上方悬停缓落）──
+        // 只在峰值线和主线有明显距离时才画（避免重叠闪烁）
+        if (pY < lY - LINE_H - 2) {
+          cx.shadowBlur  = 12 + avgE * 10;
+          cx.shadowColor = `hsla(${hue}, 100%, 88%, 0.95)`;
+          cx.fillStyle   = `hsla(${hue}, 100%, 82%, ${Math.max(0.55, alp)})`;
+          cx.fillRect(x, pY, lineW, PEAK_H);
+        }
+      }
+
+      cx.shadowBlur = 0;
+    }
+
+    // ── 9. 监听内置播放器 ──
+    audio.addEventListener('play',  () => { initAudio(); show(); });
+    audio.addEventListener('pause', () => { if (!audio.ended) hide(); });
+
+  })();
+  // ─────────────── 可视化器结束 ───────────────
+
+document.addEventListener('keydown', (e) => {
+    // 1. 确认按下的是空格键
+    if (e.code === 'Space' || e.key === ' ') {
+      
+      // 2. 排除焦点在输入框的情况（防止在聊天或搜索打字时误触）
+      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (activeTag === 'input' || activeTag === 'textarea') return;
+
+      // 3. 判断是否处于禅模式 (无论是手动开启还是自动进入) 且已选中歌曲
+      if ((window.isZenMode || window.isAutoZenActive) && currentSongIndex > -1) {
+        
+        e.preventDefault(); // 阻止空格键默认会导致网页向下滚动的行为
+        
+        // 4. 切换播放/暂停状态
+        if (audio.paused) {
+          audio.play().catch(console.error);
+          if (typeof showBubble === 'function') showBubble('▶️ 继续播放');
+        } else {
+          audio.pause();
+          if (typeof showBubble === 'function') showBubble('⏸️ 音乐暂停');
+        }
+      }
+    }
+  });
+  // =============================================
+  // ✅ 新增：键盘左右键切换歌曲 (上一首/下一首)
+  // =============================================
+  document.addEventListener('keydown', (e) => {
+    // 1. 排除焦点在输入框的情况，防止打字时误触发切歌
+    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+    if (activeTag === 'input' || activeTag === 'textarea') return;
+
+    // 2. 只有在禅模式（手动或自动）下才允许左右键切歌
+    if (!window.isZenMode && !window.isAutoZenActive) return;
+
+    // 3. 只有在已经选中歌曲（currentSongIndex > -1）的情况下才生效
+    if (currentSongIndex > -1) {
+      if (e.key === 'ArrowLeft') {
+        // 按左箭头：上一首
+        e.preventDefault(); // 阻止默认行为
+        ui.prevBtn.click();
+        if (typeof showBubble === 'function') showBubble('⏮️ 上一首');
+      } else if (e.key === 'ArrowRight') {
+        // 按右箭头：下一首
+        e.preventDefault();
+        ui.nextBtn.click();
+        if (typeof showBubble === 'function') showBubble('⏭️ 下一首');
+      }
+    }
+  });
 });
 document.addEventListener('DOMContentLoaded', () => {
     const playlistContainer = document.getElementById('musicPlaylist');

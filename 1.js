@@ -1,3 +1,208 @@
+// ===============================
+// 通用网页壁纸zip包加载与资源路径替换核心函数
+// 支持html/css/js/图片/视频/子文件夹等多结构壁纸包
+// 依赖：JSZip (jszip.min.js)
+// ===============================
+/**
+ * 加载并处理任意结构的网页壁纸zip包，返回可直接用于iframe.srcdoc或postMessage的html和Blob映射
+ * @param {File|Blob} zipFile - 用户上传的zip包
+ * @returns {Promise<{html: string, urlMap: Map<string, string>, mainHtmlPath: string}>}
+ */
+async function loadWallpaperZip(zipFile) {
+  const zip = await JSZip.loadAsync(zipFile);
+  const fileMap = new Map();
+  // 1. 遍历所有文件，存到 fileMap
+  await Promise.all(Object.keys(zip.files).map(async (path) => {
+    const file = zip.files[path];
+    if (!file.dir) {
+      const blob = await file.async('blob');
+      fileMap.set(path, blob);
+    }
+  }));
+
+  // 2. 生成 Blob URL 映射
+  const urlMap = new Map();
+  for (const [path, blob] of fileMap) {
+    urlMap.set(path, URL.createObjectURL(blob));
+  }
+
+  // 3. 查找主html
+  let mainHtmlPath = [...fileMap.keys()].find(p => /index\.html$/i.test(p)) || 
+                     [...fileMap.keys()].find(p => /main\.html$/i.test(p)) ||
+                     [...fileMap.keys()].find(p => /\.html$/i.test(p));
+  if (!mainHtmlPath) throw new Error('未找到主html文件');
+  let htmlText = await zip.file(mainHtmlPath).async('string');
+
+  // 4. 替换html中的资源路径为Blob URL
+  // 用DOMParser更安全，兼容img、script、link、video、audio等
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(htmlText, 'text/html');
+  // 需要替换src/href的标签
+  const tags = [
+    ['img', 'src'],
+    ['script', 'src'],
+    ['link', 'href'],
+    ['video', 'src'],
+    ['audio', 'src'],
+    ['source', 'src'],
+    ['iframe', 'src']
+  ];
+  // 新增：支持 /xxx 路径和 zip 内部绝对路径
+  function fixPath(orig) {
+    if (!orig) return orig;
+    if (/^(https?:|data:|blob:)/i.test(orig)) return orig;
+    // 统一小写查找，提升容错
+    const candidates = [];
+    // 原始
+    candidates.push(orig);
+    // 去掉开头./和/
+    candidates.push(orig.replace(/^\.\//, ''));
+    candidates.push(orig.replace(/^\//, ''));
+    // mainHtmlPath同目录
+    const baseDir = mainHtmlPath.substring(0, mainHtmlPath.lastIndexOf('/')+1);
+    candidates.push(baseDir + orig);
+    candidates.push(baseDir + orig.replace(/^\.\//, ''));
+    candidates.push(baseDir + orig.replace(/^\//, ''));
+    // 全部小写
+    candidates.push(orig.toLowerCase());
+    candidates.push((baseDir + orig).toLowerCase());
+    // 绝对路径 /xxx
+    if (/^\//.test(orig)) {
+      candidates.push(orig.slice(1));
+      candidates.push((baseDir + orig.slice(1)).toLowerCase());
+    }
+    // 去掉 query/hash
+    let clean = orig.split('?')[0].split('#')[0];
+    candidates.push(clean);
+    candidates.push((baseDir + clean).toLowerCase());
+    // 查找
+    for (const c of candidates) {
+      if (urlMap.has(c)) return urlMap.get(c);
+    }
+    // debug 输出未命中
+    if (orig.match(/\.(jpg|png|jpeg|gif|webp|svg)$/i)) {
+      console.warn('[zip壁纸] 未找到图片资源:', orig, '尝试:', candidates);
+    }
+    return orig;
+  }
+  for (const [tag, attr] of tags) {
+    doc.querySelectorAll(tag + '[' + attr + ']').forEach(el => {
+      const orig = el.getAttribute(attr);
+      if (!orig) return;
+      const fixed = fixPath(orig);
+      el.setAttribute(attr, fixed);
+    });
+  }
+  // 处理style标签和style属性里的url(…)
+  function replaceStyleUrls(str) {
+    if (!str) return str;
+    return str.replace(/url\((['"]?)([^)'"]+)\1\)/g, (m, q, p) => {
+      const fixed = fixPath(p);
+      if (/^(https?:|data:|blob:)/i.test(fixed)) return `url(${fixed})`;
+      if (fixed.startsWith('blob:')) return `url(${fixed})`;
+      // fallback: 保持原样
+      return `url(${fixed})`;
+    });
+  }
+  // style标签
+  doc.querySelectorAll('style').forEach(styleEl => {
+    styleEl.textContent = replaceStyleUrls(styleEl.textContent);
+  });
+  // style属性
+  doc.querySelectorAll('[style]').forEach(el => {
+    el.setAttribute('style', replaceStyleUrls(el.getAttribute('style')));
+  });
+
+  // 5. 注入 polyfill/hack 脚本，提升兼容性
+  const polyfillScript = doc.createElement('script');
+  polyfillScript.textContent = `
+    // --- zip壁纸兼容性polyfill ---
+    (function(){
+      // 1. 伪造 window.location 全属性为 https://fake.local/index.html
+      try {
+        const fakeLoc = {
+          protocol: 'https:',
+          host: 'fake.local',
+          hostname: 'fake.local',
+          port: '',
+          origin: 'https://fake.local',
+          pathname: '/index.html',
+          search: '',
+          hash: '',
+          href: 'https://fake.local/index.html'
+        };
+        Object.defineProperty(window, 'location', {
+          get: () => fakeLoc,
+          configurable: true
+        });
+      } catch(e){}
+
+      // 2. Blob URL 映射表注入（由父页面 postMessage 注入，或提前挂载）
+      window.__WALLPAPER_BLOB_MAP = window.__WALLPAPER_BLOB_MAP || {};
+
+      // 3. 劫持 fetch，自动映射 zip 内部路径为 Blob URL
+      const oldFetch = window.fetch;
+      window.fetch = function(input, ...args) {
+        if (typeof input === 'string') {
+          // 直接是 blob: 则直接用
+          if (input.startsWith('blob:')) return oldFetch(input, ...args);
+          // zip 内部路径
+          let key = input.replace(/^\//, '');
+          if (window.__WALLPAPER_BLOB_MAP && window.__WALLPAPER_BLOB_MAP[key]) {
+            return oldFetch(window.__WALLPAPER_BLOB_MAP[key], ...args);
+          }
+        }
+        return oldFetch(input, ...args);
+      };
+
+      // 4. 劫持 XMLHttpRequest.open
+      const oldXHROpen = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+        if (typeof url === 'string') {
+          let key = url.replace(/^\//, '');
+          if (window.__WALLPAPER_BLOB_MAP && window.__WALLPAPER_BLOB_MAP[key]) {
+            arguments[1] = window.__WALLPAPER_BLOB_MAP[key];
+          }
+        }
+        return oldXHROpen.apply(this, arguments);
+      };
+
+      // 5. 劫持 Image/HTMLImageElement.src
+      function patchImageProto(proto) {
+        const oldSrc = Object.getOwnPropertyDescriptor(proto, 'src');
+        Object.defineProperty(proto, 'src', {
+          set: function(val) {
+            if (typeof val === 'string') {
+              let key = val.replace(/^\//, '');
+              if (window.__WALLPAPER_BLOB_MAP && window.__WALLPAPER_BLOB_MAP[key]) {
+                return oldSrc.set.call(this, window.__WALLPAPER_BLOB_MAP[key]);
+              }
+            }
+            return oldSrc.set.call(this, val);
+          },
+          get: function() { return oldSrc.get.call(this); },
+          configurable: true
+        });
+      }
+      patchImageProto(Image.prototype);
+      patchImageProto(HTMLImageElement.prototype);
+
+      // 6. 禁用 Service Worker 注册
+      if (navigator.serviceWorker) {
+        try { navigator.serviceWorker.register = ()=>Promise.reject('ServiceWorker禁用'); } catch(e){}
+      }
+    })();
+  `;
+  doc.head.appendChild(polyfillScript);
+
+  // 6. 注入 Blob URL 映射表到 html（让 iframe 内 polyfill 能访问）
+  const blobMapScript = doc.createElement('script');
+  blobMapScript.textContent = 'window.__WALLPAPER_BLOB_MAP = ' + JSON.stringify(Object.fromEntries(urlMap)) + ';';
+  doc.head.appendChild(blobMapScript);
+
+  // 7. 返回处理结果
+  return { html: doc.documentElement.outerHTML, urlMap, mainHtmlPath };
+}
 // 1.js - 性能优化完整版 (全功能)
 
 // ============================================================
@@ -14,7 +219,8 @@ const wallpaperAuthorLinks = [
   'https://steamcommunity.com/sharedfiles/filedetails/?id=3349260373','https://steamcommunity.com/sharedfiles/filedetails/?id=3298268799','https://steamcommunity.com/sharedfiles/filedetails/?id=3635492501','https://steamcommunity.com/sharedfiles/filedetails/?id=3369171553','https://steamcommunity.com/sharedfiles/filedetails/?id=2030846178','https://steamcommunity.com/sharedfiles/filedetails/?id=2499006048','https://steamcommunity.com/sharedfiles/filedetails/?id=3310203979','https://steamcommunity.com/sharedfiles/filedetails/?id=3289037617','https://steamcommunity.com/sharedfiles/filedetails/?id=2385132996','https://steamcommunity.com/sharedfiles/filedetails/?id=2929937768',//71-80
   'https://steamcommunity.com/sharedfiles/filedetails/?id=3429707117','https://steamcommunity.com/sharedfiles/filedetails/?id=2691915794','https://steamcommunity.com/sharedfiles/filedetails/?id=2841018591','https://steamcommunity.com/sharedfiles/filedetails/?id=3480156230','https://steamcommunity.com/sharedfiles/filedetails/?id=2995764284','https://steamcommunity.com/sharedfiles/filedetails/?id=3272631584','https://steamcommunity.com/sharedfiles/filedetails/?id=2902939420','https://steamcommunity.com/sharedfiles/filedetails/?id=3275856487','https://steamcommunity.com/sharedfiles/filedetails/?id=3211762136','https://steamcommunity.com/sharedfiles/filedetails/?id=3369151871',//81-90
   'https://steamcommunity.com/sharedfiles/filedetails/?id=2945859950','https://steamcommunity.com/sharedfiles/filedetails/?id=3639948534','https://steamcommunity.com/sharedfiles/filedetails/?id=2723647705','https://steamcommunity.com/sharedfiles/filedetails/?id=818696361','https://steamcommunity.com/sharedfiles/filedetails/?id=3158513965','https://steamcommunity.com/sharedfiles/filedetails/?id=3415535976','https://steamcommunity.com/sharedfiles/filedetails/?id=2961828444','https://steamcommunity.com/sharedfiles/filedetails/?id=3086767327','https://steamcommunity.com/sharedfiles/filedetails/?id=3023458758','https://steamcommunity.com/sharedfiles/filedetails/?id=3353921298', //91-100
-  'https://steamcommunity.com/sharedfiles/filedetails/?id=950308229'
+  'https://steamcommunity.com/sharedfiles/filedetails/?id=950308229','https://steamcommunity.com/sharedfiles/filedetails/?id=3678409401','https://steamcommunity.com/sharedfiles/filedetails/?id=3168641857','https://steamcommunity.com/sharedfiles/filedetails/?id=2879252246',
+  'https://zhutix.com/animated/haimian-wuzi/','https://zhutix.com/animated/lone-cherry-blossom/','https://zhutix.com/animated/honkai-star-rail/','https://steamcommunity.com/sharedfiles/filedetails/?id=2542785751','https://steamcommunity.com/sharedfiles/filedetails/?id=2700444200','https://steamcommunity.com/sharedfiles/filedetails/?id=3605483059'
 ];
 
 let hasShownInitialTip = false;
@@ -452,6 +658,8 @@ async function renderWallpapers(type) {
       renderStaticWallpapers();
     } else if (type === 'dynamic') {
       renderDynamicWallpapers();
+    } else if (type === 'web') {
+      renderWebWallpapers();
     }
   }
   // New: Render custom page logic
@@ -503,6 +711,7 @@ function createAndReplacePlaceholder(placeholder, type) {
 
     const gearBtn = document.createElement("button");
     gearBtn.className = "iconSettings";
+    gearBtn.style.cssText = "position:absolute;bottom:8px;right:8px;border:none;cursor:pointer;z-index:10;";
     gearBtn.innerHTML = '<img src="images/chilun.png" alt="管理">';
 
     const popover = document.createElement("div");
@@ -713,7 +922,7 @@ function renderStaticWallpapers() {
     dailyPlaceholder.className = "wallpaper-placeholder special-external-daily";
     fragment.appendChild(dailyPlaceholder);
     // 1. Create ordinary static wallpaper placeholders (1-45)
-    for (let i = 1; i <= 89; i++) {
+    for (let i = 1; i <= 101; i++) {
         const placeholder = document.createElement("div");
         placeholder.className = "wallpaper-placeholder";
         placeholder.dataset.index = i;
@@ -812,7 +1021,7 @@ function renderDynamicWallpapers() {
     specialPlaceholder.className = "wallpaper-placeholder special-tile"; // Add a special class
     fragment.appendChild(specialPlaceholder);
     // 1. Create placeholders
-    for (let i = 1; i <= 101; i++) {
+    for (let i = 1; i <= 110; i++) {
         const placeholder = document.createElement("div");
         placeholder.className = "wallpaper-placeholder";
         placeholder.dataset.index = i;
@@ -876,6 +1085,10 @@ function renderDynamicWallpapers() {
 
                     specialTile.appendChild(thumbBox);
                     specialTile.addEventListener("click", () => {
+                      if (bgWebFrame) {
+                            bgWebFrame.style.display = 'none';
+                            bgWebFrame.src = ''; // 清空src彻底停止网页运行
+                        }
                         localStorage.removeItem("wallpaperType");
                         localStorage.removeItem("currentWallpaperKey");
                         localStorage.removeItem("wallpaper");
@@ -885,9 +1098,12 @@ function renderDynamicWallpapers() {
                             window.deleteVideoFromIndexedDB("bgVideo");
                         }
 
-                        bgVideo.pause(); // Pause the video
-                        bgVideo.muted = true; // Mute the video
-
+   // 这里加个保险：确保 bgVideo 存在再操作，避免报错阻塞执行
+                        const bgVideo = document.getElementById("bgVideo"); 
+                        if (bgVideo) {
+                            bgVideo.pause(); // Pause the video
+                            bgVideo.muted = true; // Mute the video
+                        }
                         if (typeof initializeDefaultWallpaperByTime === 'function') {
                             initializeDefaultWallpaperByTime();
                         } else {
@@ -1167,5 +1383,616 @@ const wallpaperModalContent = document.querySelector('#wallpaperModal .modal-con
         if (modalContent && header) {
             makeDraggable(modalContent, header);
         }
+    }
+});
+// ============================================================
+// 🌐 网页壁纸模块 (Wallpaper Engine Web Type)
+// ============================================================
+
+// ⚙️ 配置区 —— 只需修改这两行
+const WEB_WP_GITHUB_RAW = 'https://raw.githubusercontent.com/shichen1234/wallpapers/main/';
+const WEB_WP_PROXY_BASE = 'https://ghproxy.net/' + WEB_WP_GITHUB_RAW;
+const WEB_WP_TOTAL = 9; // 仓库 web/ 目录下 zip 的总数 (1.zip ~ N.zip)
+
+// 当前已创建的 Blob URL 列表，切换壁纸时统一 revoke
+let currentWebWpBlobUrls = [];
+// 交互模式状态
+let webWpInteractive = false;
+
+// ── 渲染网页壁纸卡片列表 ────────────────────────────────────
+function renderWebWallpapers() {
+  const grid = document.querySelector('.wallpaper-grid');
+  grid.innerHTML = '';
+
+  // 不再添加顶部说明卡片
+
+  for (let i = 1; i <= WEB_WP_TOTAL; i++) {
+    const dbKey = `webwp_${i}`;
+
+    const tile = document.createElement('div');
+    tile.className = 'video-tile';
+    tile.dataset.downloaded = checkVideoExistsSync(dbKey) ? 'true' : 'false';
+
+    const thumbBox = document.createElement('div');
+    thumbBox.className = 'lazy-video-thumb';
+    thumbBox.style.cssText = 'position:relative;width:100%;height:130px;border-radius:8px;cursor:pointer;overflow:hidden;';
+
+    // 封面图：wallpapers/web/1.jpg，没有则用 poster
+    const img = document.createElement('img');
+    img.src = `wallpapers/web/${i}.jpg`;
+    img.onerror = () => { img.src = 'wallpapers/poster.jpg'; };
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;transition:transform 0.3s;';
+
+
+    // 下载进度遮罩
+    const mask = document.createElement('div');
+    mask.className = 'download-mask';
+    mask.innerHTML = `<div class="loading-spinner"></div><span class="progress-text">0%</span>`;
+
+    // 已缓存勾
+    const badge = document.createElement('div');
+    badge.className = 'downloaded-badge';
+    if (tile.dataset.downloaded === 'true') badge.style.display = 'block';
+
+    // 下载/网页链接按钮（左下角，悬停显示）
+    const webWallpaperLinks = [
+      'https://codepen.io/donotfold/pen/yyapzOP', // 1
+      'https://codepen.io/LeonLinBuild/pen/emdgRJj', // 2
+      'https://codepen.io/BalintFerenczy/pen/qENdpoL',// 3
+      'https://steamcommunity.com/sharedfiles/filedetails/?id=888689688' ,// 4
+      'https://codepen.io/Mant0uStudio/pen/ZYWywJB', // 5
+      'https://codepen.io/aleksa-rakocevic/pen/bNeeGMa', // 6
+      'https://codepen.io/ed-demircioglu/pen/yyaOJKO', // 7 
+      'https://steamcommunity.com/sharedfiles/filedetails/?id=3553519395', // 8 
+      'https://steamcommunity.com/sharedfiles/filedetails/?id=3419679793' // 9 
+    ];
+    const dlLink = document.createElement('a');
+    dlLink.className = 'wallpaper-author-link';
+    dlLink.target = '_blank';
+    dlLink.textContent = '网页链接 →';
+    dlLink.href = webWallpaperLinks[i-1] || `${WEB_WP_GITHUB_RAW}${i}.zip`;
+    dlLink.style.cssText = `
+      position:absolute;bottom:8px;left:8px;font-size:12px;font-weight:bold;
+      color:black;background-color:white;padding:4px 8px;border-radius:999px;
+      text-decoration:none;z-index:15;opacity:0;visibility:hidden;
+      transform:scale(0.95);transition:all 0.2s ease-out;
+    `;
+    dlLink.addEventListener('click', e => e.stopPropagation());
+
+    // 管理齿轮
+    const gearBtn = document.createElement('button');
+    gearBtn.className = 'iconSettings';
+    gearBtn.style.cssText = 'position:absolute;bottom:8px;right:8px;border:none;cursor:pointer;z-index:10;background:none;';
+    gearBtn.innerHTML = '<img src="images/chilun.png" alt="管理">';
+
+    const popover = document.createElement('div');
+    popover.className = 'iconPopover overlay';
+    popover.innerHTML = `<button class="delBtn" type="button">删除缓存</button><button class="cancelBtn" type="button">取消</button>`;
+
+    thumbBox.append(img, mask, badge, dlLink, gearBtn, popover);
+    tile.appendChild(thumbBox);
+
+    // 悬停效果
+    tile.addEventListener('mouseenter', () => {
+      img.style.transform = 'scale(1.1)';
+      dlLink.style.opacity = '1';
+      dlLink.style.visibility = 'visible';
+      dlLink.style.transform = 'scale(1)';
+    });
+    tile.addEventListener('mouseleave', () => {
+      img.style.transform = 'scale(1)';
+      dlLink.style.opacity = '0';
+      dlLink.style.visibility = 'hidden';
+      dlLink.style.transform = 'scale(0.95)';
+    });
+
+    // 齿轮按钮
+    gearBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.iconPopover.show').forEach(el => el.classList.remove('show'));
+      popover.classList.add('show');
+    });
+    popover.querySelector('.cancelBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      popover.classList.remove('show');
+    });
+    popover.querySelector('.delBtn').addEventListener('click', async e => {
+      e.stopPropagation();
+      if (confirm('确定删除这个网页壁纸的缓存吗？')) {
+        await deleteVideoFromIndexedDB(dbKey);
+        downloadedKeys.delete(dbKey);
+        tile.dataset.downloaded = 'false';
+        badge.style.display = 'none';
+        popover.classList.remove('show');
+        if (typeof showBubble === 'function') showBubble('缓存已删除喵！🗑️');
+      }
+    });
+
+    // ── 点击：应用或下载 ──────────────────────────────────────
+    tile.addEventListener('click', async e => {
+      if (popover.classList.contains('show')) { popover.classList.remove('show'); return; }
+
+      const progressText = mask.querySelector('.progress-text');
+
+      // 已缓存，直接从 IndexedDB 读取
+      if (tile.dataset.downloaded === 'true') {
+        try {
+          const zipBlob = await getVideoFromDB(dbKey);
+          if (zipBlob) {
+            mask.classList.add('active');
+            progressText.textContent = '解析中...';
+            await applyWebWallpaper(zipBlob);
+            localStorage.setItem('wallpaperType', 'web');
+            localStorage.setItem('currentWallpaperKey', dbKey);
+            if (typeof showBubble === 'function') showBubble('网页壁纸切换成功喵！🌐');
+          }
+        } catch (err) {
+          console.error('[G-web] 应用网页壁纸失败:', err);
+          if (typeof showBubble === 'function') showBubble('应用失败了喵，请重试～');
+        } finally {
+          setTimeout(() => mask.classList.remove('active'), 1500);
+        }
+        return;
+      }
+
+      // 下载流程
+      mask.classList.add('active');
+      progressText.textContent = '0%';
+
+      try {
+        const response = await fetch(WEB_WP_PROXY_BASE + `${i}.zip`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const total = parseInt(response.headers.get('content-length'), 10);
+        let loaded = 0;
+        const reader = response.body.getReader();
+        const chunks = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          loaded += value.length;
+          if (total) progressText.textContent = `${Math.round(loaded / total * 100)}%`;
+        }
+
+        const zipBlob = new Blob(chunks, { type: 'application/zip' });
+        chunks.length = 0;
+
+        progressText.textContent = '解析中...';
+        await applyWebWallpaper(zipBlob);
+        localStorage.setItem('wallpaperType', 'web');
+        localStorage.setItem('currentWallpaperKey', dbKey);
+
+        progressText.textContent = '保存中...';
+        try {
+          await saveVideoToIndexedDB(zipBlob, dbKey);
+          downloadedKeys.add(dbKey);
+          tile.dataset.downloaded = 'true';
+          badge.style.display = 'block';
+          if (typeof showBubble === 'function') showBubble('下载并应用成功喵！🎉');
+        } catch (saveErr) {
+          console.error('[G-web] 保存失败:', saveErr);
+          if (typeof showBubble === 'function') {
+            if (saveErr.name === 'QuotaExceededError') {
+              showBubble('存储空间不足！请先删除旧壁纸再试喵～😿', true, true);
+            } else {
+              showBubble('壁纸保存失败了喵，请稍后再试。', true, true);
+            }
+          }
+          await deleteVideoFromIndexedDB(dbKey).catch(() => {});
+        }
+
+      } catch (fetchErr) {
+        console.error('[G-web] 下载失败:', fetchErr);
+        progressText.textContent = '下载失败';
+      } finally {
+        setTimeout(() => mask.classList.remove('active'), 2000);
+      }
+    });
+
+    tile.classList.add('tile-fade-in');
+    grid.appendChild(tile);
+  }
+}
+
+// ── 核心：解压 zip，重写路径，注入 iframe (沙盒通信版) ────────────────────
+async function applyWebWallpaper(zipBlob) {
+  if (!window.JSZip) {
+    throw new Error('JSZip 未加载，请确认 lib/jszip.min.js 已引入');
+  }
+
+  // 撤销上一组 Blob URL，防止内存泄漏
+  currentWebWpBlobUrls.forEach(u => { try { URL.revokeObjectURL(u); } catch (_) {} });
+  currentWebWpBlobUrls = [];
+
+  const zip = await JSZip.loadAsync(zipBlob);
+
+  // 第一步：把所有文件并行解压
+  // ⚠️ 沙盒 iframe 运行在 null origin，父页面创建的 blob URL 无法被 sandbox 跨源读取。
+  // 解决方案：对图片/字体/媒体等"静态嵌入"文件使用 base64 data URL（自包含，无跨源限制）；
+  //           对 JS/CSS 不生成 URL（走 extractedJsString/extractedCssString 内联注入），
+  //           对大体积的 video/audio 保留 blob URL（避免 base64 过大），可在此调整。
+  const INLINE_AS_DATA_URL_EXTS = new Set([
+    'png','jpg','jpeg','gif','webp','svg','ico','bmp',   // 图片
+    'woff','woff2','ttf','otf',                           // 字体
+  ]);
+  const blobUrlMap = {};
+  const tasks = [];
+  zip.forEach((relativePath, fileEntry) => {
+    if (fileEntry.dir) return;
+    const ext = (relativePath.split('.').pop() || '').toLowerCase();
+    const mime = getWebWpMime(relativePath);
+
+    tasks.push(
+      fileEntry.async(INLINE_AS_DATA_URL_EXTS.has(ext) ? 'base64' : 'blob').then(data => {
+        let url;
+        if (INLINE_AS_DATA_URL_EXTS.has(ext)) {
+          // data URL：沙盒可直接读取，无跨源限制
+          url = `data:${mime};base64,${data}`;
+        } else {
+          // blob URL（video / audio / 其他大文件）
+          const typed = new Blob([data], { type: mime });
+          url = URL.createObjectURL(typed);
+          currentWebWpBlobUrls.push(url);
+        }
+        // 同时注册带 ./ 前缀和不带的两种 key
+        blobUrlMap[relativePath] = url;
+        blobUrlMap['./' + relativePath] = url;
+        // 兼容 Windows 路径分隔符
+        const normalized = relativePath.replace(/\\/g, '/');
+        if (normalized !== relativePath) {
+          blobUrlMap[normalized] = url;
+          blobUrlMap['./' + normalized] = url;
+        }
+      })
+    );
+  });
+  await Promise.all(tasks);
+
+  // 第二步：找 index.html（兼容放在子目录的情况）
+  let indexEntry = zip.file('index.html') || zip.file('index.htm');
+  if (!indexEntry) {
+    // 尝试在第一层子目录中查找
+    let found = null;
+    zip.forEach((path, entry) => {
+      if (!found && (path.endsWith('/index.html') || path.endsWith('/index.htm'))) {
+        found = entry;
+      }
+    });
+    if (found) indexEntry = found;
+  }
+  if (!indexEntry) throw new Error('压缩包中没有找到 index.html，请检查壁纸 zip 结构');
+
+  // 第三步：重写 HTML 中所有资源引用 (这会让 HTML 里的图片、外部 JS 指向合法的本地 Blob)
+  let html = await indexEntry.async('string');
+  html = rewriteWebWpHTML(html, blobUrlMap);
+
+  // 额外提取可能的纯代码文件 (双重保险，发送给沙盒执行)
+  let extractedCssString = "";
+  if (zip.file("style.css")) extractedCssString = await zip.file("style.css").async("string");
+  let extractedJsString = "";
+  if (zip.file("main.js")) extractedJsString = await zip.file("main.js").async("string");
+  else if (zip.file("script.js")) extractedJsString = await zip.file("script.js").async("string");
+
+  // ============================================================
+  // 🔧 防止双重执行 & 消除 blob 跨源错误：
+  // 如果 extractedJsString 已提取到 JS，则从 HTML 中移除对应的
+  // <script src="..."> 标签（已被路径重写为 blob URL）。
+  // 原因：扩展沙盒的 null origin 无法 fetch 父页面创建的 blob URL，
+  // 会产生 net::ERR_FAILED 控制台错误；且 sandbox.js 会内联注入
+  // extractedJsString，保留 src 标签会导致重复执行。
+  // ============================================================
+  if (extractedJsString) {
+    // 移除所有外部 script 标签（src 已被 rewriteWebWpHTML 替换为 blob: 或保留原路径）
+    html = html.replace(/<script\b[^>]+\bsrc\s*=\s*["'][^"']*["'][^>]*>[\s\S]*?<\/script>/gi, (match) => {
+      // 保留 importmap，只移除 src 型外部脚本
+      if (/type\s*=\s*["']importmap["']/i.test(match)) return match;
+      return '<!-- [G-web] script src removed, injected inline by sandbox -->';
+    });
+  }
+
+  // 停止动态视频层（bgImage 暂时保留，作为加载兜底，后面延迟隐藏）
+  const bgImg   = document.getElementById('bgImage');
+  const bgVideo = document.getElementById('bgVideo');
+  if (bgVideo) {
+    bgVideo.pause();
+    bgVideo.muted = true;
+    bgVideo.removeAttribute('src');
+    bgVideo.load();         // 刷新解码器，彻底清空音频缓冲区
+    bgVideo.style.display = 'none';
+  }
+
+  // 显示 Web 壁纸 iframe
+  const frame = document.getElementById('bgWebFrame');
+  frame.style.display = 'block';
+  frame.style.pointerEvents = 'auto'; // 默认关闭交互，不遮挡扩展 UI
+  webWpInteractive = false;
+
+  // ====== 自动重发机制，彻底消除白屏 ======
+  let webWpRendered = false;
+  let webWpRetryCount = 0;
+  const MAX_RETRY = 3;
+  let webWpRetryTimer = null;
+
+  // 先移除旧监听，防止多次触发
+  if (window._webWpSandboxReadyHandler) {
+    window.removeEventListener('message', window._webWpSandboxReadyHandler);
+    window._webWpSandboxReadyHandler = null;
+  }
+  if (window._webWpRenderedHandler) {
+    window.removeEventListener('message', window._webWpRenderedHandler);
+    window._webWpRenderedHandler = null;
+  }
+
+  // 监听 WP_RENDERED，收到后停止重发
+  window._webWpRenderedHandler = function(event) {
+    if (event.source === frame.contentWindow && event.data && event.data.type === 'WP_RENDERED') {
+      webWpRendered = true;
+      if (webWpRetryTimer) {
+        clearTimeout(webWpRetryTimer);
+        webWpRetryTimer = null;
+      }
+      window.removeEventListener('message', window._webWpRenderedHandler);
+      window._webWpRenderedHandler = null;
+    }
+  };
+  window.addEventListener('message', window._webWpRenderedHandler);
+
+  // 监听 SANDBOX_READY，收到后开始发送壁纸数据
+  window._webWpSandboxReadyHandler = function(event) {
+    if (event.source === frame.contentWindow && event.data && event.data.type === 'SANDBOX_READY') {
+      // 只允许第一次触发
+      window.removeEventListener('message', window._webWpSandboxReadyHandler);
+      window._webWpSandboxReadyHandler = null;
+
+      function sendWallpaperToSandbox() {
+        if (webWpRendered || webWpRetryCount >= MAX_RETRY) return;
+        if (localStorage.getItem('wallpaperType') !== 'web') return;
+
+        // 清除上一次可能残留的兜底定时器
+        if (window._webWpFallbackTimer) {
+          clearTimeout(window._webWpFallbackTimer);
+          window._webWpFallbackTimer = null;
+        }
+
+        frame.contentWindow.postMessage({
+          type: 'RENDER_WALLPAPER',
+          html: html,
+          css: extractedCssString,
+          js: extractedJsString
+        }, '*');
+
+        // 握手式隐藏：等 sandbox 发回 WP_RENDERED 信号后再隐藏 bgImage
+        // 兜底：1500ms 内未收到信号也强制隐藏，防止因渲染错误永远卡住
+        window._webWpFallbackTimer = setTimeout(() => {
+          window._webWpFallbackTimer = null;
+          const latestBgImg = document.getElementById('bgImage');
+          if (latestBgImg && localStorage.getItem('wallpaperType') === 'web') {
+            latestBgImg.style.display = 'none';
+          }
+        }, 1500);
+
+        webWpRetryCount++;
+        if (!webWpRendered && webWpRetryCount < MAX_RETRY) {
+          webWpRetryTimer = setTimeout(sendWallpaperToSandbox, 1000);
+        }
+      }
+
+      webWpRendered = false;
+      webWpRetryCount = 0;
+      sendWallpaperToSandbox();
+    }
+  };
+  window.addEventListener('message', window._webWpSandboxReadyHandler);
+
+  // 强制刷新 iframe，确保每次都能收到 SANDBOX_READY
+  frame.src = 'sandbox.html';
+}
+
+// ── HTML 静态路径重写 ────────────────────────────────────────
+function rewriteWebWpHTML(html, blobUrlMap) {
+  function resolve(val) {
+    if (!val) return null;
+    const direct = blobUrlMap[val];
+    if (direct) return direct;
+    const stripped = val.replace(/^\.\//, '');
+    return blobUrlMap[stripped] || null;
+  }
+
+  // src/href 属性
+  html = html.replace(/(src|href)=(["'])([^"']+)\2/g, (match, attr, q, val) => {
+    if (/^(https?:|blob:|data:|#|javascript:)/i.test(val)) return match;
+    const blob = resolve(val);
+    return blob ? `${attr}=${q}${blob}${q}` : match;
+  });
+
+  // CSS url(...)
+  html = html.replace(/url\(\s*(["']?)([^)"']+)\1\s*\)/g, (match, q, val) => {
+    if (/^(https?:|blob:|data:)/i.test(val)) return match;
+    const blob = resolve(val);
+    return blob ? `url(${q}${blob}${q})` : match;
+  });
+
+  // <source src="..."> 媒体标签
+  html = html.replace(/(<source[^>]+src=)(["'])([^"']+)\2/gi, (match, pre, q, val) => {
+    if (/^(https?:|blob:|data:)/i.test(val)) return match;
+    const blob = resolve(val);
+    return blob ? `${pre}${q}${blob}${q}` : match;
+  });
+
+  return html;
+}
+
+// ── MIME 类型表 ──────────────────────────────────────────────
+function getWebWpMime(filename) {
+  const ext = (filename.split('.').pop() || '').toLowerCase();
+  const map = {
+    'js':'application/javascript','mjs':'application/javascript',
+    'css':'text/css','html':'text/html','htm':'text/html',
+    'json':'application/json',
+    'png':'image/png','jpg':'image/jpeg','jpeg':'image/jpeg',
+    'gif':'image/gif','webp':'image/webp','svg':'image/svg+xml',
+    'ico':'image/x-icon','bmp':'image/bmp',
+    'mp4':'video/mp4','webm':'video/webm','ogg':'video/ogg',
+    'mp3':'audio/mpeg','wav':'audio/wav','flac':'audio/flac',
+    'woff':'font/woff','woff2':'font/woff2',
+    'ttf':'font/ttf','otf':'font/otf',
+    'glsl':'text/plain','vert':'text/plain','frag':'text/plain',
+    'txt':'text/plain','xml':'application/xml',
+  };
+  return map[ext] || 'application/octet-stream';
+}
+
+// ── 页面刷新后恢复网页壁纸 ───────────────────────────────────
+async function restoreWebWallpaper(key) {
+  try {
+    const zipBlob = await getVideoFromDB(key);
+    if (!zipBlob) return;
+
+    // 竞态保护：await 期间用户可能已切换到其他壁纸，此时应放弃恢复
+    if (localStorage.getItem('wallpaperType') !== 'web') return;
+
+    // 将所有 iframe / bgImage / bgVideo 的管理交给 applyWebWallpaper 统一处理
+    await applyWebWallpaper(zipBlob);
+
+  } catch (err) {
+    console.warn('[G-web] 恢复网页壁纸失败:', err);
+    // 失败时回退：确保 bgImage 可见
+    const bgImg = document.getElementById('bgImage');
+    if (bgImg) { bgImg.src = 'wallpapers/poster.jpg'; bgImg.style.display = 'block'; }
+  }
+}
+
+// ── 启动时检查是否需要恢复网页壁纸 ─────────────────────────
+// ── 启动时检查是否需要恢复网页壁纸 ─────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem('wallpaperType') === 'web') {
+    // 静音+隐藏视频，防止它在后台发声
+    // ⚠️ 不能用 remove()：applyDailyExternalWallpaper / initializeDefaultWallpaperByTime
+    //    一进来就 getElementById("bgVideo")，remove 后拿到 null → TypeError → 切换完全失效
+    // ⚠️ 不调用 bgVideo.load()：会触发 emptied 事件，可能级联触发其他监听逻辑
+    const bgVideo = document.getElementById("bgVideo");
+    if (bgVideo) {
+        try {
+            bgVideo.pause();
+            bgVideo.muted = true;
+            bgVideo.removeAttribute('src');
+            bgVideo.style.display = 'none';
+        } catch (e) {
+            console.warn('[G-web] 清理 bgVideo 出错（可忽略）:', e);
+        }
+    }
+    // ⚠️ 不在此处隐藏 bgImage：
+    // 保留 poster.jpg 作为网页壁纸加载期间的兜底画面，防止白屏。
+    // applyWebWallpaper 会在 postMessage 发出后延迟隐藏 bgImage。
+
+    const key = localStorage.getItem('currentWallpaperKey');
+    if (key) {
+        restoreWebWallpaper(key);
+    }
+  } else {
+    const bgWebFrame = document.getElementById('bgWebFrame');
+    if (bgWebFrame) bgWebFrame.style.display = 'none';
+  }
+});
+
+// ── Alt+W 交互模式切换 ───────────────────────────────────────
+(function initWebWpInteractiveToggle() {
+  const tip = document.getElementById('webWpInteractiveTip');
+  let tipTimer = null;
+
+  function showWpTip(msg) {
+    if (!tip) return;
+    tip.textContent = msg;
+    tip.style.opacity = '1';
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(() => { tip.style.opacity = '0'; }, 2200);
+  }
+})();
+// ... (1.js 文件其余内容) ...
+
+// ============================================================
+// 新增：监听来自沙盒 iframe 的消息，以触发父窗口的右键菜单
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  window.addEventListener('message', function(event) {
+    // 确保消息来自我们的 iframe，并且消息类型是我们定义的 WEB_WP_CONTEXT_MENU
+    if (event.data && event.data.type === 'WEB_WP_CONTEXT_MENU') {
+      const { clientX, clientY } = event.data;
+
+      // 创建一个合成的 contextmenu 事件
+      const syntheticEvent = new MouseEvent('contextmenu', {
+        bubbles: true,       // 允许事件冒泡
+        cancelable: true,    // 允许阻止默认行为
+        view: window,
+        button: 2,           // 右键 (0:左, 1:中, 2:右)
+        buttons: 2,          // 同样表示右键
+        clientX: clientX,    // 鼠标 X 坐标
+        clientY: clientY     // 鼠标 Y 坐标
+      });
+
+      // 派发事件到 document，这将触发 4.js 中已有的 document.addEventListener('contextmenu', ...) 监听器
+      document.dispatchEvent(syntheticEvent);
+    }
+    else if (event.data && event.data.type === 'WEB_WP_CLICK') {
+      // 在父窗口模拟一次左键点击，触发全局的点击关闭菜单逻辑
+      const syntheticClick = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        button: 0,
+        buttons: 1
+      });
+      document.body.dispatchEvent(syntheticClick);
+    }
+    else if (event.data && event.data.type === 'SANDBOX_READY') {
+        if (window.pendingWebWallpaper) {
+            const bgWebFrame = document.getElementById("bgWebFrame");
+            if (bgWebFrame && bgWebFrame.contentWindow) {
+                console.log('[父窗口] 收到沙盒就绪信号，开始发送壁纸数据！');
+                bgWebFrame.contentWindow.postMessage({
+                    type: 'RENDER_WALLPAPER',
+                    html: window.pendingWebWallpaper.html,
+                    css: window.pendingWebWallpaper.css,
+                    js: window.pendingWebWallpaper.js
+                }, '*');
+            }
+        }
+    }
+    // ─── 握手接收端：sandbox 壁纸渲染上屏后通知父窗口，立刻隐藏兜底 bgImage ───
+    else if (event.data && event.data.type === 'WP_RENDERED') {
+      if (window._webWpFallbackTimer) {
+        clearTimeout(window._webWpFallbackTimer);
+        window._webWpFallbackTimer = null;
+      }
+      const bgImg = document.getElementById('bgImage');
+      if (bgImg && localStorage.getItem('wallpaperType') === 'web') {
+        bgImg.style.display = 'none';
+      }
+    }
+  });
+  });
+// ==========================================
+// 修复：当加载系统壁纸/动态壁纸时，强制干掉网页壁纸的遮挡
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    const bgImage = document.getElementById('bgImage');
+    const bgVideo = document.getElementById('bgVideo');
+
+    function clearWebWallpaper() {
+        const bgWebFrame = document.getElementById('bgWebFrame');
+        if (bgWebFrame && bgWebFrame.style.display !== 'none') {
+            bgWebFrame.style.display = 'none';
+            bgWebFrame.src = 'about:blank'; // 彻底清空并停止后台运行
+        }
+    }
+
+    // 当普通图片/一天一换壁纸图片加载完成时，立刻触发清理
+    if (bgImage) {
+        bgImage.addEventListener('load', clearWebWallpaper);
+    }
+    // 当动态视频壁纸加载完成出画面时，立刻触发清理
+    if (bgVideo) {
+        bgVideo.addEventListener('loadeddata', clearWebWallpaper);
     }
 });

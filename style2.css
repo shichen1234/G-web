@@ -563,48 +563,54 @@
   transform: scale(1.1); /* 微微放大 */
 }
 /* === 🎬 动态壁纸管理：齿轮与删除弹窗 === */
-
 /* 1. 齿轮按钮 (默认隐藏，悬停显示) */
 .video-tile .iconSettings {
   position: absolute;
   right: 6px;
-  bottom: 6px; /* 放在右下角 */
+  bottom: 6px;
   width: 24px;
   height: 24px;
   padding: 0;
   border: none;
-  background: rgba(0, 0, 0, 0.5); /* 半透明黑底，保证在不同壁纸上可见 */
+  background: rgba(0, 0, 0, 0.82);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.2s, transform 0.2s;
-  pointer-events: none; /* 默认不挡鼠标 */
+  transform: scale(0.75);
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
   z-index: 20;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
 
 .video-tile .iconSettings img {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   display: block;
-  filter: invert(1); /* 确保齿轮是白色的 */
+  filter: invert(1);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* 只有当卡片被标记为“已下载”且鼠标悬停时，才显示齿轮 */
+/* 只有当卡片被标记为"已下载"且鼠标悬停时，才显示齿轮 */
 .video-tile[data-downloaded="true"]:hover .iconSettings {
   opacity: 1;
   transform: scale(1);
   pointer-events: auto;
 }
 
+/* 鼠标悬停齿轮：弹性放大动画 */
 .video-tile .iconSettings:hover {
-  background: rgba(0, 0, 0, 0.8);
-  transform: scale(1.1);
+  background: rgba(0, 0, 0, 0.95);
+  transform: scale(1.22) !important;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.6);
 }
 
+.video-tile .iconSettings:hover img {
+  transform: rotate(30deg) scale(1.1);
+}
 /* 2. 删除确认遮罩 (覆盖整个卡片) */
 .video-tile .iconPopover.overlay {
   position: absolute;
@@ -2037,7 +2043,13 @@ body::after {
   flex: 1;
   height: 4px;
   appearance: none;
-  background: rgba(255,255,255,0.2);
+  background: linear-gradient(
+    to right,
+    #0b74de 0%,
+    #0b74de var(--progress, 0%),
+    rgba(255,255,255,0.2) var(--progress, 0%),
+    rgba(255,255,255,0.2) 100%
+  );
   border-radius: 2px;
   cursor: pointer;
 }
@@ -2226,17 +2238,24 @@ body::after {
 /* 修正后的“固定”开关容器样式 */
 .pin-panel-container {
   position: absolute;
-  top: 15px;
-  right: 15px;
-  z-index: 10;
+  top: 30px;
+  right: 57px;
+  z-index: 100;
   display: flex;
   align-items: center;
-  gap: 8px; /* 文字与开关的间距 */
-  background: rgba(0, 0, 0, 0.2); /* 添加一个半透明背景，更美观 */
-  padding: 4px 8px;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 5px 10px 5px 8px;
   border-radius: 15px;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: background 0.2s;
 }
+
+.pin-panel-container:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 
 /* “固定”文字标签的样式 */
 .pin-panel-label {
@@ -2453,4 +2472,362 @@ body::after {
   height: auto;     /* 高度自适应 */
   z-index: 2;       /* 盖在头像上方 */
   pointer-events: none; /* 防止遮挡头像的右键或点击事件 */
+}
+
+/* =========================================
+   ⌨️ 禅模式 - 快捷键提示按钮 & 弹窗
+   ========================================= */
+
+/* 提示按钮 - 默认隐藏，禅模式激活后显示 */
+#zenHintBtn {
+  position: fixed;
+  bottom: 26px;
+  right: 345px; /* 紧靠媒体组件左侧 */
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  /* 默认不可见 */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease, color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  user-select: none;
+}
+
+/* 禅模式激活时，通过 CSS 兄弟选择器显示按钮 */
+#zenTimeWidget.visible ~ #zenHintBtn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#zenHintBtn:hover {
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.38);
+}
+
+/* 弹出提示面板 */
+#zenHintPopup {
+  position: fixed;
+  bottom: 56px;
+  right: 20px;
+  width: 210px;
+  background: rgba(15, 15, 20, 0.55);
+  backdrop-filter: blur(10px) saturate(1.4);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 13px 15px 11px;
+  z-index: 201;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12.5px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  /* 默认隐藏 */
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px) scale(0.97);
+  transform-origin: bottom right;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+#zenHintPopup.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+/* 每行快捷键 */
+.zen-hint-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.zen-hint-row kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  flex-shrink: 0;
+}
+
+.zen-hint-row span {
+  opacity: 0.75;
+}
+
+/* 分割线 */
+.zen-hint-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 7px 0 6px;
+}
+
+/* 重置提示（小字灰色）*/
+.zen-hint-tip {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.55;
+}
+
+.zen-hint-tip kbd {
+  display: inline;
+  padding: 1px 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.6);
+}
+.draggable-widget canvas {
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+.game-lobby-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+.lobby-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+.lobby-grid button {
+    padding: 15px 30px;
+    cursor: pointer;
+}
+/* =========================================
+   🎮 游戏大厅按钮及交互样式
+   ========================================= */
+/* 游戏入口卡片按钮 */
+.game-entry-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Q弹曲线 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(1px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.game-entry-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    border-color: #0b74de;
+}
+
+/* 显眼的“返回大厅”按钮 */
+.back-lobby-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 20;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.back-lobby-btn:hover {
+    background: #ff4d4f; /* 悬停变为警告红，显眼 */
+    border-color: #ff4d4f;
+    transform: scale(1.05);
+    box-shadow: 0 4px 10px rgba(255, 77, 79, 0.5);
+}
+/* --- 记忆翻牌 UI 增强 --- */
+.memory-ui-container {
+    padding-top: 10px; /* 为顶部标题留出一点空间 */
+}
+
+/* 难度按钮容器 */
+.memory-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding-right: 90px; /* 关键：确保这块区域不会覆盖到右侧的返回按钮 */
+}
+
+.diff-group {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 3px;
+    border-radius: 20px;
+}
+
+/* 难度按钮精修 */
+.memory-diff-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 5px 12px;
+    font-size: 12px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.memory-diff-btn.active {
+    background: #69f0ae;
+    color: #1a2a3a;
+    font-weight: bold;
+    box-shadow: 0 2px 6px rgba(105, 240, 174, 0.4);
+}
+
+.memory-diff-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.memory-icon-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 统计数据样式 */
+.memory-stats {
+    display: flex;
+    gap: 15px;
+    font-size: 13px;
+    color: #eee;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 5px 10px;
+    border-radius: 8px;
+}
+
+.memory-best {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 10px;
+}
+
+/* 游戏网格 */
+.memory-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    border-radius: 12px;
+}
+
+/* ═══════════════════════════════════════════════════
+   🎭  表情包点击特效  —  样式
+   ═══════════════════════════════════════════════════ */
+
+/* 子菜单里的勾选行 */
+.meme-toggle-item {
+  display: flex !important;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.meme-check-icon {
+  font-size: 15px;
+  line-height: 1;
+  color: rgba(255,255,255,0.55);
+  transition: color 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+
+/* 勾选激活态 */
+.meme-toggle-item.meme-on .meme-check-icon {
+  color: #69f0ae;
+  transform: scale(1.15);
+}
+
+/* ── 飞出的表情元素 ── */
+.meme-pop {
+  position: fixed;
+  pointer-events: none;
+  z-index: 2147483647;
+  font-size: 32px;
+  line-height: 1;
+  /* 初始中心对齐到点击点（JS 里会减掉半个字号） */
+  transform-origin: center center;
+  will-change: transform, opacity;
+  animation: meme-shoot 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes meme-shoot {
+  0%   { transform: translate(0,0) scale(0.15) rotate(0deg);           opacity: 1; }
+  35%  { transform: translate(var(--mx), var(--my)) scale(1.35) rotate(var(--mr)); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0.55) rotate(var(--rr)); opacity: 0; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   🎵  底部节奏可视化器
+   ═══════════════════════════════════════════════════════════════ */
+
+#beat-viz-canvas {
+  position: fixed;
+  bottom: 0;          /* ✅ 贴紧屏幕最底边 */
+  left: 0;
+  z-index: 20;        /* 高于壁纸，低于面板/猫咪/菜单 */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.65s ease;
+
+  /* CSS 层辉光 */
+  filter: drop-shadow(0 -6px 18px rgba(160, 200, 255, 0.35))
+          drop-shadow(0  0    8px rgba(130, 170, 255, 0.25));
+}
+
+#beat-viz-canvas.viz-on {
+  opacity: 1;
 }

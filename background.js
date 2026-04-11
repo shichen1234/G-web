@@ -40,7 +40,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // 1. 媒体更新
   if (message.type === 'mediaUpdate') {
     const now = Date.now();
-    if (now - lastUpdateTime < UPDATE_THROTTLE) return;
+    // 🔑 关键修复（Bug 2）：内置播放器的消息是事件驱动的（不会频繁发送），
+    // 不应受节流限制。否则切歌时新歌的 mediaUpdate 若在 1 秒内到达就会被丢弃，
+    // 导致主页面组件无法显示新歌信息。
+    if (message.source !== 'internal_player') {
+      if (now - lastUpdateTime < UPDATE_THROTTLE) return;
+    }
     lastUpdateTime = now;
     
     if (clearTimer) clearTimeout(clearTimer);
@@ -97,7 +102,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  // 5. 🔧 修复：豆包AI查询处理（改进版）
+  // 5a. 🎨 豆包画图模式（网页直跳，无需任何 API Key）
+  // storage 已由 content script 写好，background 只负责开标签页
+  if (message.action === "openDoubaoImage") {
+    // 立即响应，避免 service worker 休眠导致端口关闭
+    sendResponse({ success: true });
+
+    const DOUBAO_IMG_URL = 'https://www.doubao.com/chat/create-image';
+    chrome.tabs.query({ url: 'https://www.doubao.com/chat/create-image*' }, (tabs) => {
+      if (tabs && tabs.length > 0) {
+        chrome.tabs.update(tabs[0].id, { active: true }, () => {
+          chrome.tabs.reload(tabs[0].id);
+        });
+      } else {
+        chrome.tabs.create({ url: DOUBAO_IMG_URL, active: true });
+      }
+    });
+    return false; // 已同步响应，不需要保持端口
+  }
+
+  // 5b. 🔧 豆包AI聊天（原有逻辑保持不变）
   if (message.action === "openDoubao") {
 
     // 验证查询内容

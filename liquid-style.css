@@ -1,0 +1,75 @@
+/* =========================================
+   🌊 水波特效专属样式 (liquid-style.css)
+   与"背景视差"开关保持完全一致的视觉风格
+   ========================================= */
+
+/* 容器布局：与 sticky-controls-bar 内的 parallax-option 对齐 */
+.liquid-setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 8px 0;
+}
+
+/* 左侧说明文字：与 .parallax-label 完全一致 */
+.liquid-setting-item > span {
+    font-size: 15px;
+    color: #333;
+    font-weight: 600;
+    user-select: none;
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* --- 滑动开关容器：与 .switch 完全一致 --- */
+.liquid-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    margin-left: 10px;
+}
+
+.liquid-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* 滑块轨道：与 .slider 完全一致 */
+.liquid-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+/* 滑块圆球：与 .slider:before 完全一致 */
+.liquid-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 开启状态：与 input:checked + .slider 完全一致 */
+.liquid-switch input:checked + .liquid-slider {
+    background-color: #0b74de;
+}
+
+.liquid-switch input:checked + .liquid-slider:before {
+    transform: translateX(20px);
+}
+
+/* wallpaperModal 内的深色文字覆盖（与 .parallax-label 在弹窗内的处理一致） */
+#wallpaperModal .liquid-setting-item > span {
+    color: #222 !important;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.9) !important;
+}

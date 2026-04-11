@@ -156,7 +156,7 @@ function manageZenLyricsWidget() {
                             ? player.getTransLyrics() 
                             : [];
         
-        const currentTime = player.audio.currentTime + 0.2;
+        const currentTime = player.audio.currentTime + 0.3;
         
         let originalText = '...';
         let translationText = ''; // 翻译文本容器
@@ -284,31 +284,12 @@ window.isZenMode = false;
 
 const zenElements = {};
 const zenSelectors = [
-  '.search-container',          
-  '.bing-logo',                 
-  '#quickPanel',                
-  '#quickPanelright',           
-  '#weather',                   
-  '#greetingMessage',           
-  '#beijingTime',               
-  '#weekDay',                   
-  '.wallpaper-change-wrapper',  
-  '#biliIcon',                  
-  '#extraIcon',                 
-  '#catBox',                    
-  '#catSpeechBubble',           
-  '#suggestionList',            
-  '#snakeWidget',                
-  '#todoWidget',
-  '#calcWidget',
-  '#fortuneWidget',             
-  '#calendarWidget',            
-  '#aimWidget',                 
-  '#keyWidget',                 
-  '#pomodoroWidget',            
-  '#noteWidget',                
-  '#noiseWidget',
-  '#cmdTrigger'
+  '.search-container', '.bing-logo', '#quickPanel', '#quickPanelright', '#weather', 
+  '#greetingMessage', '#beijingTime', '#weekDay', '.wallpaper-change-wrapper', 
+  '#biliIcon', '#extraIcon', '#catBox', '#catSpeechBubble', '#suggestionList', 
+  '#snakeWidget', '#todoWidget', '#calcWidget', '#fortuneWidget', '#calendarWidget', 
+  '#aimWidget', '#keyWidget', '#pomodoroWidget', '#noteWidget', '#noiseWidget',
+  '#cmdTrigger', '.content'
 ];
 
 function cacheZenElements() {
@@ -327,6 +308,24 @@ window.toggleZenMode = function() {
   Object.entries(zenElements).forEach(([sel, el]) => {
     if (!el) return;
     
+    // 🎯 新增：专门处理 .content 的出场/入场动画
+    if (sel === '.content') {
+      if (isZen) {
+        // 进入禅模式：先变透明(0.4s)，再移出屏幕(延迟0.4s执行)
+        el.style.transition = 'opacity 0.4s ease, transform 0.4s ease 0.4s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-100vh)'; // 移出屏幕外
+        el.style.pointerEvents = 'none';
+      } else {
+        // 退出禅模式：先移回原位(0.4s)，再显示(延迟0.4s执行)
+        el.style.transition = 'transform 0.03s ease, opacity 0.2s ease 0.05s';
+        el.style.transform = '';
+        el.style.opacity = '';
+        el.style.pointerEvents = '';
+      }
+      return; // 处理完直接返回，不走下面的通用逻辑
+    }
+
     if (el.id === 'mediaWidget') {
       el.style.transition = 'opacity 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), right 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)';
       el.style.willChange = 'opacity, transform, right';
@@ -385,7 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.isAutoZenActive = false;
   
-  // ⚡ 优化: 提高节流时间到3秒，大幅减少CPU消耗
   let lastResetTime = 0;
   const RESET_THROTTLE = 3000;
   
@@ -402,6 +400,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     Object.entries(zenElements).forEach(([sel, el]) => {
       if (sel === '#mediaWidget' || !el) return;
+      
+      // 🎯 新增：.content 专属逻辑 (进入禅模式：隐藏)
+      if (sel === '.content') {
+        // 【隐藏】总用时 0.45s：先变透明(0.2s)，再移出屏幕(耗时0.25s，延迟0.2s后执行)
+        el.style.transition = 'opacity 0.2s ease, transform 0.25s ease 0.2s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(-100vh)'; 
+        el.style.pointerEvents = 'none';
+        return; 
+      }
       
       el.style.transition = 'opacity 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1)';
       el.style.willChange = 'opacity, transform';
@@ -431,6 +439,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!window.isZenMode && window.setZenModeForPlayer) {
         window.setZenModeForPlayer(false);
       }
+
+      // 🎯 新增：.content 专属逻辑 (退出禅模式：显示并恢复)
+      if (sel === '.content') {
+        // 【显示】接力总用时 0.45s：先隐身移回原位(0.25s)，再渐显(耗时0.2s，延迟0.25s后执行)
+        el.style.transition = 'transform 0.25s cubic-bezier(0.1, 0.7, 0.1, 1), opacity 0.2s ease 0.25s';
+        el.style.transform = '';
+        el.style.opacity = '';
+        el.style.pointerEvents = '';
+        return;
+      }
+
       el.style.opacity = '';
       el.style.transform = '';
       el.style.pointerEvents = '';
@@ -471,7 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ⚡ 优化: 使用passive事件监听器减少CPU占用
+  let idleTimer; // 确保这里有声明
   const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'wheel'];
   events.forEach(evt => {
     document.addEventListener(evt, resetIdleTimer, { 
@@ -482,8 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   cacheZenElements();
   resetIdleTimer();
-});
-// =============================================
+});// =============================================
 // 🔋 强制省电策略：失去焦点立即暂停
 // =============================================
 window.addEventListener('blur', () => {
@@ -553,3 +571,120 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// =============================================
+// ⌨️ 禅模式快捷键提示按钮管理
+// =============================================
+(function() {
+  'use strict';
+
+  const POPUP_ID = 'zenHintPopup';
+  const BTN_ID   = 'zenHintBtn';
+
+  // 将按钮定位到 mediaWidget 正左侧（仅在 rect 有效时才写入坐标）
+  function positionBtn() {
+    const btn    = document.getElementById(BTN_ID);
+    const widget = document.getElementById('mediaWidget');
+    if (!btn || !widget) return;
+
+    const rect  = widget.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return; // widget 尚未渲染完毕，跳过
+
+    const GAP   = 10;
+    const BTN_W = 28;
+    btn.style.top    = (rect.top + rect.height / 2 - BTN_W / 2) + 'px';
+    btn.style.left   = (rect.left - BTN_W - GAP) + 'px';
+    btn.style.bottom = '';
+    btn.style.right  = '';
+  }
+
+  // 更新按钮的可见性（隐藏时只改透明度，坐标保持不变）
+  function updateZenHintBtn() {
+    const btn    = document.getElementById(BTN_ID);
+    const popup  = document.getElementById(POPUP_ID);
+    const widget = document.getElementById('mediaWidget');
+    if (!btn || !popup || !widget) return;
+
+    const zenActive    = !!(window.isZenMode || window.isAutoZenActive);
+    const musicVisible = widget.classList.contains('visible');
+
+    if (!zenActive) {
+      // 退出禅模式：隐藏并关闭弹窗
+      btn.style.opacity       = '0';
+      btn.style.pointerEvents = 'none';
+      popup.classList.remove('open');
+      return;
+    }
+
+    if (musicVisible) {
+      // 音乐播放中：先定位（等过渡完成后），再显示
+      positionBtn();
+      btn.style.opacity       = '1';
+      btn.style.pointerEvents = 'auto';
+    } else {
+      // 音乐暂停：只淡出，坐标不动，弹窗关闭
+      btn.style.opacity       = '0';
+      btn.style.pointerEvents = 'none';
+      popup.classList.remove('open');
+    }
+  }
+
+  // 点击按钮切换弹窗
+  function initZenHintToggle() {
+    const btn   = document.getElementById(BTN_ID);
+    const popup = document.getElementById(POPUP_ID);
+    if (!btn || !popup) return;
+
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      popup.classList.toggle('open');
+    });
+
+    // 点击其他区域关闭弹窗
+    document.addEventListener('click', function(e) {
+      if (!popup.classList.contains('open')) return;
+      if (popup.contains(e.target) || e.target === btn) return;
+      popup.classList.remove('open');
+    });
+  }
+
+  // 拦截 toggleZenMode 和 enterAutoZen/exitAutoZen，在其执行后刷新按钮状态
+  function patchZenHooks() {
+    const orig = window.toggleZenMode;
+    if (orig) {
+      window.toggleZenMode = function() {
+        orig.apply(this, arguments);
+        setTimeout(updateZenHintBtn, 50);
+      };
+    }
+  }
+
+  // 监听 mediaWidget 的 class 变化（visible 被加减时）
+  function observeMediaWidget() {
+    const widget = document.getElementById('mediaWidget');
+    if (!widget) return;
+    const mo = new MutationObserver(function() {
+      // 延迟等待 CSS 过渡完成后再计算坐标，避免拿到动画中途的错误位置
+      setTimeout(updateZenHintBtn, 220);
+    });
+    mo.observe(widget, { attributes: true, attributeFilter: ['class', 'style'] });
+  }
+
+  // 禅状态改变时 manageZenTimeWidget 会被调用，给它挂钩
+  const origManageZen = window.manageZenTimeWidget;
+  if (typeof origManageZen === 'function') {
+    window.manageZenTimeWidget = function() {
+      origManageZen.apply(this, arguments);
+      setTimeout(updateZenHintBtn, 50);
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initZenHintToggle();
+    patchZenHooks();
+    observeMediaWidget();
+    // 每 2 秒轮询一次，兜底同步
+    setInterval(updateZenHintBtn, 2000);
+    updateZenHintBtn();
+  });
+})();

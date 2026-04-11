@@ -19,8 +19,26 @@ function clearCurrentWallpaperUrl() {
 async function setBackgroundFromBlob(file) {
   const bgImage = document.getElementById("bgImage");
   let bgVideo = document.getElementById("bgVideo");
+  if (bgVideo) {
+    bgVideo.pause();                // 暂停播放（停止声音）
+    bgVideo.removeAttribute('src'); // 移除数据源
+    bgVideo.load();                 // 刷新状态
+    bgVideo.remove();               // 从DOM中移除
+    bgVideo = null;
+}
+if (bgImage) bgImage.style.display = 'none';  
+const bgWebFrame = document.getElementById("bgWebFrame");
+  if (bgWebFrame) {
+      bgWebFrame.style.display = 'none';
+      bgWebFrame.src = ''; // 清空src彻底停止网页运行
+  }
+  // --- 第一步：释放旧资源，同时用 poster 垫底避免白屏 ---
+  // 先把 bgImage 切到 poster，保证销毁旧视频期间有画面兜底
+  if (bgImage && file && file.type && file.type.startsWith("video/")) {
+    bgImage.src = "wallpapers/poster.jpg";
+    bgImage.style.display = 'block';
+  }
 
-  // --- 第一步：强制释放所有旧资源 ---
   if (bgVideo) {
     bgVideo.pause();
     bgVideo.removeAttribute('src');
@@ -31,12 +49,10 @@ async function setBackgroundFromBlob(file) {
   
   clearCurrentWallpaperUrl();
 
-  if (bgImage) {
-    bgImage.src = "";
-    bgImage.style.display = 'none';
+  if (!file) {
+    if (bgImage) bgImage.style.display = 'none';
+    return null;
   }
-
-  if (!file) return null;
 
   // --- 第二步：重新创建干净的 Video 元素 ---
   const container = document.body;
@@ -44,30 +60,27 @@ async function setBackgroundFromBlob(file) {
   newVideo.id = "bgVideo";
   newVideo.autoplay = true;
   newVideo.loop = true;
-  newVideo.muted = true; // ✅ 默认静音以保证自动播放
-  newVideo.style.position = "fixed"; // ✅ 使用 fixed 定位
+  newVideo.muted = true;
+  newVideo.style.position = "fixed";
   newVideo.style.top = "0";
   newVideo.style.left = "0";
-  newVideo.style.width = "100vw"; // ✅ 使用 vw/vh
+  newVideo.style.width = "100vw";
   newVideo.style.height = "100vh";
   newVideo.style.objectFit = "cover";
   newVideo.style.zIndex = "-1";
-  newVideo.style.display = "none";
+  newVideo.style.display = "none"; // 先隐藏，等播放后再显示
   
   if (bgImage && bgImage.parentNode) {
-    bgImage.parentNode.insertBefore(newVideo, bgImage.nextSibling); // 保证在 image 之后
+    bgImage.parentNode.insertBefore(newVideo, bgImage.nextSibling);
   } else {
     container.appendChild(newVideo);
   }
   bgVideo = newVideo;
 
-  // 🔥 =======================================================
-  // 🔥 核心修复：通知视差脚本，背景元素已经更新！
-  // 🔥 =======================================================
+  // 🔥 通知视差脚本，背景元素已更新
   if (typeof window.reinitParallaxEffect === 'function') {
       window.reinitParallaxEffect();
   }
-  // 🔥 =======================================================
 
   // --- 第三步：加载资源 ---
   const objectUrl = URL.createObjectURL(file);
@@ -77,51 +90,68 @@ async function setBackgroundFromBlob(file) {
     bgVideo.src = objectUrl;
     
     bgVideo.onloadedmetadata = () => {
-        bgVideo.style.display = 'block';
-        
         try {
             const savedMute = localStorage.getItem('backgroundVideoMuted') === 'true';
             const savedVolStr = localStorage.getItem('backgroundVideoVolume');
             const savedVol = savedVolStr ? parseInt(savedVolStr, 10) : 50;
             
             bgVideo.volume = savedVol / 100;
-            bgVideo.muted = savedMute; 
+            bgVideo.muted = savedMute;
             if (window.isMusicPlayerPlaying) {
-            // 备份当前“本应”的状态，以便音乐停止时恢复
-            savedBgVideoMutedState = bgVideo.muted;
-            savedBgVideoVolume = bgVideo.volume;
-            bgVideo.muted = true;
-            console.log('[G-web] 切换壁纸：检测到音乐播放，已自动静音视频声音');
-        }
+                savedBgVideoMutedState = bgVideo.muted;
+                savedBgVideoVolume = bgVideo.volume;
+                bgVideo.muted = true;
+            }
 
             const playPromise = bgVideo.play();
-            
             if (playPromise !== undefined) {
-                playPromise.catch(error => {
+                playPromise.then(() => {
+                    // ✅ 视频真正开始播放后，显示视频、隐藏 poster
+                    bgVideo.style.display = 'block';
+                    if (bgImage) bgImage.style.display = 'none';
+                }).catch(error => {
                     console.warn("自动播放被拦截，强制静音播放:", error);
                     bgVideo.muted = true;
-                    bgVideo.play();
-                    if(typeof showBubble === 'function') {
+                    bgVideo.play().then(() => {
+                        bgVideo.style.display = 'block';
+                        if (bgImage) bgImage.style.display = 'none';
+                    }).catch(() => {});
+                    if (typeof showBubble === 'function') {
                         showBubble("浏览器限制了自动播放，已静音喵～");
                     }
                 });
+            } else {
+                // 旧版浏览器 play() 不返回 Promise
+                bgVideo.style.display = 'block';
+                if (bgImage) bgImage.style.display = 'none';
             }
         } catch (e) {
             console.error("视频设置出错:", e);
+            bgVideo.style.display = 'block';
+            if (bgImage) bgImage.style.display = 'none';
+        }
+    };
+
+    // 视频加载出错时保持 poster 显示，不闪白
+    bgVideo.onerror = () => {
+        console.error('[G-web] 视频加载失败，保持 poster 显示');
+        if (bgImage) {
+            bgImage.src = "wallpapers/poster.jpg";
+            bgImage.style.display = 'block';
         }
     };
 
   } else if (file.type && file.type.startsWith("image/")) {
+    // 图片直接切换
     if (bgImage) {
-      bgImage.style.display = 'block';
       bgImage.src = objectUrl;
-      bgVideo.style.display = 'none';
+      bgImage.style.display = 'block';
     }
+    bgVideo.style.display = 'none';
   }
 
   return objectUrl;
 }
-
 
 document.getElementById("beijingTime").addEventListener("mouseenter", () => {
     const now = new Date();
@@ -1002,7 +1032,7 @@ document.getElementById('weekDay').textContent = weekDays[beijingTime.getDay()];
 // ☁️ 心知天气 (Seniverse) - 统一私钥版
 // =======================================================
 
-const WEATHER_KEY = "SR_Mc21H1zOS8CaF0"; // 您的心知天气私钥
+const WEATHER_KEY = (window.APP_CONFIG && window.APP_CONFIG.WEATHER_KEY) || ""; // 从 config.js 读取
 const DEFAULT_CITY = "Beijing"; // 默认城市
 
 // 1. 渲染天气 UI
@@ -1128,10 +1158,14 @@ window.applyDailyExternalWallpaper = async function() {
     const bgVideo = document.getElementById("bgVideo");
     const DAILY_WALLPAPER_KEY = 'daily_external_wallpaper';
 
-    // 统一的UI准备
-    bgVideo.style.display = "none";
-    bgImage.style.display = "block";
-    
+    // 统一的UI准备（bgVideo 可能因网页壁纸模式被隐藏或移除，加 null 保护）
+    if (bgVideo) bgVideo.style.display = "none";
+    if (bgImage) bgImage.style.display = "block";
+    const bgWebFrame = document.getElementById("bgWebFrame");
+    if (bgWebFrame) {
+        bgWebFrame.style.display = "none";
+        bgWebFrame.src = ""; 
+    }
     const displayImageFromBlob = (blob) => {
       // 使用统一 helper 处理 blob（会自动释放旧的临时 URL）
       if (!(blob instanceof Blob)) {
@@ -1198,6 +1232,7 @@ window.applyDailyExternalWallpaper = async function() {
   
   // 如果已从 IndexedDB 加载成功，说明是用户选择，直接返回
   if (loadedFromDB) return;
+  if (wallpaperType === 'web') return;  // 网页壁纸由 1.js 自行恢复，此处跳过，避免 initializeDefaultWallpaperByTime 破坏恢复逻辑
   if (wallpaperType === "daily_external") {
       window.applyDailyExternalWallpaper();
       return; // 结束，不执行后续逻辑
@@ -1205,41 +1240,51 @@ window.applyDailyExternalWallpaper = async function() {
   // 加载预设壁纸（用户从壁纸库选择的）
   if (wallpaperType === "preset" && wallpaperPath) {
     if (wallpaperPath.includes(".mp4")) {
-      // 清理之前通过 createObjectURL 创建的临时 URL（如果有）
       clearCurrentWallpaperUrl();
-      bgImage.style.display = "none";
-      bgVideo.style.display = "block";
-      bgVideo.poster = "";
+      // poster 垫底：bgImage 保持显示，视频就绪后再切换
+      if (bgImage) {
+        bgImage.src = "wallpapers/poster.jpg";
+        bgImage.style.display = "block";
+      }
+      bgVideo.style.display = "none";
       try { bgVideo.pause(); } catch (e) {}
       bgVideo.removeAttribute('src');
       bgVideo.src = wallpaperPath;
       bgVideo.load();
-      // 恢复保存的音量/静音设置
       try {
         const savedMute = localStorage.getItem('backgroundVideoMuted') === 'true';
         const savedVol = parseInt(localStorage.getItem('backgroundVideoVolume') || '', 10);
         if (!isNaN(savedVol)) bgVideo.volume = Math.max(0, Math.min(1, savedVol / 100));
         else if (typeof bgVideo.volume === 'number' && bgVideo.volume === 0) bgVideo.volume = 0.5;
         if (window.isMusicPlayerPlaying) {
-    savedBgVideoMutedState = savedMute;
-    savedBgVideoVolume = bgVideo.volume;
-    bgVideo.muted = true;
-} else {
-    bgVideo.muted = savedMute;
-}
+          savedBgVideoMutedState = savedMute;
+          savedBgVideoVolume = bgVideo.volume;
+          bgVideo.muted = true;
+        } else {
+          bgVideo.muted = savedMute;
+        }
       } catch (e) {}
       bgVideo.addEventListener("canplay", () => {
-        bgVideo.play().catch(() => {
+        bgVideo.play().then(() => {
+          bgVideo.style.display = "block";
+          if (bgImage) bgImage.style.display = "none";
+        }).catch(() => {
           try {
-            if (!bgVideo.muted) { bgVideo.muted = true; bgVideo.play().catch(()=>{}); }
+            if (!bgVideo.muted) { bgVideo.muted = true; }
+            bgVideo.play().then(() => {
+              bgVideo.style.display = "block";
+              if (bgImage) bgImage.style.display = "none";
+            }).catch(()=>{});
           } catch (e) {}
         });
       }, { once: true });
       bgVideo.addEventListener("error", () => {
         console.error("视频加载失败:", wallpaperPath);
+        if (bgImage) {
+          bgImage.src = "wallpapers/1.jpg";
+          bgImage.style.display = "block";
+        }
         bgVideo.style.display = "none";
-        bgImage.style.display = "block";
-        bgImage.src = "wallpapers/1.jpg";
       }, { once: true });
       return;
     } else {
@@ -1979,7 +2024,9 @@ const DEFAULT_ICONS = [
   { id: 'def-29', name: 'X', url: 'https://www.x.com', img: 'images/32.jpg' },
   { id: 'def-30', name: 'Discord', url: 'https://www.discord.com/', img: 'images/26.jpg' },
   { id: 'def-31', name: 'Wikipedia', url: 'https://www.wikipedia.org/', img: 'images/27.jpg' },
-  { id: 'def-32', name: 'Pinterest', url: 'https://www.pinterest.com/', img: 'images/31.jpg' }
+  { id: 'def-32', name: 'Pinterest', url: 'https://www.pinterest.com/', img: 'images/31.jpg' },
+  { id: 'def-34', name: 'steam', url: 'https://store.steampowered.com/', img: 'images/34.jpg' },
+  { id: 'def-35', name: '腾讯视频', url: 'https://v.qq.com/', img: 'images/35.jpg' }
 ];
 
 // Helper: Generate placeholder icon
@@ -2124,6 +2171,12 @@ function createCustomIconElement(item) {
   
   a.appendChild(img);
   wrapper.appendChild(a);
+
+  // 图标名称标签
+  const label = document.createElement('span');
+  label.className = 'iconLabel';
+  label.textContent = item.name || '';
+  wrapper.appendChild(label);
 
   // Gear button
   const gearBtn = document.createElement('button');
@@ -2300,11 +2353,41 @@ function setWallpaperForWeather(weatherData) {
  * @description Sets the default initial wallpaper based on the current time.
  */
 function initializeDefaultWallpaperByTime() {
-    const bgVideo = document.getElementById("bgVideo");
+    let bgVideo = document.getElementById("bgVideo");
     const bgImage = document.getElementById("bgImage");
-    bgImage.style.display = "none";
-    bgVideo.style.display = "block";
-    bgVideo.poster = "wallpapers/poster.jpg";
+
+    // bgImage 保持显示 poster.jpg 作为垫底，等视频播放后再隐藏
+    if (bgImage) {
+        bgImage.src = "wallpapers/poster.jpg";
+        bgImage.style.display = "block";
+    }
+
+    // ── bgVideo 重建逻辑 ──────────────────────────────────────────────────────
+    // 网页壁纸模式下，1.js 的 DOMContentLoaded 恢复逻辑可能已调用 bgVideo.remove()
+    // 导致 getElementById 返回 null。此处检测到缺失时，按 index.html 原始属性重新创建
+    // 并插回 bgImage 之后，保持 DOM 层叠顺序（bgImage z-index:-2 / bgVideo z-index:-1）
+    if (!bgVideo) {
+        console.log('[G-web] initializeDefaultWallpaperByTime: bgVideo 缺失，正在重建...');
+        bgVideo = document.createElement('video');
+        bgVideo.id = 'bgVideo';
+        bgVideo.muted = true;
+        bgVideo.loop = true;
+        bgVideo.setAttribute('poster', 'wallpapers/poster.jpg');
+        bgVideo.setAttribute('disablePictureInPicture', '');
+        bgVideo.setAttribute('controlsList', 'nodownload');
+        bgVideo.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;' +
+                                 'object-fit:cover;z-index:-1;display:none;' +
+                                 'user-select:none;-webkit-user-select:none;';
+        const bgImageEl = document.getElementById('bgImage');
+        if (bgImageEl && bgImageEl.parentNode) {
+            bgImageEl.parentNode.insertBefore(bgVideo, bgImageEl.nextSibling);
+        } else {
+            document.body.insertBefore(bgVideo, document.body.firstChild);
+        }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    bgVideo.style.display = "none"; // 先隐藏，canplay 后再显示
 
     const now = new Date();
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
@@ -2313,28 +2396,42 @@ function initializeDefaultWallpaperByTime() {
     
     let videoFile = '';
 
-    if (hours >= 5 && hours < 8) {       // Dawn: 5-7 o'clock
+    if (hours >= 5 && hours < 8) {
         videoFile = 'video1.mp4';
-    } else if (hours >= 8 && hours < 12) { // Morning: 8-11 o'clock
+    } else if (hours >= 8 && hours < 12) {
         videoFile = 'video2.mp4';
-    } else if (hours >= 12 && hours < 16) { // Afternoon: 12-16 o'clock
+    } else if (hours >= 12 && hours < 16) {
         videoFile = 'video3.mp4';
-    } else if (hours >= 16 && hours < 18) { // Dusk: 17-19 o'clock
+    } else if (hours >= 16 && hours < 18) {
         videoFile = 'video4.mp4';
-    } else {                               // Night: 20-4 o'clock
+    } else {
         videoFile = 'video5.mp4';
     }
+
+    const savedMuteState = localStorage.getItem('backgroundVideoMuted') === 'true';
+    if (window.isMusicPlayerPlaying) {
+        savedBgVideoMutedState = savedMuteState;
+        bgVideo.muted = true;
+    } else {
+        bgVideo.muted = savedMuteState;
+    }
+
     bgVideo.src = `wallpapers/${videoFile}`;
     bgVideo.load();
-    bgVideo.play().catch(()=>{});
-const savedMuteState = localStorage.getItem('backgroundVideoMuted') === 'true';
-if (window.isMusicPlayerPlaying) {
-    // 即使配置是开启声音，只要在放歌就必须静音
-    savedBgVideoMutedState = savedMuteState;
-    bgVideo.muted = true;
-} else {
-    bgVideo.muted = savedMuteState;
-}
+
+    bgVideo.addEventListener('canplay', function onCanPlay() {
+        bgVideo.removeEventListener('canplay', onCanPlay);
+        bgVideo.play().then(() => {
+            bgVideo.style.display = "block";
+            if (bgImage) bgImage.style.display = "none";
+        }).catch(() => {
+            bgVideo.muted = true;
+            bgVideo.play().then(() => {
+                bgVideo.style.display = "block";
+                if (bgImage) bgImage.style.display = "none";
+            }).catch(() => {});
+        });
+    }, { once: true });
 }
 // =======================================================
 // 🧹 localStorage cache auto-cleanup program
@@ -2631,25 +2728,3 @@ See console (F12) for detailed information`
   menuContainer.appendChild(memoryBtn);
 }
 
-// Call on DOMContentLoaded (if needed)
-// document.addEventListener('DOMContentLoaded', () => {
-//   addDeleteWallpaperMenuItem();
-// });
-
-// =============================================
-// 🔄 Auto cleanup: Clean up unused wallpapers on page load
-// =============================================
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Delay 3 seconds before auto cleanup (to avoid affecting page load speed)
-  setTimeout(async () => {
-    const count = await window.cleanupUnusedWallpapers();
-    if (count > 0) {
-    }
-  }, 3000);
-  chrome.runtime.sendMessage({ action: 'getDailyWallpaper' }, (response) => {
-    if (response && response.success) {
-      console.log('[Frontend] 后台已完成壁纸检查/更新');
-    }
-  });
-});
