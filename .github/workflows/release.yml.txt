@@ -1,0 +1,40 @@
+name: 打包并发布 Release
+
+on:
+  push:
+    tags:
+      - 'v*'          # 推送 v4.1、v4.2 这样的 tag 时自动触发
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 检出源代码
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # 2. 安装 Node.js（用于运行 build.js）
+      - name: 安装 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. 运行构建脚本（密钥从 Secrets 注入，不会出现在日志中）
+      - name: 构建扩展包
+        env:
+          WEATHER_KEY: ${{ secrets.WEATHER_KEY }}
+          AI_KEY: ${{ secrets.AI_KEY }}
+        run: node build.js
+
+      # 4. 发布到 GitHub Releases，附上 zip 文件
+      - name: 发布 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: g-web-extension.zip
+          body: |
+            ## G-web 新标签页 ${{ github.ref_name }}
+            
+            下载 `g-web-extension.zip`，解压后在浏览器扩展页面选择「加载已解压的扩展程序」即可。
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
