@@ -1,0 +1,74 @@
+{
+  "type": "Live2D Model Setting",
+  "name": "ネプテューヌ - ジャージワンピ",
+  "model": "normal.moc",
+  "preview": "preview.jpg",
+  "textures": [
+    "tx1024/0.png",
+    "tx1024/1.png",
+    "tx1024/normal_2.png"
+  ],
+  "physics": "physics.json",
+  "subtitle": "subtitles.json",
+  "layout": {
+    "center_x": 0,
+    "center_y": 0,
+    "width": 2,
+    "height": 2
+  },
+  "hit_areas": [
+    {"name": "head", "id": "D_REF.PT_HEAD"},
+    {"name": "body", "id": "D_REF.PT_BUST"},
+    {"name": "belly", "id": "D_REF.PT_BELL"}
+  ],
+  "expressions": [
+    {"name": "normal", "file": "exp/normal.json"},
+    {"name": "happy", "file": "exp/happy.json"},
+    {"name": "unhappy", "file": "exp/unhappy.json"},
+    {"name": "kira", "file": "exp/kira.json"},
+    {"name": "deformed", "file": "exp/deformed.json"},
+    {"name": "fear", "file": "exp/fear.json"},
+    {"name": "enjoy", "file": "exp/enjoy.json"}
+  ],
+  "motions": {
+    "idle": [
+      {"file": "mtn/idle_00.mtn", "fade_in": 2000, "fade_out": 2000},
+      {"file": "mtn/idle_01.mtn", "fade_in": 2000, "fade_out": 2000},
+      {"file": "mtn/idle_02.mtn", "fade_in": 2000, "fade_out": 2000}
+    ],
+    "greet": [
+      {"time": 6, "subtitle": "16", "sound": "snd/021.ogg", "file": "mtn/nep_start_morning_1.mtn"},
+      {"time": 6, "subtitle": "17", "sound": "snd/022.ogg", "file": "mtn/nep_start_morning_2.mtn"},
+      {"time": 11, "subtitle": "18", "sound": "snd/023.ogg", "file": "mtn/nep_start_noon_1.mtn"},
+      {"time": 11, "subtitle": "19", "sound": "snd/024.ogg", "file": "mtn/nep_start_noon_2.mtn"},
+      {"time": 15, "subtitle": "20", "sound": "snd/025.ogg", "file": "mtn/nep_start_evening_1.mtn"},
+      {"time": 15, "subtitle": "21", "sound": "snd/026.ogg", "file": "mtn/nep_start_evening_2.mtn"},
+      {"time": 19, "subtitle": "22", "sound": "snd/027.ogg", "file": "mtn/nep_start_night_1.mtn"},
+      {"time": 19, "subtitle": "23", "sound": "snd/028.ogg", "file": "mtn/nep_start_night_2.mtn"},
+      {"time": 0, "subtitle": "24", "sound": "snd/029.ogg", "file": "mtn/neptune_fullpack_029.mtn"},
+      {"time": 0, "subtitle": "25", "sound": "snd/030.ogg", "file": "mtn/nep_start_midnight_2.mtn"},
+      {"season": "Halloween", "subtitle": "48", "sound": "snd/055.ogg", "file": "mtn/neptune_fullpack_055.mtn"},
+      {"season": "Christmas", "subtitle": "43", "sound": "snd/050.ogg", "file": "mtn/nep_start_christmas.mtn"},
+      {"season": "NewYear", "subtitle": "42", "sound": "snd/049.ogg", "file": "mtn/neptune_fullpack_049.mtn"}
+    ],
+    "tap_body": [
+      {"subtitle": "1", "sound": "snd/001.ogg", "file": "mtn/nep_touch_head_1.mtn"},
+      {"subtitle": "6", "sound": "snd/007.ogg", "file": "mtn/nep_touch_boobs_1.mtn"},
+      {"subtitle": "8", "sound": "snd/013.ogg", "file": "mtn/nep_touch_belly_1.mtn"},
+      {"subtitle": "9", "sound": "snd/014.ogg", "file": "mtn/nep_touch_belly_2.mtn"},
+      {"subtitle": "32", "sound": "snd/037.ogg", "file": "mtn/nep_left_2.mtn"},
+      {"subtitle": "33", "sound": "snd/038.ogg", "file": "mtn/nep_costume_classic.mtn"},
+      {"subtitle": "55", "sound": "snd/062.ogg", "file": "mtn/nep_touch_spring_1.mtn"},
+      {"subtitle": "65", "sound": "snd/101.ogg", "file": "mtn/nep_slide_head_2.mtn"},
+      {"subtitle": "78", "sound": "snd/119.ogg", "file": "mtn/neptune_fullpack_099.mtn"}
+    ],
+    "pinch_out": [
+    ],
+    "pinch_in": [
+    ],
+    "shake": [
+    ],
+    "flick_head": [
+    ]
+  }
+}

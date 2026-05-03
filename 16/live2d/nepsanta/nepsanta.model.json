@@ -1,0 +1,108 @@
+{
+  "type": "Live2D Model Setting",
+  "name": "ネプテューヌ - ネプサンタ",
+  "model": "santa.moc",
+  "preview": "preview.jpg",
+  "textures": [
+    "tx1024/0.png",
+    "tx1024/santa_1.png",
+    "tx1024/santa_2.png"
+  ],
+  "pose": "../general/pose.json",
+  "physics": "physics.json",
+  "subtitle": "../neptune/subtitles.json",
+  "layout": {
+  },
+  "hit_areas": [
+    {"name": "head", "id": "D_REF.PT_HEAD"},
+    {"name": "body", "id": "D_REF.PT_BUST"},
+    {"name": "belly", "id": "D_REF.PT_BELL"}
+  ],
+  "expressions": [
+    {"name": "normal", "file": "../neptune/exp/normal.json"},
+    {"name": "happy", "file": "../neptune/exp/happy.json"},
+    {"name": "unhappy", "file": "../neptune/exp/unhappy.json"},
+    {"name": "kira", "file": "../neptune/exp/kira.json"},
+    {"name": "deformed", "file": "../neptune/exp/deformed.json"},
+    {"name": "fear", "file": "../neptune/exp/fear.json"},
+    {"name": "enjoy", "file": "../neptune/exp/enjoy.json"}
+  ],
+  "motions": {
+    "idle": [
+      {"file": "../neptune/mtn/idle_00.mtn", "fade_in": 2000, "fade_out": 2000},
+      {"file": "../neptune/mtn/idle_01.mtn", "fade_in": 2000, "fade_out": 2000},
+      {"file": "../neptune/mtn/idle_02.mtn", "fade_in": 2000, "fade_out": 2000}
+    ],
+    "greet": [
+      {
+        "time": 6,
+        "subtitle": "16",
+        "sound": "../neptune/snd/021.ogg",
+        "file": "../neptune/mtn/nep_start_morning_1.mtn"
+      },
+      {
+        "time": 6,
+        "subtitle": "17",
+        "sound": "../neptune/snd/022.ogg",
+        "file": "../neptune/mtn/nep_start_morning_2.mtn"
+      },
+      {"time": 11, "subtitle": "18", "sound": "../neptune/snd/023.ogg", "file": "../neptune/mtn/nep_start_noon_1.mtn"},
+      {"time": 11, "subtitle": "19", "sound": "../neptune/snd/024.ogg", "file": "../neptune/mtn/nep_start_noon_2.mtn"},
+      {
+        "time": 15,
+        "subtitle": "20",
+        "sound": "../neptune/snd/025.ogg",
+        "file": "../neptune/mtn/nep_start_evening_1.mtn"
+      },
+      {
+        "time": 15,
+        "subtitle": "21",
+        "sound": "../neptune/snd/026.ogg",
+        "file": "../neptune/mtn/nep_start_evening_2.mtn"
+      },
+      {"time": 19, "subtitle": "22", "sound": "../neptune/snd/027.ogg", "file": "../neptune/mtn/nep_start_night_1.mtn"},
+      {"time": 19, "subtitle": "23", "sound": "../neptune/snd/028.ogg", "file": "../neptune/mtn/nep_start_night_2.mtn"},
+      {
+        "time": 0,
+        "subtitle": "24",
+        "sound": "../neptune/snd/029.ogg",
+        "file": "../neptune/mtn/neptune_fullpack_029.mtn"
+      },
+      {
+        "time": 0,
+        "subtitle": "25",
+        "sound": "../neptune/snd/030.ogg",
+        "file": "../neptune/mtn/nep_start_midnight_2.mtn"
+      },
+      {
+        "season": "Halloween",
+        "subtitle": "48",
+        "sound": "../neptune/snd/055.ogg",
+        "file": "../neptune/mtn/neptune_fullpack_055.mtn"
+      },
+      {
+        "season": "Christmas",
+        "subtitle": "43",
+        "sound": "../neptune/snd/050.ogg",
+        "file": "../neptune/mtn/nep_start_christmas.mtn"
+      },
+      {
+        "season": "NewYear",
+        "subtitle": "42",
+        "sound": "../neptune/snd/049.ogg",
+        "file": "../neptune/mtn/neptune_fullpack_049.mtn"
+      }
+    ],
+    "tap_body": [
+      {"subtitle": "1", "sound": "../neptune/snd/001.ogg", "file": "../neptune/mtn/nep_touch_head_1.mtn"},
+      {"subtitle": "6", "sound": "../neptune/snd/007.ogg", "file": "../neptune/mtn/nep_touch_boobs_1.mtn"},
+      {"subtitle": "8", "sound": "../neptune/snd/013.ogg", "file": "../neptune/mtn/nep_touch_belly_1.mtn"},
+      {"subtitle": "9", "sound": "../neptune/snd/014.ogg", "file": "../neptune/mtn/nep_touch_belly_2.mtn"},
+      {"subtitle": "32", "sound": "../neptune/snd/037.ogg", "file": "../neptune/mtn/nep_left_2.mtn"},
+      {"subtitle": "33", "sound": "../neptune/snd/038.ogg", "file": "../neptune/mtn/nep_costume_classic.mtn"},
+      {"subtitle": "55", "sound": "../neptune/snd/062.ogg", "file": "../neptune/mtn/nep_touch_spring_1.mtn"},
+      {"subtitle": "65", "sound": "../neptune/snd/101.ogg", "file": "../neptune/mtn/nep_slide_head_2.mtn"},
+      {"subtitle": "78", "sound": "../neptune/snd/119.ogg", "file": "../neptune/mtn/neptune_fullpack_099.mtn"}
+    ]
+  }
+}
