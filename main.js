@@ -504,16 +504,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });// =============================================
 // 🔋 强制省电策略：失去焦点立即暂停
 // =============================================
+
+// 仅在有其他窗口最大化时才暂停壁纸
 window.addEventListener('blur', () => {
-    const bgVideo = document.getElementById('bgVideo');
-    // 只要失去焦点，无条件尝试暂停
-    if (bgVideo && !bgVideo.paused) {
+  // 检查是否有其他窗口最大化（仅限 Windows 环境，需配合 Electron/Node 或特殊 API，浏览器原生无法直接判断）
+  // 这里采用近似判断：如果 document.visibilityState === 'hidden' 并且 window.outerWidth/outerHeight 明显变小，推测被最大化遮挡
+  // 但大多数浏览器仅能检测到失焦，不能直接判断最大化。此处提供兼容性较好的近似方案：
+  setTimeout(() => {
+    // 失焦后短暂延迟，判断窗口是否被遮挡
+    if (document.visibilityState === 'hidden') {
+      // 进一步判断窗口尺寸是否变化（可选，部分场景下有用）
+      // 这里只要失焦且页面不可见，才暂停
+      const bgVideo = document.getElementById('bgVideo');
+      if (bgVideo && !bgVideo.paused) {
         bgVideo.pause();
+      }
+      // 停止其他耗能动画
+      if (window.pauseMouseTrail) window.pauseMouseTrail();
+      if (window.pauseParallax) window.pauseParallax();
     }
-    
-    // 停止其他耗能动画
-    if (window.pauseMouseTrail) window.pauseMouseTrail();
-    if (window.pauseParallax) window.pauseParallax();
+    // 否则不暂停
+  }, 100);
 }, { passive: true });
 
 
@@ -580,6 +591,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const POPUP_ID = 'zenHintPopup';
   const BTN_ID   = 'zenHintBtn';
+  const MEDIA_RIGHT = 20;
+  const MEDIA_SHIFTED_RIGHT = 540;
+  const HINT_GAP = 10;
 
   // 将按钮定位到 mediaWidget 正左侧（仅在 rect 有效时才写入坐标）
   function positionBtn() {
@@ -590,12 +604,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const rect  = widget.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return; // widget 尚未渲染完毕，跳过
 
-    const GAP   = 10;
-    const BTN_W = 28;
-    btn.style.top    = (rect.top + rect.height / 2 - BTN_W / 2) + 'px';
-    btn.style.left   = (rect.left - BTN_W - GAP) + 'px';
+    const widgetRight = widget.classList.contains('shifted-left') ? MEDIA_SHIFTED_RIGHT : MEDIA_RIGHT;
+    const btnH = btn.offsetHeight || 28;
+    btn.style.top    = (rect.top + rect.height / 2 - btnH / 2) + 'px';
+    btn.style.right  = (widgetRight + rect.width + HINT_GAP) + 'px';
     btn.style.bottom = '';
-    btn.style.right  = '';
+    btn.style.left   = '';
+  }
+
+  function positionPopup() {
+    const popup  = document.getElementById(POPUP_ID);
+    const widget = document.getElementById('mediaWidget');
+    if (!popup || !widget) return;
+
+    popup.style.right = (widget.classList.contains('shifted-left') ? MEDIA_SHIFTED_RIGHT : MEDIA_RIGHT) + 'px';
+  }
+
+  function positionHint() {
+    positionBtn();
+    positionPopup();
   }
 
   // 更新按钮的可见性（隐藏时只改透明度，坐标保持不变）
@@ -605,27 +632,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const widget = document.getElementById('mediaWidget');
     if (!btn || !popup || !widget) return;
 
-    const zenActive    = !!(window.isZenMode || window.isAutoZenActive);
-    const musicVisible = widget.classList.contains('visible');
-
-    if (!zenActive) {
-      // 退出禅模式：隐藏并关闭弹窗
-      btn.style.opacity       = '0';
-      btn.style.pointerEvents = 'none';
-      popup.classList.remove('open');
-      return;
-    }
+const musicVisible = widget.classList.contains('visible');
 
     if (musicVisible) {
-      // 音乐播放中：先定位（等过渡完成后），再显示
-      positionBtn();
-      btn.style.opacity       = '1';
-      btn.style.pointerEvents = 'auto';
+      // 1. 首先立即更新位置（让按钮跟随组件向上移动）
+      positionHint();
+      if (btn.style.opacity !== '1') {
+        setTimeout(() => {
+          if (widget.classList.contains('visible')) {
+            btn.style.opacity = '1';
+            btn.style.pointerEvents = 'auto';
+          }
+        }, 450); 
+      }
     } else {
-      // 音乐暂停：只淡出，坐标不动，弹窗关闭
-      btn.style.opacity       = '0';
+      // 音乐暂停或组件隐藏：立即消失，不设延迟
+      btn.style.transition = 'opacity 0.3s ease'; // 消失可以快一点
+      btn.style.opacity    = '0';
       btn.style.pointerEvents = 'none';
       popup.classList.remove('open');
+      
+      // 消失后恢复较慢的显现过渡，为下次出现做准备
+      setTimeout(() => {
+        btn.style.transition = 'top 0.01s cubic-bezier(0.25, 0.8, 0.25, 1), right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.2s ease-out';
+      }, 100);
     }
   }
 
@@ -664,8 +694,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const widget = document.getElementById('mediaWidget');
     if (!widget) return;
     const mo = new MutationObserver(function() {
-      // 延迟等待 CSS 过渡完成后再计算坐标，避免拿到动画中途的错误位置
-      setTimeout(updateZenHintBtn, 220);
+      // Keep the hint moving in the same frame as the media widget.
+      if (window.requestAnimationFrame) {
+        requestAnimationFrame(updateZenHintBtn);
+      } else {
+        setTimeout(updateZenHintBtn, 0);
+      }
     });
     mo.observe(widget, { attributes: true, attributeFilter: ['class', 'style'] });
   }
@@ -684,7 +718,44 @@ document.addEventListener('DOMContentLoaded', () => {
     patchZenHooks();
     observeMediaWidget();
     // 每 2 秒轮询一次，兜底同步
-    setInterval(updateZenHintBtn, 2000);
+    setInterval(updateZenHintBtn, 400);
     updateZenHintBtn();
   });
 })();
+// ====================== 网页壁纸点击焦点处理（优化版）======================
+window.addEventListener('message', function(event) {
+  if (!event.data || typeof event.data.type !== 'string') return;
+
+  if (
+    event.data.type === 'WEB_WP_CLICK' ||
+    (event.data.type === 'WEB_WP_POINTER_EVENT' && event.data.eventType === 'mousedown')
+  ) {
+    const currentKey = localStorage.getItem('currentWallpaperKey');
+    const frame = document.getElementById('bgWebFrame');
+
+    if (currentKey === 'webwp_5') {
+      // ==================== 第五个壁纸专用逻辑 ====================
+      // 1. 不主动抢焦点，让 iframe 自己管理（解决 select 等表单控件问题）
+      if (frame) {
+        frame.focus();                    // 确保 iframe 获得焦点
+      }
+
+      // 2. 仅在必要时才把点击同步到父窗口（避免干扰）
+      const targetElement = document.elementFromPoint(event.data.clientX, event.data.clientY);
+      if (targetElement && 
+          targetElement !== frame && 
+          !targetElement.closest('#bgWebFrame')) {
+        targetElement.click();
+      }
+
+    } else {
+      // ==================== 其他网页壁纸 ====================
+      window.focus();   // 正常夺回焦点
+
+      const targetElement = document.elementFromPoint(event.data.clientX, event.data.clientY);
+      if (targetElement && targetElement !== frame) {
+        targetElement.click();
+      }
+    }
+  }
+});

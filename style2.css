@@ -1484,6 +1484,27 @@ body::after {
   /* 右侧面板内容区宽度(500px) + 音乐组件原始右侧间距(20px) */
   right: 540px;
 }
+/* 提示按钮基础样式 */
+#zenHintBtn {
+  position: fixed; /* 确保是固定定位 */
+  z-index: 1000;
+  /* 初始过渡：必须包含 left/right 属性，且与主组件的时间函数一致 */
+  transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+              right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 提示弹窗基础样式 */
+#zenHintPopup {
+  position: fixed;
+  z-index: 1001;
+  transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+              transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+              left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 当右侧面板打开时，提示按钮同步向左偏移 */
+/* 偏移量计算：主组件移动了到 540px(right)，按钮需要保持在其左侧固定距离 */
 /* --- style.css 新增 --- */
 
 /* 动态壁纸“智能切换”标签样式 */
@@ -2244,7 +2265,7 @@ body::after {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.18);
   padding: 5px 10px 5px 8px;
   border-radius: 15px;
   backdrop-filter: blur(4px);
@@ -2253,7 +2274,7 @@ body::after {
 }
 
 .pin-panel-container:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 
@@ -2474,11 +2495,6 @@ body::after {
   pointer-events: none; /* 防止遮挡头像的右键或点击事件 */
 }
 
-/* =========================================
-   ⌨️ 禅模式 - 快捷键提示按钮 & 弹窗
-   ========================================= */
-
-/* 提示按钮 - 默认隐藏，禅模式激活后显示 */
 #zenHintBtn {
   position: fixed;
   bottom: 26px;
@@ -2502,12 +2518,6 @@ body::after {
   pointer-events: none;
   transition: opacity 0.4s ease, color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   user-select: none;
-}
-
-/* 禅模式激活时，通过 CSS 兄弟选择器显示按钮 */
-#zenTimeWidget.visible ~ #zenHintBtn {
-  opacity: 1;
-  pointer-events: auto;
 }
 
 #zenHintBtn:hover {
@@ -2537,7 +2547,9 @@ body::after {
   pointer-events: none;
   transform: translateY(8px) scale(0.97);
   transform-origin: bottom right;
-  transition: opacity 0.22s ease, transform 0.22s ease;
+  transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+              transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+              right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 #zenHintPopup.open {

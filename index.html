@@ -178,7 +178,7 @@
           <span>🎬 动态壁纸</span>
         </div>
                 <div class="wp-tab" data-type="web">
-          <span>🌐 网页壁纸<span style="font-size: 12px;">(测试)</span></span>
+          <span>🌐 网页壁纸</span>
         </div>
         <div class="wp-tab" data-type="custom">
           <span>📂 自定义壁纸</span>
@@ -283,7 +283,7 @@
   <button class="openBtn">▶</button>
   <div class="panel" style="position:relative;">
     <div class="icons">
-      <h3 style="color:white;">快捷应用</h3>
+      <h3 style="color:white;">快捷应用<abc style="font-size:12px; color: white;">（可以通过拖动改变位置）</abc></h3>
       <div class="iconWrapper addWrapper">
         <button type="button" class="addBtn" title="添加快捷方式">+</button>
       </div>
@@ -749,15 +749,14 @@
 </div>
 
 <!-- 禅模式快捷键提示按钮 & 弹窗 -->
-<button id="zenHintBtn" title="禅模式快捷键提示" aria-label="禅模式快捷键提示">?</button>
-<div id="zenHintPopup" role="tooltip" aria-hidden="true">
+<button id="zenHintBtn" title="音乐快捷键提示" aria-label="禅模式快捷键提示">?</button>
+<div id="zenHintPopup" role="tooltip" aria-hidden="true" style="transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);">
   <div class="zen-hint-row"><kbd>Space</kbd><span>播放 / 暂停</span></div>
   <div class="zen-hint-row"><kbd>←</kbd><span>上一首</span></div>
   <div class="zen-hint-row"><kbd>→</kbd><span>下一首</span></div>
   <div class="zen-hint-divider"></div>
   <div class="zen-hint-tip">只能够控制右侧面板的音乐播放器组件的音乐，无法控制外部网页的音乐</div>
 </div>
-<!-- ⚠️ 密钥配置文件，已加入 .gitignore，不提交到 Git -->
 <script src="config.js"></script>
 <script src="lunar.js"></script>
  <script src="main.js"></script>

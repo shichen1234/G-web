@@ -1,153 +1,189 @@
 // ===============================
-// 通用网页壁纸zip包加载与资源路径替换核心函数
+// 通用网页壁纸zip包加载与资源路径替换核心函数 (Base64 + 内联安全升级版)
+// 突破 Manifest V3 Sandbox 对 blob: 协议的限制
 // 支持html/css/js/图片/视频/子文件夹等多结构壁纸包
 // 依赖：JSZip (jszip.min.js)
 // ===============================
 /**
- * 加载并处理任意结构的网页壁纸zip包，返回可直接用于iframe.srcdoc或postMessage的html和Blob映射
+ * 加载并处理任意结构的网页壁纸zip包，返回可直接用于iframe.srcdoc或postMessage的html和资源映射
  * @param {File|Blob} zipFile - 用户上传的zip包
  * @returns {Promise<{html: string, urlMap: Map<string, string>, mainHtmlPath: string}>}
  */
 async function loadWallpaperZip(zipFile) {
   const zip = await JSZip.loadAsync(zipFile);
-  const fileMap = new Map();
-  // 1. 遍历所有文件，存到 fileMap
+  
+  const urlMap = new Map();  // 存放 Base64 媒体资源的映射 (提供给src和运行时fetch)
+  const textMap = new Map(); // 存放 js/css 的纯文本 (提供给内联注入)
+  const fileMap = new Map(); // 保留原始结构映射备用
+
+  // 1. 遍历所有文件，分类处理
   await Promise.all(Object.keys(zip.files).map(async (path) => {
     const file = zip.files[path];
-    if (!file.dir) {
-      const blob = await file.async('blob');
-      fileMap.set(path, blob);
+    if (file.dir) return;
+    
+    fileMap.set(path, file);
+
+    const ext = path.split('.').pop().toLowerCase();
+
+    // 媒体资源、字体 -> 转为 Base64 Data URI
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'mp4', 'webm', 'mp3', 'wav', 'ogg', 'ttf', 'woff', 'woff2'].includes(ext)) {
+        const base64 = await file.async('base64');
+        let mimeType = 'application/octet-stream';
+        if (ext === 'png') mimeType = 'image/png';
+        else if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg';
+        else if (ext === 'gif') mimeType = 'image/gif';
+        else if (ext === 'webp') mimeType = 'image/webp';
+        else if (ext === 'svg') mimeType = 'image/svg+xml';
+        else if (ext === 'mp4') mimeType = 'video/mp4';
+        else if (ext === 'webm') mimeType = 'video/webm';
+        else if (ext === 'mp3') mimeType = 'audio/mpeg';
+        else if (ext === 'wav') mimeType = 'audio/wav';
+        else if (ext === 'ogg') mimeType = 'audio/ogg';
+        else if (['ttf', 'woff', 'woff2'].includes(ext)) mimeType = 'font/' + ext;
+
+        urlMap.set(path, `data:${mimeType};base64,${base64}`);
+    }
+     else if (['js', 'css', 'json'].includes(ext)) {
+            const text = await file.async('string');
+            textMap.set(path, text);
+            // ==== 新增：强制把 js/css/json 也转成 Base64 塞进拦截字典！====
+            const base64 = await file.async('base64');
+            let mimeType = 'text/plain';
+            if (ext === 'js') mimeType = 'text/javascript';
+            if (ext === 'css') mimeType = 'text/css';
+            if (ext === 'json') mimeType = 'application/json';
+            const dataUri = `data:${mimeType};base64,${base64}`;
+            urlMap.set(path, dataUri);
+        }
+    // 其他文件（比如 JSON 配置文件） -> 转为 Base64，供运行时 fetch 读取
+    else {
+        const text = await file.async('string');
+        const b64 = btoa(unescape(encodeURIComponent(text)));
+        urlMap.set(path, `data:application/json;base64,${b64}`);
     }
   }));
 
-  // 2. 生成 Blob URL 映射
-  const urlMap = new Map();
-  for (const [path, blob] of fileMap) {
-    urlMap.set(path, URL.createObjectURL(blob));
-  }
-
-  // 3. 查找主html
+  // 2. 查找主html
   let mainHtmlPath = [...fileMap.keys()].find(p => /index\.html$/i.test(p)) || 
                      [...fileMap.keys()].find(p => /main\.html$/i.test(p)) ||
                      [...fileMap.keys()].find(p => /\.html$/i.test(p));
   if (!mainHtmlPath) throw new Error('未找到主html文件');
   let htmlText = await zip.file(mainHtmlPath).async('string');
 
-  // 4. 替换html中的资源路径为Blob URL
-  // 用DOMParser更安全，兼容img、script、link、video、audio等
+  // 3. 用DOMParser解析HTML
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlText, 'text/html');
-  // 需要替换src/href的标签
-  const tags = [
-    ['img', 'src'],
-    ['script', 'src'],
-    ['link', 'href'],
-    ['video', 'src'],
-    ['audio', 'src'],
-    ['source', 'src'],
-    ['iframe', 'src']
-  ];
-  // 新增：支持 /xxx 路径和 zip 内部绝对路径
-  function fixPath(orig) {
-    if (!orig) return orig;
-    if (/^(https?:|data:|blob:)/i.test(orig)) return orig;
-    // 统一小写查找，提升容错
+
+  // 升级版的路径寻找器 (结合了你原本的容错逻辑)
+  function findResource(orig) {
+    if (!orig) return null;
+    if (/^(https?:|data:|blob:)/i.test(orig)) return null;
+    
     const candidates = [];
-    // 原始
     candidates.push(orig);
-    // 去掉开头./和/
     candidates.push(orig.replace(/^\.\//, ''));
     candidates.push(orig.replace(/^\//, ''));
-    // mainHtmlPath同目录
+    
     const baseDir = mainHtmlPath.substring(0, mainHtmlPath.lastIndexOf('/')+1);
     candidates.push(baseDir + orig);
     candidates.push(baseDir + orig.replace(/^\.\//, ''));
     candidates.push(baseDir + orig.replace(/^\//, ''));
-    // 全部小写
+    
     candidates.push(orig.toLowerCase());
     candidates.push((baseDir + orig).toLowerCase());
-    // 绝对路径 /xxx
+    
     if (/^\//.test(orig)) {
       candidates.push(orig.slice(1));
       candidates.push((baseDir + orig.slice(1)).toLowerCase());
     }
-    // 去掉 query/hash
+    
     let clean = orig.split('?')[0].split('#')[0];
     candidates.push(clean);
     candidates.push((baseDir + clean).toLowerCase());
-    // 查找
+    
     for (const c of candidates) {
-      if (urlMap.has(c)) return urlMap.get(c);
+      if (textMap.has(c)) return { type: 'text', key: c }; // 纯文本 (供内联)
+      if (urlMap.has(c)) return { type: 'base64', key: c }; // Base64 (供src)
     }
-    // debug 输出未命中
-    if (orig.match(/\.(jpg|png|jpeg|gif|webp|svg)$/i)) {
-      console.warn('[zip壁纸] 未找到图片资源:', orig, '尝试:', candidates);
-    }
-    return orig;
+    return null;
   }
+
+  // 4. 核心改造：将 JS 和 CSS 外部文件直接变为内部代码 (内联注入)
+  // 替换 <link rel="stylesheet">
+  doc.querySelectorAll('link[rel="stylesheet"]').forEach(el => {
+      const orig = el.getAttribute('href');
+      const res = findResource(orig);
+      if (res && res.type === 'text') {
+          const style = doc.createElement('style');
+          style.textContent = textMap.get(res.key);
+          el.replaceWith(style); // 彻底用 <style> 替换掉 <link>
+      }
+  });
+
+  // 替换 <script src="...">
+  doc.querySelectorAll('script[src]').forEach(el => {
+      const orig = el.getAttribute('src');
+      const res = findResource(orig);
+      if (res && res.type === 'text') {
+          const script = doc.createElement('script');
+          // 默认设为 module，完美兼容 Three.js 等含有 import 的代码
+          script.type = el.getAttribute('type') || 'module'; 
+          script.textContent = textMap.get(res.key);
+          el.replaceWith(script); // 彻底用内部 <script> 替换掉外部引用
+      }
+  });
+
+  // 5. 替换其他标签和样式里的相对路径为 Base64 Data URI
+  const tags = [
+    ['img', 'src'], ['video', 'src'], ['audio', 'src'], 
+    ['source', 'src'], ['iframe', 'src']
+  ];
   for (const [tag, attr] of tags) {
     doc.querySelectorAll(tag + '[' + attr + ']').forEach(el => {
       const orig = el.getAttribute(attr);
-      if (!orig) return;
-      const fixed = fixPath(orig);
-      el.setAttribute(attr, fixed);
+      const res = findResource(orig);
+      if (res && res.type === 'base64') {
+        el.setAttribute(attr, urlMap.get(res.key));
+      }
     });
   }
-  // 处理style标签和style属性里的url(…)
+
   function replaceStyleUrls(str) {
     if (!str) return str;
     return str.replace(/url\((['"]?)([^)'"]+)\1\)/g, (m, q, p) => {
-      const fixed = fixPath(p);
-      if (/^(https?:|data:|blob:)/i.test(fixed)) return `url(${fixed})`;
-      if (fixed.startsWith('blob:')) return `url(${fixed})`;
-      // fallback: 保持原样
-      return `url(${fixed})`;
+      const res = findResource(p);
+      if (res && res.type === 'base64') return `url(${urlMap.get(res.key)})`;
+      return m;
     });
   }
-  // style标签
   doc.querySelectorAll('style').forEach(styleEl => {
     styleEl.textContent = replaceStyleUrls(styleEl.textContent);
   });
-  // style属性
   doc.querySelectorAll('[style]').forEach(el => {
     el.setAttribute('style', replaceStyleUrls(el.getAttribute('style')));
   });
 
-  // 5. 注入 polyfill/hack 脚本，提升兼容性
+  // 6. 注入 polyfill/hack 脚本 (保留你精妙的运行时劫持逻辑)
   const polyfillScript = doc.createElement('script');
   polyfillScript.textContent = `
-    // --- zip壁纸兼容性polyfill ---
+    // --- zip壁纸兼容性polyfill (Base64升级版) ---
     (function(){
-      // 1. 伪造 window.location 全属性为 https://fake.local/index.html
       try {
         const fakeLoc = {
-          protocol: 'https:',
-          host: 'fake.local',
-          hostname: 'fake.local',
-          port: '',
-          origin: 'https://fake.local',
-          pathname: '/index.html',
-          search: '',
-          hash: '',
+          protocol: 'https:', host: 'fake.local', hostname: 'fake.local', port: '',
+          origin: 'https://fake.local', pathname: '/index.html', search: '', hash: '',
           href: 'https://fake.local/index.html'
         };
-        Object.defineProperty(window, 'location', {
-          get: () => fakeLoc,
-          configurable: true
-        });
+        Object.defineProperty(window, 'location', { get: () => fakeLoc, configurable: true });
       } catch(e){}
 
-      // 2. Blob URL 映射表注入（由父页面 postMessage 注入，或提前挂载）
       window.__WALLPAPER_BLOB_MAP = window.__WALLPAPER_BLOB_MAP || {};
 
-      // 3. 劫持 fetch，自动映射 zip 内部路径为 Blob URL
       const oldFetch = window.fetch;
       window.fetch = function(input, ...args) {
         if (typeof input === 'string') {
-          // 直接是 blob: 则直接用
-          if (input.startsWith('blob:')) return oldFetch(input, ...args);
-          // zip 内部路径
-          let key = input.replace(/^\//, '');
+          if (input.startsWith('blob:') || input.startsWith('data:')) return oldFetch(input, ...args);
+          let key = input.replace(/^\\//, '');
           if (window.__WALLPAPER_BLOB_MAP && window.__WALLPAPER_BLOB_MAP[key]) {
             return oldFetch(window.__WALLPAPER_BLOB_MAP[key], ...args);
           }
@@ -155,11 +191,10 @@ async function loadWallpaperZip(zipFile) {
         return oldFetch(input, ...args);
       };
 
-      // 4. 劫持 XMLHttpRequest.open
       const oldXHROpen = XMLHttpRequest.prototype.open;
       XMLHttpRequest.prototype.open = function(method, url, ...rest) {
         if (typeof url === 'string') {
-          let key = url.replace(/^\//, '');
+          let key = url.replace(/^\\//, '');
           if (window.__WALLPAPER_BLOB_MAP && window.__WALLPAPER_BLOB_MAP[key]) {
             arguments[1] = window.__WALLPAPER_BLOB_MAP[key];
           }
@@ -167,13 +202,12 @@ async function loadWallpaperZip(zipFile) {
         return oldXHROpen.apply(this, arguments);
       };
 
-      // 5. 劫持 Image/HTMLImageElement.src
       function patchImageProto(proto) {
         const oldSrc = Object.getOwnPropertyDescriptor(proto, 'src');
         Object.defineProperty(proto, 'src', {
           set: function(val) {
             if (typeof val === 'string') {
-              let key = val.replace(/^\//, '');
+              let key = val.replace(/^\\//, '');
               if (window.__WALLPAPER_BLOB_MAP && window.__WALLPAPER_BLOB_MAP[key]) {
                 return oldSrc.set.call(this, window.__WALLPAPER_BLOB_MAP[key]);
               }
@@ -187,20 +221,20 @@ async function loadWallpaperZip(zipFile) {
       patchImageProto(Image.prototype);
       patchImageProto(HTMLImageElement.prototype);
 
-      // 6. 禁用 Service Worker 注册
       if (navigator.serviceWorker) {
         try { navigator.serviceWorker.register = ()=>Promise.reject('ServiceWorker禁用'); } catch(e){}
       }
     })();
   `;
-  doc.head.appendChild(polyfillScript);
+  // 必须插入到 head 最前面，确保它在其他业务代码执行前先生效
+  doc.head.insertBefore(polyfillScript, doc.head.firstChild);
 
-  // 6. 注入 Blob URL 映射表到 html（让 iframe 内 polyfill 能访问）
+  // 7. 注入 Base64 URL 映射表到 html，供上面劫持的 fetch 和 Image 读取
   const blobMapScript = doc.createElement('script');
   blobMapScript.textContent = 'window.__WALLPAPER_BLOB_MAP = ' + JSON.stringify(Object.fromEntries(urlMap)) + ';';
-  doc.head.appendChild(blobMapScript);
+  doc.head.insertBefore(blobMapScript, polyfillScript.nextSibling);
 
-  // 7. 返回处理结果
+  // 8. 返回最终的 HTML
   return { html: doc.documentElement.outerHTML, urlMap, mainHtmlPath };
 }
 // 1.js - 性能优化完整版 (全功能)
@@ -220,7 +254,7 @@ const wallpaperAuthorLinks = [
   'https://steamcommunity.com/sharedfiles/filedetails/?id=3429707117','https://steamcommunity.com/sharedfiles/filedetails/?id=2691915794','https://steamcommunity.com/sharedfiles/filedetails/?id=2841018591','https://steamcommunity.com/sharedfiles/filedetails/?id=3480156230','https://steamcommunity.com/sharedfiles/filedetails/?id=2995764284','https://steamcommunity.com/sharedfiles/filedetails/?id=3272631584','https://steamcommunity.com/sharedfiles/filedetails/?id=2902939420','https://steamcommunity.com/sharedfiles/filedetails/?id=3275856487','https://steamcommunity.com/sharedfiles/filedetails/?id=3211762136','https://steamcommunity.com/sharedfiles/filedetails/?id=3369151871',//81-90
   'https://steamcommunity.com/sharedfiles/filedetails/?id=2945859950','https://steamcommunity.com/sharedfiles/filedetails/?id=3639948534','https://steamcommunity.com/sharedfiles/filedetails/?id=2723647705','https://steamcommunity.com/sharedfiles/filedetails/?id=818696361','https://steamcommunity.com/sharedfiles/filedetails/?id=3158513965','https://steamcommunity.com/sharedfiles/filedetails/?id=3415535976','https://steamcommunity.com/sharedfiles/filedetails/?id=2961828444','https://steamcommunity.com/sharedfiles/filedetails/?id=3086767327','https://steamcommunity.com/sharedfiles/filedetails/?id=3023458758','https://steamcommunity.com/sharedfiles/filedetails/?id=3353921298', //91-100
   'https://steamcommunity.com/sharedfiles/filedetails/?id=950308229','https://steamcommunity.com/sharedfiles/filedetails/?id=3678409401','https://steamcommunity.com/sharedfiles/filedetails/?id=3168641857','https://steamcommunity.com/sharedfiles/filedetails/?id=2879252246',
-  'https://zhutix.com/animated/haimian-wuzi/','https://zhutix.com/animated/lone-cherry-blossom/','https://zhutix.com/animated/honkai-star-rail/','https://steamcommunity.com/sharedfiles/filedetails/?id=2542785751','https://steamcommunity.com/sharedfiles/filedetails/?id=2700444200','https://steamcommunity.com/sharedfiles/filedetails/?id=3605483059'
+  'https://zhutix.com/animated/haimian-wuzi/','https://zhutix.com/animated/lone-cherry-blossom/','https://zhutix.com/animated/honkai-star-rail/','https://steamcommunity.com/sharedfiles/filedetails/?id=2542785751','https://steamcommunity.com/sharedfiles/filedetails/?id=2700444200','https://steamcommunity.com/sharedfiles/filedetails/?id=3605483059','https://steamcommunity.com/sharedfiles/filedetails/?id=3651977513','https://steamcommunity.com/sharedfiles/filedetails/?id=3548193261','https://steamcommunity.com/sharedfiles/filedetails/?id=2796810755'
 ];
 
 let hasShownInitialTip = false;
@@ -1021,7 +1055,7 @@ function renderDynamicWallpapers() {
     specialPlaceholder.className = "wallpaper-placeholder special-tile"; // Add a special class
     fragment.appendChild(specialPlaceholder);
     // 1. Create placeholders
-    for (let i = 1; i <= 110; i++) {
+    for (let i = 1; i <= 113; i++) {
         const placeholder = document.createElement("div");
         placeholder.className = "wallpaper-placeholder";
         placeholder.dataset.index = i;
@@ -1392,7 +1426,7 @@ const wallpaperModalContent = document.querySelector('#wallpaperModal .modal-con
 // ⚙️ 配置区 —— 只需修改这两行
 const WEB_WP_GITHUB_RAW = 'https://raw.githubusercontent.com/shichen1234/wallpapers/main/';
 const WEB_WP_PROXY_BASE = 'https://ghproxy.net/' + WEB_WP_GITHUB_RAW;
-const WEB_WP_TOTAL = 9; // 仓库 web/ 目录下 zip 的总数 (1.zip ~ N.zip)
+const WEB_WP_TOTAL = 16; // 仓库 web/ 目录下 zip 的总数 (1.zip ~ N.zip)
 
 // 当前已创建的 Blob URL 列表，切换壁纸时统一 revoke
 let currentWebWpBlobUrls = [];
@@ -1443,8 +1477,15 @@ function renderWebWallpapers() {
       'https://codepen.io/Mant0uStudio/pen/ZYWywJB', // 5
       'https://codepen.io/aleksa-rakocevic/pen/bNeeGMa', // 6
       'https://codepen.io/ed-demircioglu/pen/yyaOJKO', // 7 
-      'https://steamcommunity.com/sharedfiles/filedetails/?id=3553519395', // 8 
-      'https://steamcommunity.com/sharedfiles/filedetails/?id=3419679793' // 9 
+      'https://steamcommunity.com/sharedfiles/filedetails/?id=2017180584', // 8 
+      'https://steamcommunity.com/sharedfiles/filedetails/?id=3419679793', // 9 
+      'https://steamcommunity.com/sharedfiles/filedetails/?id=1116014641', // 10
+      'https://steamcommunity.com/sharedfiles/filedetails/?id=3553519395', // 11
+      'https://steamcommunity.com/sharedfiles/filedetails/?id=1595037011', // 12
+      'https://steamcommunity.com/sharedfiles/filedetails/?id=1551961057', // 13
+      'https://steamcommunity.com/sharedfiles/filedetails/?id=837440254', // 14
+      'https://steamcommunity.com/sharedfiles/filedetails/?id=1373816444', // 15
+      'https://steamcommunity.com/sharedfiles/filedetails/?id=1078208425'
     ];
     const dlLink = document.createElement('a');
     dlLink.className = 'wallpaper-author-link';
@@ -1595,6 +1636,98 @@ function renderWebWallpapers() {
   }
 }
 
+// ============================================================
+// 🔧 CDN 模块预获取（解决沙盒 null-origin CORS 阻断）
+//
+// 问题根因：
+//   扩展沙盒 iframe 运行在 null origin。Chrome/Edge 严格遵循 CORS 规范：
+//   "Access-Control-Allow-Origin: *" 不匹配 null origin，因此壁纸脚本
+//   中所有 import ... from "https://esm.sh/..." 都静默失败，Three.js /
+//   Cannon-ES 等库永远加载不到，动画从未启动。
+//   此外，import from "data:..." 在 Chrome 中也受限，无法作为替代方案。
+//
+// 解决方案（三步）：
+//   1. 父窗口（有正常 origin）fetch CDN 模块的完整文本
+//   2. 把模块文本字符串随 RENDER_WALLPAPER 消息传给沙盒
+//   3. 沙盒在自己的 null-origin 上下文中创建 blob: URL
+//      ──── 关键：同一 null-origin 上下文创建的 blob: URL 可被该上下文 import ────
+//      再用这些 blob: URL 替换 import 语句，彻底规避 CORS 限制
+//
+// 注意：manifest.json host_permissions 须包含 CDN 域名，否则父窗口的
+//       fetch 本身会被扩展拦截。已在 manifest.json 中一并添加。
+// ============================================================
+async function resolveCDNImports(jsText) {
+  const fetched = new Map(); // url → text (null = 正在 fetch，防循环)
+
+  // 提取文本中所有 https:// 开头的模块 URL（from 和 import 两种形式）
+  function extractUrls(text) {
+    const s = new Set();
+    for (const m of text.matchAll(/\bfrom\s*(['"])(https?:\/\/[^'"#\s]+)\1/gm))   s.add(m[2]);
+    for (const m of text.matchAll(/\bimport\s*(['"])(https?:\/\/[^'"#\s]+)\1/gm)) s.add(m[2]);
+    return [...s];
+  }
+
+  async function fetchOne(url) {
+    if (fetched.has(url)) return;
+    fetched.set(url, null); // 占位防循环
+
+    const fetchUrl = /esm\.sh/.test(url)
+      ? (url.includes('?') ? url + '&bundle' : url + '?bundle')
+      : url;
+
+    try {
+      const resp = await fetch(fetchUrl);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      let text = await resp.text();
+
+      // ── 核心路径改写 ────────────────────────────────────────────────────
+      // 不尝试匹配 import/export 关键字——直接把文本里
+      // 所有引号包裹、以 /  ./  ../ 开头的字符串用 URL 构造函数转成绝对 URL。
+      // 这样无论 esm.sh bundle 用何种语法（from、import、export*from、
+      // 副作用 import、动态 import()……），路径都能被捕获到。
+      // resp.url 是重定向后的真实 URL，能正确解析相对路径。
+      // ──────────────────────────────────────────────────────────────────
+      const baseUrl = resp.url;
+      text = text.replace(
+        /(['"])((?:\/|\.\/|\.\.\/)[^'"#\s]+)\1/g,
+        (match, q, p) => {
+          try {
+            const abs = new URL(p, baseUrl).href;
+            return `${q}${abs}${q}`;
+          } catch {
+            return match;
+          }
+        }
+      );
+
+      fetched.set(url, text);
+      console.log('[G-web] ✅ CDN fetch:', url.split('/').slice(0, 4).join('/'),
+                  `(${Math.round(text.length / 1024)}KB)`);
+
+      // 递归 fetch：路径改写后扫描新出现的 https:// 依赖
+      const inner = extractUrls(text).filter(u => !fetched.has(u));
+      if (inner.length) await Promise.all(inner.map(fetchOne));
+
+    } catch (e) {
+      console.warn('[G-web] ⚠️ CDN fetch 失败:', url, e.message);
+      fetched.delete(url);
+    }
+  }
+
+  const top = extractUrls(jsText);
+  if (!top.length) return {};
+
+  console.log('[G-web] 🔍 开始 CDN 递归预获取:', top);
+  await Promise.all(top.map(fetchOne));
+
+  const result = {};
+  for (const [url, text] of fetched) {
+    if (text !== null) result[url] = text;
+  }
+  console.log('[G-web] 📦 CDN 预获取完成，共', Object.keys(result).length, '个模块（含传递依赖）');
+  return result;
+}
+
 // ── 核心：解压 zip，重写路径，注入 iframe (沙盒通信版) ────────────────────
 async function applyWebWallpaper(zipBlob) {
   if (!window.JSZip) {
@@ -1615,6 +1748,7 @@ async function applyWebWallpaper(zipBlob) {
   const INLINE_AS_DATA_URL_EXTS = new Set([
     'png','jpg','jpeg','gif','webp','svg','ico','bmp',   // 图片
     'woff','woff2','ttf','otf',                           // 字体
+    'ogg','mp3','wav','flac','aac','m4a','webm',         // 音频
   ]);
   const blobUrlMap = {};
   const tasks = [];
@@ -1644,6 +1778,19 @@ async function applyWebWallpaper(zipBlob) {
           blobUrlMap[normalized] = url;
           blobUrlMap['./' + normalized] = url;
         }
+        // 兼容：只用文件名（不含目录前缀），GameMaker 等引擎直接用裸文件名加载
+        const bare = normalized.replace(/^.*\//, '');
+        if (bare && bare !== normalized) {
+          blobUrlMap[bare] = blobUrlMap[bare] || url;
+        }
+        // 兼容：URL 编码版本的 key（文件名含空格时请求路径会被编码）
+        try {
+          const encoded = normalized.split('/').map(encodeURIComponent).join('/');
+          if (encoded !== normalized) {
+            blobUrlMap[encoded] = url;
+            blobUrlMap['./' + encoded] = url;
+          }
+        } catch(e) {}
       })
     );
   });
@@ -1665,30 +1812,234 @@ async function applyWebWallpaper(zipBlob) {
 
   // 第三步：重写 HTML 中所有资源引用 (这会让 HTML 里的图片、外部 JS 指向合法的本地 Blob)
   let html = await indexEntry.async('string');
+
+  // ============================================================
+  // 🔧 本地 <script src="localfile.js"> 内联（在路径改写前处理）
+  //
+  // 问题根因：rewriteWebWpHTML 会把 src="lenis.js" 等本地 JS 改写为
+  //   src="blob:chrome-extension://..."，沙盒（null origin）无权
+  //   加载 extension-origin 的 blob: URL，导致库未定义。
+  //
+  // 解决方案：在路径改写前，把 zip 里所有本地 JS 文件提取为文本，
+  //   直接内联进 HTML，彻底消除跨 origin 的 blob: 加载需求。
+  //   - importmap 保留（沙盒需要用它解析裸说明符）
+  //   - type="module" src 脚本保留（由 extractedJsString 路径处理）
+  //   - CDN https:// 脚本保留（走 resolveCDNImports 路径处理）
+  // ============================================================
+  {
+    const jsTextMap = {};
+    const jsTasks = [];
+    zip.forEach((relativePath, fileEntry) => {
+      if (fileEntry.dir || !/\.js$/i.test(relativePath)) return;
+      jsTasks.push(fileEntry.async('string').then(text => {
+        jsTextMap[relativePath] = text;
+        jsTextMap['./' + relativePath] = text;
+        jsTextMap[relativePath.replace(/^.*[\\/]/, '')] = text; // 仅文件名
+        // 兼容 URL 编码形式（文件名含空格时 zip 存原始名，src 可能是编码后的）
+        try {
+          const decoded = decodeURIComponent(relativePath);
+          if (decoded !== relativePath) {
+            jsTextMap[decoded] = text;
+            jsTextMap['./' + decoded] = text;
+            jsTextMap[decoded.replace(/^.*[\\/]/, '')] = text;
+          }
+        } catch (e) {}
+      }));
+    });
+    await Promise.all(jsTasks);
+
+    html = html.replace(
+      /<script\b([^>]*)>([\s\S]*?)<\/script>/gi,
+      (match, attrs) => {
+        if (/type\s*=\s*["']importmap["']/i.test(attrs)) return match; // 保留 importmap
+        if (/type\s*=\s*["']module["']/i.test(attrs)) return match;   // 保留 module（走 extractedJsString）
+        const srcM = attrs.match(/\bsrc\s*=\s*["']([^"']+)["']/i);
+        if (!srcM) return match;                                        // 内联脚本，无 src
+        const src = srcM[1];
+        if (/^https?:\/\//i.test(src)) return match;                   // CDN 地址，保留
+        // ── 关键修复：去掉 query string 和 hash 后再查表 ──────────────
+        // 例：src="doki_assets/Doki Doki Wallpaper.js?ITEZB=1097575119"
+        // zip 里的 key 是 "doki_assets/Doki Doki Wallpaper.js"（无 query）
+        const srcClean = src.split('?')[0].split('#')[0];
+        const text = jsTextMap[srcClean]
+                  || jsTextMap[srcClean.replace(/^\.\//, '')]
+                  || jsTextMap[srcClean.replace(/^.*[\\/]/, '')]
+                  || jsTextMap[src]
+                  || jsTextMap[src.replace(/^\.\//, '')]
+                  || jsTextMap[src.replace(/^.*[\\/]/, '')];
+        if (!text) return match;                                        // zip 中找不到，保留
+        const cleanAttrs = attrs
+          .replace(/\bsrc\s*=\s*["'][^"']*["']/i, '')
+          .replace(/\bdefer\b/gi, '').replace(/\basync\b/gi, '').trim();
+        console.log('[G-web] 📎 本地脚本内联:', srcClean, `(${Math.round(text.length / 1024)}KB)`);
+        return `<script${cleanAttrs ? ' ' + cleanAttrs : ''}>\n${text}\n</script>`;
+      }
+    );
+  }
+
   html = rewriteWebWpHTML(html, blobUrlMap);
 
   // 额外提取可能的纯代码文件 (双重保险，发送给沙盒执行)
   let extractedCssString = "";
-  if (zip.file("style.css")) extractedCssString = await zip.file("style.css").async("string");
+  if (zip.file("style.css")) {
+    extractedCssString = await zip.file("style.css").async("string");
+    // 🔧 处理 CSS 中的 url() 路径，转换为 blob URL / data URL
+    extractedCssString = extractedCssString.replace(/url\(\s*(['"]?)([^)"']+)\1\s*\)/g, (match, q, val) => {
+      if (!val || /^(https?:|data:|blob:)/i.test(val)) return match; // 跳过外部 URL 和 data URL
+      // 尝试多种路径变体查找资源
+      const candidates = [val, './' + val, val.replace(/^\.\//, ''), val.replace(/^\//, '')];
+      for (const candidate of candidates) {
+        if (blobUrlMap[candidate]) return `url("${blobUrlMap[candidate]}")`;
+      }
+      console.warn('[G-web] CSS 中的资源未找到:', val);
+      return match; // 兜底：保留原始路径
+    });
+  }
   let extractedJsString = "";
   if (zip.file("main.js")) extractedJsString = await zip.file("main.js").async("string");
   else if (zip.file("script.js")) extractedJsString = await zip.file("script.js").async("string");
 
   // ============================================================
-  // 🔧 防止双重执行 & 消除 blob 跨源错误：
-  // 如果 extractedJsString 已提取到 JS，则从 HTML 中移除对应的
-  // <script src="..."> 标签（已被路径重写为 blob URL）。
-  // 原因：扩展沙盒的 null origin 无法 fetch 父页面创建的 blob URL，
-  // 会产生 net::ERR_FAILED 控制台错误；且 sandbox.js 会内联注入
-  // extractedJsString，保留 src 标签会导致重复执行。
+  // 🔧 预获取 CDN 模块（父窗口抓取 → 沙盒 blob: URL 替换）
+  // 解决 null-origin 沙盒的 CORS 阻断，详见 resolveCDNImports 注释
+  // ============================================================
+  let cdnModules = {};
+  if (extractedJsString && /from\s*['"]https?:\/\//.test(extractedJsString)) {
+    cdnModules = await resolveCDNImports(extractedJsString);
+  }
+
+  // ES Module 检测：在原始 JS 上检测，传给沙盒作为第一重保险
+  const jsIsModule = /(?:^|[\r\n])[ \t]*import[ \t*{"'`]/.test(extractedJsString)
+                  || /(?:^|[\r\n])[ \t]*export[ \t{]/.test(extractedJsString);
+
+  // ============================================================
+  // 🔧 移除 HTML 中会产生 extension-origin blob: URL 的标签：
+  //   <script src>          → 已被 rewriteWebWpHTML 改写为 blob:chrome-extension://
+  //                           沙盒无权加载；JS 走 extractedJsString 内联注入
+  //   <link rel=stylesheet> → 同理；CSS 走 extractedCssString 内联注入
+  //   importmap 保留（沙盒用它识别裸说明符）
   // ============================================================
   if (extractedJsString) {
-    // 移除所有外部 script 标签（src 已被 rewriteWebWpHTML 替换为 blob: 或保留原路径）
-    html = html.replace(/<script\b[^>]+\bsrc\s*=\s*["'][^"']*["'][^>]*>[\s\S]*?<\/script>/gi, (match) => {
-      // 保留 importmap，只移除 src 型外部脚本
+    html = html.replace(/<script\b[^>]*\bsrc\s*=\s*["'][^"']*["'][^>]*>[\s\S]*?<\/script>/gi, match => {
       if (/type\s*=\s*["']importmap["']/i.test(match)) return match;
-      return '<!-- [G-web] script src removed, injected inline by sandbox -->';
+      return '<!-- [G-web] script[src] removed, injected inline -->';
     });
+  }
+  if (extractedCssString) {
+    html = html.replace(
+      /<link\b[^>]*\brel\s*=\s*["']stylesheet["'][^>]*\/?>/gi,
+      '<!-- [G-web] link[stylesheet] removed, injected inline -->'
+    );
+  }
+
+  // ============================================================
+  // 🔧 沙盒 HTML 头部补丁注入（三合一）
+  //
+  // ① localStorage 垫片：沙盒 null-origin 访问 localStorage 抛
+  //   SecurityError，垫片必须在所有业务脚本前执行。
+  //
+  // ② DOMContentLoaded patch：module 脚本异步执行，sandbox.js 派发
+  //   DOMContentLoaded 时监听尚未注册，改为 Promise.resolve().then()
+  //   立即回调。
+  //
+  // ③ __WP_MAP + 资源拦截器：壁纸 JS 用 new Image() / new Audio() /
+  //   fetch / XHR 动态加载本地资源（如 GameMaker 引擎），路径被解析
+  //   为 chrome-extension://... → ERR_FILE_NOT_FOUND。
+  //   将 blobUrlMap 里的 data: URL 注入为 window.__WP_MAP，并 patch
+  //   Image/Audio/Video/fetch/XHR，自动将相对路径映射到 data: URL。
+  //   关键修复：lookup 先 decodeURIComponent，兼容含空格文件名
+  //   （GameMaker 传入 "doki_assets/Doki%20Doki%20..."，map key 是
+  //   "doki_assets/Doki Doki ..."）。
+  // ============================================================
+  {
+    // ── ① localStorage 垫片 ────────────────────────────────────
+    const storagePolyfillScript = `<script>
+/* [G-web] localStorage sandbox polyfill */
+(function(){
+  function makeSafe(){var s={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(s,k)?s[k]:null;},setItem:function(k,v){s[String(k)]=String(v);},removeItem:function(k){delete s[String(k)];},clear:function(){Object.keys(s).forEach(function(k){delete s[k];});},key:function(i){return Object.keys(s)[i]!==undefined?Object.keys(s)[i]:null;},get length(){return Object.keys(s).length;}};}
+  var ok=false;try{window.localStorage.getItem('__t__');ok=true;}catch(e){}
+  if(!ok){try{Object.defineProperty(window,'localStorage',{value:makeSafe(),configurable:true,writable:true});Object.defineProperty(window,'sessionStorage',{value:makeSafe(),configurable:true,writable:true});}catch(e){}}
+})();
+</script>`;
+
+    // ── ② DOMContentLoaded patch ───────────────────────────────
+    const domReadyPatch = `<script>
+/* [G-web] DOMContentLoaded sandbox patch */
+(function(){
+  var _orig=Document.prototype.addEventListener;
+  Document.prototype.addEventListener=function(type,fn,opts){
+    if(type==='DOMContentLoaded'){Promise.resolve().then(function(){try{fn.call(document);}catch(e){}});return;}
+    return _orig.call(this,type,fn,opts);
+  };
+})();
+</script>`;
+
+    // ── ③ __WP_MAP + 资源路径拦截器 ───────────────────────────
+    // 把资源 data: URL map 存入 <script type="application/json"> 标签。
+    // 这种标签的内容被 HTML 解析器视为纯文本，不会执行，不受 </script>
+    // 等序列干扰（因为 type 不是 text/javascript）。
+    // 再用一个普通 <script> 读取该标签内容并注入拦截器。
+    // 只注入 data: URL（base64），blob:chrome-extension:// 沙盒无权用。
+    const safeMap = {};
+    for (const [k, v] of Object.entries(blobUrlMap)) {
+      if (typeof v === 'string' && v.startsWith('data:')) safeMap[k] = v;
+    }
+    // JSON.stringify 本身不转义 < > / 但 base64 不含这些字符，key 路径
+    // 通常也不含，所以直接用即可；转义 U+2028/2029 防止 JS 行终止符问题。
+    const blobMapJson = JSON.stringify(safeMap)
+      .replace(/\u2028/g, '\\u2028')
+      .replace(/\u2029/g, '\\u2029');
+
+    // 数据标签：type="application/json" 让解析器跳过执行，内容安全
+    const blobMapDataTag = `<script type="application/json" id="__wp_map_data">${blobMapJson}</script>`;
+
+    // 拦截器脚本：从数据标签读取 map 并 patch 各资源加载 API
+    const blobMapScript = `<script>
+/* [G-web] wallpaper asset interceptor */
+(function(){
+  try{
+    var el=document.getElementById('__wp_map_data');
+    window.__WP_MAP=el?JSON.parse(el.textContent):{};
+  }catch(e){window.__WP_MAP={};}
+  function lookup(val){
+    if(!val||!window.__WP_MAP)return null;
+    var dec=val;try{dec=decodeURIComponent(val);}catch(e){}
+    var candidates=[val,dec,
+      val.replace(/^\.\//,''),dec.replace(/^\.\//,''),
+      val.replace(/^\//,''),dec.replace(/^\//,''),
+      val.split(/[\\/]/).pop(),dec.split(/[\\/]/).pop()];
+    for(var i=0;i<candidates.length;i++){var r=window.__WP_MAP[candidates[i]];if(r)return r;}
+    return null;
+  }
+  var imgD=Object.getOwnPropertyDescriptor(HTMLImageElement.prototype,'src');
+  if(imgD&&imgD.set){Object.defineProperty(HTMLImageElement.prototype,'src',{set:function(v){var r=lookup(v);imgD.set.call(this,r||v);},get:imgD.get,configurable:true});}
+  var medD=Object.getOwnPropertyDescriptor(HTMLMediaElement.prototype,'src');
+  if(medD&&medD.set){Object.defineProperty(HTMLMediaElement.prototype,'src',{set:function(v){var r=lookup(v);medD.set.call(this,r||v);},get:medD.get,configurable:true});}
+  var _f=window.fetch;
+  window.fetch=function(input,opts){if(typeof input==='string'){var r=lookup(input);if(r)return _f.call(this,r,opts);}return _f.apply(this,arguments);};
+  var _o=XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open=function(method,url){if(typeof url==='string'){var r=lookup(url);if(r)arguments[1]=r;}return _o.apply(this,arguments);};
+})();
+</script>`;
+
+    // headPatch 只保留两个轻量补丁，不注入任何大数据
+    const headPatch = storagePolyfillScript + domReadyPatch;
+    if (/<head[^>]*>/i.test(html)) {
+      html = html.replace(/<head([^>]*)>/i, '<head$1>' + headPatch);
+    } else if (/<\/head>/i.test(html)) {
+      html = html.replace(/<\/head>/i, headPatch + '</head>');
+    } else if (/<body/i.test(html)) {
+      html = html.replace(/<body/i, headPatch + '<body');
+    } else {
+      html = headPatch + html;
+    }
+  }
+
+  // 构建 resourceMap：只含 data: URL，供 postMessage 发给 sandbox
+  // sandbox.js 通过 window.resourceMap 处理资源，不再注入 HTML 头部
+  const resourceMap = {};
+  for (const [k, v] of Object.entries(blobUrlMap)) {
+    if (typeof v === 'string' && v.startsWith('data:')) resourceMap[k] = v;
   }
 
   // 停止动态视频层（bgImage 暂时保留，作为加载兜底，后面延迟隐藏）
@@ -1702,10 +2053,21 @@ async function applyWebWallpaper(zipBlob) {
     bgVideo.style.display = 'none';
   }
 
-  // 显示 Web 壁纸 iframe
+  // 显示 Web 壁纸 iframe，并确保全屏铺满背景
   const frame = document.getElementById('bgWebFrame');
-  frame.style.display = 'block';
-  frame.style.pointerEvents = 'auto'; // 默认关闭交互，不遮挡扩展 UI
+  frame.style.cssText = `
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    border: none;
+    margin: 0;
+    padding: 0;
+    z-index: 0;
+    pointer-events: auto;
+  `;
   webWpInteractive = false;
 
   // ====== 自动重发机制，彻底消除白屏 ======
@@ -1759,7 +2121,10 @@ async function applyWebWallpaper(zipBlob) {
           type: 'RENDER_WALLPAPER',
           html: html,
           css: extractedCssString,
-          js: extractedJsString
+          js: extractedJsString,
+          cdnModules: cdnModules,
+          isModule: jsIsModule,
+          resourceMap: resourceMap
         }, '*');
 
         // 握手式隐藏：等 sandbox 发回 WP_RENDERED 信号后再隐藏 bgImage
@@ -1787,6 +2152,7 @@ async function applyWebWallpaper(zipBlob) {
 
   // 强制刷新 iframe，确保每次都能收到 SANDBOX_READY
   frame.src = 'sandbox.html';
+  
 }
 
 // ── HTML 静态路径重写 ────────────────────────────────────────
@@ -1945,18 +2311,53 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       document.body.dispatchEvent(syntheticClick);
     }
+    else if (event.data && event.data.type === 'WEB_WP_MOUSEMOVE') {
+      const { clientX, clientY } = event.data;
+      // 合成 mousemove，激活鼠标拖尾和鼠标样式
+      const syntheticMove = new MouseEvent('mousemove', {
+        bubbles: true, cancelable: false, view: window,
+        clientX, clientY
+      });
+      document.dispatchEvent(syntheticMove);
+      // 触发禅模式退出（重置 idle 计时器）
+      ['mousemove'].forEach(evt => {
+        window.dispatchEvent(new MouseEvent(evt, {
+          bubbles: true, cancelable: false, view: window,
+          clientX, clientY
+        }));
+      });
+    }
     else if (event.data && event.data.type === 'SANDBOX_READY') {
         if (window.pendingWebWallpaper) {
             const bgWebFrame = document.getElementById("bgWebFrame");
             if (bgWebFrame && bgWebFrame.contentWindow) {
                 console.log('[父窗口] 收到沙盒就绪信号，开始发送壁纸数据！');
-                bgWebFrame.contentWindow.postMessage({
-                    type: 'RENDER_WALLPAPER',
-                    html: window.pendingWebWallpaper.html,
-                    css: window.pendingWebWallpaper.css,
-                    js: window.pendingWebWallpaper.js
-                }, '*');
-            }
+// === 注意：在 1.js 解析 zip 的地方，确保你有 window.pendingWebWallpaper.urlMap = urlMap; ===
+const resourceObject = {};
+// 强制将 Map 转为普通对象
+if (window.pendingWebWallpaper && window.pendingWebWallpaper.urlMap) {
+    if (window.pendingWebWallpaper.urlMap instanceof Map) {
+        window.pendingWebWallpaper.urlMap.forEach((value, key) => {
+            resourceObject[key] = value;
+        });
+    } else {
+        Object.assign(resourceObject, window.pendingWebWallpaper.urlMap);
+    }
+}
+
+console.log('[1.js] 传给沙盒的资源数:', Object.keys(resourceObject).length); // 如果这里是 0，说明你在前面解压zip时没有保存 urlMap！
+
+bgWebFrame.contentWindow.postMessage({
+    type: 'RENDER_WALLPAPER',
+    // 修复数组逗号报错
+    html: Array.isArray(window.pendingWebWallpaper.html) ? window.pendingWebWallpaper.html.join('') : (window.pendingWebWallpaper.html || ''),
+    css: window.pendingWebWallpaper.css || '',
+    js: window.pendingWebWallpaper.js || '',
+    cdnModules: window.pendingWebWallpaper.cdnModules || {},
+    isModule: window.pendingWebWallpaper.isModule || false,
+    scripts: window.pendingWebWallpaper.scripts || [],
+    resourceMap: resourceObject
+}, '*');           }
         }
     }
     // ─── 握手接收端：sandbox 壁纸渲染上屏后通知父窗口，立刻隐藏兜底 bgImage ───

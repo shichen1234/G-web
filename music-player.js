@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   const DUAL_COLUMN_LYRIC_SONG_IDS = new Set([
-    12, 21, 22, 23, 24, 26, 31, 35, 36, 37, 38, 40, 43, 44, 45, 46,48,50,54,55,56,58,62,66,75,76,77,78,79,84,85,86,87
+    12, 21, 22, 23, 24, 26, 31, 35, 36, 37, 38, 40, 43, 44, 45, 46,48,50,54,55,56,58,62,66,75,76,77,78,79,84,85,86,87,92,96,98,100,32,109
   ]);
 
   // music-player.js
@@ -159,6 +159,25 @@ document.addEventListener('DOMContentLoaded', () => {
       { id: 89, filename: "89--光与影的对白--洛天依.mp3" },
       { id: 90, filename: "90--勾指起誓--洛天依,ilem.mp3" },
       { id: 91, filename: "91--雨爱--杨丞琳.mp3" },
+      { id: 92, filename: "92--おやすみカンファレンス--まちーしゃ&重音テト&音街ウナ.mp3" },
+      { id: 93, filename: "93--Refrain--阿南亮子.mp3" },
+      { id: 94, filename: "94--素颜--许嵩&何曼婷.mp3" },
+      { id: 95, filename: "95--下完这场雨--后弦.mp3" },
+      { id: 96, filename: "96--Rumors--Jake Miller.mp3" },
+      { id: 97, filename: "97--最好的那年--TFBOYS.mp3" },
+      { id: 98, filename: "98--Catch My Breath--Kelly Clarkson.mp3" },
+      { id: 99, filename: "99--我不曾忘记--最好的那年.mp3" },
+      { id: 100, filename: "100--Monsters--Katie Sky.mp3" },
+      { id: 101, filename: "101--Fall Rain--JULY.mp3" },
+      { id: 102, filename: "102--我们俩--郭顶.mp3" },
+      { id: 103, filename: "103--负重一万斤长大--太一.mp3" },
+      { id: 104, filename: "104--蒲公英的约定--周杰伦.mp3" },
+      { id: 105, filename: "105--M01--梶浦由記.mp3" },  
+      { id: 106, filename: "106--花あそび--阿南亮子.mp3" },
+      { id: 107, filename: "107--慘劇的記憶--梶浦由記.mp3" },
+      { id: 108, filename: "108--空待--洛天依Official&王朝.mp3" },  
+      { id: 109, filename: "109--向日葵(Sunflower)--流星P,巡音流歌.mp3" },  
+      { id: 110, filename: "110--类似爱情--萧亚轩.mp3" },
   ];
 
 songDatabase.forEach(song => {
@@ -1099,56 +1118,43 @@ async function initializePlayer() {
   })();
   // ─────────────── 可视化器结束 ───────────────
 
-document.addEventListener('keydown', (e) => {
-    // 1. 确认按下的是空格键
-    if (e.code === 'Space' || e.key === ' ') {
-      
-      // 2. 排除焦点在输入框的情况（防止在聊天或搜索打字时误触）
-      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-      if (activeTag === 'input' || activeTag === 'textarea') return;
+// =============================================
+  // ✅ 整合优化：全局键盘控制音乐 (空格播放/暂停，左右键切歌)
+  // =============================================
+  window.addEventListener('keydown', (e) => {
+    // 1. 排除焦点在输入框的情况（防止在聊天、搜索或写备忘录打字时误触）
+    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+    if (activeTag === 'input' || activeTag === 'textarea') return;
 
-      // 3. 判断是否处于禅模式 (无论是手动开启还是自动进入) 且已选中歌曲
-      if ((window.isZenMode || window.isAutoZenActive) && currentSongIndex > -1) {
+    // 2. 核心逻辑：只有在已经选中/加载了歌曲的情况下才生效
+    if (currentSongIndex > -1) {
+      
+      // --- 处理空格键：播放 / 暂停 ---
+      if (e.code === 'Space' || e.key === ' ') {
+        // 阻止空格键导致网页滚动的默认行为
+        e.preventDefault(); 
         
-        e.preventDefault(); // 阻止空格键默认会导致网页向下滚动的行为
-        
-        // 4. 切换播放/暂停状态
         if (audio.paused) {
           audio.play().catch(console.error);
+          // 仅在执行操作时触发气泡提示
           if (typeof showBubble === 'function') showBubble('▶️ 继续播放');
         } else {
           audio.pause();
           if (typeof showBubble === 'function') showBubble('⏸️ 音乐暂停');
         }
       }
-    }
-  });
-  // =============================================
-  // ✅ 新增：键盘左右键切换歌曲 (上一首/下一首)
-  // =============================================
-  document.addEventListener('keydown', (e) => {
-    // 1. 排除焦点在输入框的情况，防止打字时误触发切歌
-    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
-    if (activeTag === 'input' || activeTag === 'textarea') return;
-
-    // 2. 只有在禅模式（手动或自动）下才允许左右键切歌
-    if (!window.isZenMode && !window.isAutoZenActive) return;
-
-    // 3. 只有在已经选中歌曲（currentSongIndex > -1）的情况下才生效
-    if (currentSongIndex > -1) {
+      
+      // --- 处理左右方向键：上一首 / 下一首 ---
       if (e.key === 'ArrowLeft') {
-        // 按左箭头：上一首
-        e.preventDefault(); // 阻止默认行为
+        e.preventDefault();
         ui.prevBtn.click();
         if (typeof showBubble === 'function') showBubble('⏮️ 上一首');
       } else if (e.key === 'ArrowRight') {
-        // 按右箭头：下一首
         e.preventDefault();
         ui.nextBtn.click();
         if (typeof showBubble === 'function') showBubble('⏭️ 下一首');
       }
     }
-  });
 });
 document.addEventListener('DOMContentLoaded', () => {
     const playlistContainer = document.getElementById('musicPlaylist');
@@ -1168,4 +1174,5 @@ document.addEventListener('DOMContentLoaded', () => {
             playlistContainer.scrollTop += scrollAmount;
         }, { passive: false }); // passive: false 是必需的，因为它允许我们调用 event.preventDefault()
     }
+});
 });

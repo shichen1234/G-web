@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "__MSG_appName__",
-    "version": "4.1",
+    "version": "4.4.1",
     "description": "__MSG_appDesc__",
     "default_locale": "zh_CN",
     "sandbox": {
@@ -28,6 +28,10 @@
         "alarms"
     ],
     "host_permissions": [
+        "https://esm.sh/*",
+        "https://unpkg.com/*",
+        "https://cdn.jsdelivr.net/*",
+        "https://cdnjs.cloudflare.com/*",
         "https://suggestion.baidu.com/*",
         "https://www.doubao.com/*",
         "https://y.qq.com/*",
@@ -92,6 +96,7 @@
         }
     ],
     "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: https: http: blob:"
+        "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: https: http: blob:",
+        "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals allow-pointer-lock allow-orientation-lock allow-presentation; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; script-src-elem 'self' 'unsafe-inline' blob:; worker-src blob:;"
     }
 }
