@@ -117,7 +117,6 @@ button:not(:disabled) *,
 #suggestionList li,
 .menu-list li,
 .submenu li,
-#catVideo,
 .iconSettings,
 .iconSettings img,
 #biliIcon,
@@ -494,21 +493,8 @@ button:disabled *,
 #addIconModal input[type="text"], #addIconModal input[type="file"]{ padding:8px; border:1px solid #ddd; border-radius:6px; width:100%; box-sizing:border-box; }
 #addIconModal button{ padding:8px 12px; border-radius:6px; border: none; background: #0b74de; color:#fff; cursor:pointer; }
 #addIconModal button#cancelNewIcon{ background:#ddd; color:#333; }
-  #catShadow {
-  position: absolute;
-  bottom: 0px;
-  left: 15px; /* 根据小猫位置微调 */
-  width: 170px;
-  height: 25px;
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0.3) 70%, rgba(0,0,0,0) 100%);
-  border-radius: 50%;
-  z-index: -1;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  opacity: 1;
-  display: none; /* 初始不显示，等待 JS 控制 */
-}  
     .bubble-paw {
+  display: none;
   position: absolute;
   right: -12px;
   bottom: -12px;
@@ -522,20 +508,21 @@ button:disabled *,
 }
     #catSpeechBubble {
   position: fixed;
-  bottom: 220px; /* 小猫盒子高度 + 间距 */
-  left: 190px;
+  top: 0;
+  left: 0;
+  bottom: auto;
   background: #fff;
   color: #333;
   font-size: 14px;
   padding: 10px 16px;
-  border-radius: 20px;
+  border-radius: 14px;
   box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-  max-width: 500px;
+  max-width: min(360px, calc(100vw - 24px));
   opacity: 0;
   transform: scale(0.3);
   transform-origin: left bottom;
   pointer-events: none;
-  z-index: 100;
+  z-index: 8999;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -553,8 +540,15 @@ button:disabled *,
   z-index: -1;
 }
 
+#catSpeechBubble[data-side="left"] .bubble-tail {
+  left: auto;
+  right: 16px; /* 右下角 */
+  /* 镜像到右下角的三角形 */
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+
 .bubble-text {
-  white-space: nowrap;
+  white-space: normal;
   position: relative; /* 必须加 position 才能让 z-index 生效 */
   z-index: 2;
 }
@@ -584,33 +578,6 @@ button:disabled *,
   }
 }
 
-    #catBox {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  width: 200px;        /* 可根据需求调整大小 */
-  height: 200px;
-  background:transparent;  /* 半透明方框 */
-  overflow: hidden;
-  z-index: 40;
-  transform-origin: bottom left;
-}
-
-/* 在 style1.css 中找到 #catBox video 相关样式并修改 */
-
-/* 原代码: #catBox video { ... } */
-/* 修改为: */
-#catBox img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  z-index: 43;
-  /* 禁止拖拽图片 */
-  -webkit-user-drag: none;
-}
-
-/* 确保 #catVideo 的光标样式还在 (在 style1.css 的通用设置区域) */
-/* 搜索 #catVideo, 确保它被包含在 cursor: url(...) 列表中 (原代码已包含ID选择器，通常不需要额外修改，但建议检查) */
 #mediaWidget {
   /* 定位与尺寸 */
   position: fixed; 
@@ -2573,7 +2540,6 @@ body {
 #greetingMessage, 
 #beijingTime, 
 #weekDay, 
-.top-left-bar, 
-#catBox {
+.top-left-bar {
     z-index: 10;
 }

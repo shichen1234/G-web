@@ -430,6 +430,18 @@ function playCatTransition(type, callback) {
 // 快捷键呼叫小猫 (Alt+C)
 document.addEventListener("keydown", (event) => {
     if (event.altKey && event.code === "KeyC") {
+        if (event.__dynamicPetCatToggleHandled) return;
+        event.__dynamicPetCatToggleHandled = true;
+        event.stopImmediatePropagation();
+        if (window.dynamicPet && typeof window.dynamicPet.toggleFromCatBox === "function") {
+            event.preventDefault();
+            window.dynamicPet.toggleFromCatBox();
+            return;
+        }
+        window.__pendingPetToggle = true;
+        event.preventDefault();
+        return;
+
         const catImg = document.getElementById("catVideo");
         const catShadow = document.getElementById("catShadow");
         
@@ -524,42 +536,16 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 // ✅ V2.0 - 支持特殊节日样式的 showBubble 函数
 function showBubble(message, lock = false, force = false, specialClass = '') { 
-  if (window.isZenMode && !force) return;
-  if (bubbleDisabled && !force) return;
-  if (bubbleLocked) return;
-
-  // 核心修改：在显示前，先移除所有可能的特殊样式
-  const specialBubbleClasses = [
-    'bubble-birthday', 'bubble-chunjie', 'bubble-yuanxiao', 'bubble-duanwu', 
-    'bubble-zhongqiu', 'bubble-qixi', 'bubble-shengdan', 'bubble-yuandan', 
-    'bubble-guoqing', 'bubble-ertong', 'bubble-qingrenjie', 
-    'bubble-wanshengjie'
-  ];
-  bubble.classList.remove(...specialBubbleClasses);
-
-  // 如果传入了有效的特殊样式名，就添加它
-  if (specialClass && specialBubbleClasses.includes(specialClass)) {
-    bubble.classList.add(specialClass);
+  if (window.dynamicPet && typeof window.dynamicPet.showBubble === "function") {
+    window.dynamicPet.showBubble(message, lock, force, specialClass);
+    return;
   }
 
-  bubble.classList.remove("show");
-  void bubble.offsetWidth;
-
-  bubbleText.textContent = message;
-  bubble.classList.add("show");
-
-  if (lock) bubbleLocked = true;
-
-  if (bubbleTimeout) clearTimeout(bubbleTimeout);
-  bubbleTimeout = setTimeout(() => {
-    bubble.classList.remove("show");
-    bubbleLocked = false;
-    // 动画结束后，再次确保移除特殊样式，恢复默认
-    setTimeout(() =>{
-      if (!bubble.classList.contains("show")) {
-        bubble.classList.remove(...specialBubbleClasses);
-      }
-    }, 400); }, 4000);
+  window.__pendingPetBubbles = window.__pendingPetBubbles || [];
+  window.__pendingPetBubbles.push({ message, lock, force, specialClass });
+  if (window.__pendingPetBubbles.length > 5) {
+    window.__pendingPetBubbles.shift();
+  }
 }
 
 // 搜索框点击触发
@@ -579,6 +565,18 @@ searchInput.addEventListener("focus", () => {
 document.addEventListener("keydown", (event) => {
   
   if (event.altKey && event.code === "KeyC") {
+    if (event.__dynamicPetCatToggleHandled) return;
+    event.__dynamicPetCatToggleHandled = true;
+    event.stopImmediatePropagation();
+    if (window.dynamicPet && typeof window.dynamicPet.toggleFromCatBox === "function") {
+      event.preventDefault();
+      window.dynamicPet.toggleFromCatBox();
+      return;
+    }
+    window.__pendingPetToggle = true;
+    event.preventDefault();
+    return;
+
     const catVideo = document.getElementById("catVideo");
     const catShadow = document.getElementById("catShadow"); 
     if (catVisible) {
@@ -794,25 +792,10 @@ function deleteVideoFromIndexedDB(key) {
 window.addEventListener("DOMContentLoaded", () => {
   updateBeijingTime();
   setInterval(updateBeijingTime, 1000);
-  const savedVisible = localStorage.getItem("catVisible");
-  if (savedVisible === "false") {
-    const catVideo = document.getElementById("catVideo");
-    if (catVideo) catVideo.style.display = "none";
-    catVisible = false;
-    bubbleDisabled = true;
-  } else {
-    if (catVisible) {
-      playCatTransition("open", () => {
-        const catVideo = document.getElementById("catVideo");
-        if (catVideo) catVideo.style.display = "block";
-      });
-    }
-    catVisible = true;
-    bubbleDisabled = false;
-  }
 
-  // ✅ [修正] 初始问候逻辑 (包含生日、公历节日、农历节日)
-  if (catVisible && !hasShownInitialTip) {
+  // ✅ 初始问候交给小人气泡显示；延后一拍，确保 dynamic-pet.js 已完成初始化。
+  setTimeout(() => {
+  if (!hasShownInitialTip) {
     let greetingShown = false;
     
     // 1. Check for special day greetings by calling the new helper function
@@ -830,6 +813,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // Mark that the initial greeting routine has run to prevent it from running again in the same session
     hasShownInitialTip = true;
   }
+  }, 0);
 });
 document.getElementById("videoUpload").addEventListener("change", async function(event) {
   const file = event.target.files[0];
@@ -2727,4 +2711,3 @@ See console (F12) for detailed information`
   menuContainer.appendChild(cleanupBtn);
   menuContainer.appendChild(memoryBtn);
 }
-

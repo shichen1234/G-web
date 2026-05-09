@@ -367,11 +367,10 @@ window.toggleZenMode = function() {
   manageZenTimeWidget();
 
   if (typeof showBubble === 'function') {
-    const catVideo = document.getElementById('catVideo');
-    const isCatVisible = catVideo && catVideo.style.display !== 'none';
+    const isPetVisible = window.dynamicPet ? window.dynamicPet.petVisible : true;
     
-    if (isCatVisible) {
-        showBubble(isZen ? "禅模式已开启,享受宁静吧喵~🍃" : "欢迎回来喵!✨", false, true);
+    if (isPetVisible) {
+        showBubble(isZen ? "禅模式已开启，享受宁静吧！🍃" : "欢迎回来，继续出发！✨", false, true);
     }
   }
 };

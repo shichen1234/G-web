@@ -1426,7 +1426,7 @@ const wallpaperModalContent = document.querySelector('#wallpaperModal .modal-con
 // ⚙️ 配置区 —— 只需修改这两行
 const WEB_WP_GITHUB_RAW = 'https://raw.githubusercontent.com/shichen1234/wallpapers/main/';
 const WEB_WP_PROXY_BASE = 'https://ghproxy.net/' + WEB_WP_GITHUB_RAW;
-const WEB_WP_TOTAL = 16; // 仓库 web/ 目录下 zip 的总数 (1.zip ~ N.zip)
+const WEB_WP_TOTAL = 15; // 仓库 web/ 目录下 zip 的总数 (1.zip ~ N.zip)
 
 // 当前已创建的 Blob URL 列表，切换壁纸时统一 revoke
 let currentWebWpBlobUrls = [];
@@ -1485,7 +1485,6 @@ function renderWebWallpapers() {
       'https://steamcommunity.com/sharedfiles/filedetails/?id=1551961057', // 13
       'https://steamcommunity.com/sharedfiles/filedetails/?id=837440254', // 14
       'https://steamcommunity.com/sharedfiles/filedetails/?id=1373816444', // 15
-      'https://steamcommunity.com/sharedfiles/filedetails/?id=1078208425'
     ];
     const dlLink = document.createElement('a');
     dlLink.className = 'wallpaper-author-link';

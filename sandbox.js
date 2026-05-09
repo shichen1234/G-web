@@ -363,15 +363,11 @@ window.addEventListener('message', function(event) {
       window.parent.postMessage({ type: 'WEB_WP_CONTEXT_MENU', clientX: e.clientX, clientY: e.clientY }, '*');
     }, true);
 
-document.addEventListener('mousedown', function (e) {
-  if (typeof postPointerEvent !== 'undefined') postPointerEvent('mousedown', e);
-  
-  // 确保 iframe 内部元素能正常获得焦点
-  // 只在存在 renderer 时执行（Three.js 壁纸用）
-  if (typeof renderer !== 'undefined' && renderer && renderer.domElement) {
-    renderer.domElement.style.pointerEvents = 'auto';
-  }
-}, true);
+    document.addEventListener('mousedown', function (e) {
+      if (typeof postPointerEvent !== 'undefined') postPointerEvent('mousedown', e);
+      // 确保 iframe 内部元素能正常获得焦点
+renderer.domElement.style.pointerEvents = 'auto'; // 如果有 three.js canvas
+    }, true);
 
     document.addEventListener('mouseup', function (e) {
       if (typeof postPointerEvent !== 'undefined') postPointerEvent('mouseup', e);
