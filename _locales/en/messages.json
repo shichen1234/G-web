@@ -1,0 +1,947 @@
+{
+  "appName": {
+    "message": "G-web - Personalized New Tab and Pet Assistant"
+  },
+  "appDesc": {
+    "message": "Turns the new tab page into a personalized dashboard with cat interactions, music detection, quick panels, and more."
+  },
+  "social_youtube_title": {
+    "message": "Author on YouTube"
+  },
+  "social_bilibili_title": {
+    "message": "Author on Bilibili"
+  },
+  "video_unsupported": {
+    "message": "Your browser does not support the video tag."
+  },
+  "web_wallpaper_comment": {
+    "message": "Web wallpaper sandbox iframe"
+  },
+  "greeting_loading": {
+    "message": "Loading greeting..."
+  },
+  "beijing_time_loading": {
+    "message": "Loading Beijing time..."
+  },
+  "weekday_loading": {
+    "message": "Loading weekday..."
+  },
+  "weather_loading": {
+    "message": "Fetching weather..."
+  },
+  "cmd_icon_alt": {
+    "message": "Command"
+  },
+  "cmd_icon_title": {
+    "message": "Command menu"
+  },
+  "media_untitled": {
+    "message": "Untitled"
+  },
+  "media_unknown_artist": {
+    "message": "Unknown artist"
+  },
+  "search_engine_alt": {
+    "message": "Search engine"
+  },
+  "search_placeholder": {
+    "message": "Search..."
+  },
+  "ai_search_title": {
+    "message": "Search with Doubao AI"
+  },
+  "wallpaper_modal_title": {
+    "message": "🎨 Change Wallpaper"
+  },
+  "drag_hint": {
+    "message": "Hold the title bar area to drag this panel."
+  },
+  "wp_tab_static": {
+    "message": "🖼️ Static Wallpapers"
+  },
+  "wp_tab_dynamic": {
+    "message": "🎬 Live Wallpapers"
+  },
+  "wp_tab_web": {
+    "message": "🌐 Web Wallpapers"
+  },
+  "wp_tab_custom": {
+    "message": "📂 Custom Wallpaper"
+  },
+  "parallax_label": {
+    "message": "Background parallax"
+  },
+  "liquid_label": {
+    "message": "Water ripple effect"
+  },
+  "volume_label": {
+    "message": "Background sound"
+  },
+  "wp_tip_title_attr": {
+    "message": "View tips"
+  },
+  "wp_tip_title": {
+    "message": "🐾 Wallpaper Notes from Nomi:"
+  },
+  "wp_tip_content": {
+    "message": "<p style=\"font-size: 16px;\">🌟 <strong>What wallpaper types are available?</strong></p><p>You can switch between <strong>static images</strong>, <strong>smooth videos</strong>, and <strong>interactive web wallpapers</strong>. You can also upload your own <strong>custom wallpaper</strong>.</p><p style=\"font-size: 16px; margin-top: 15px;\">✨ <strong>What is background parallax?</strong></p><p>When enabled, the background gently follows your <strong>mouse movement</strong>,</p><p>making the page feel deeper, livelier, and more playful.</p><p style=\"font-size: 16px; margin-top: 15px;\">🌊 <strong>What is the water ripple effect?</strong></p><p>It makes static wallpapers ripple softly like water. It is soothing, but it can use more GPU power, so choose based on your machine.</p><p style=\"font-size: 13px; color: #777;\">Tip: this effect only works on static wallpapers.</p><hr><p>Try things out and dress up the page beautifully.</p><h3 style=\"text-align: right;\">Nomi &nbsp; says</h3>"
+  },
+  "add_shortcut_title": {
+    "message": "Add Shortcut"
+  },
+  "label_name": {
+    "message": "Name"
+  },
+  "shortcut_name_placeholder": {
+    "message": "Example: Bilibili"
+  },
+  "label_icon_optional": {
+    "message": "Icon (optional)"
+  },
+  "shortcut_url_placeholder": {
+    "message": "Example: bilibili.com"
+  },
+  "button_cancel": {
+    "message": "Cancel"
+  },
+  "button_save": {
+    "message": "Save"
+  },
+  "quick_apps_title": {
+    "message": "Quick Apps"
+  },
+  "quick_apps_hint": {
+    "message": "(drag to reorder)"
+  },
+  "add_shortcut_title_attr": {
+    "message": "Add shortcut"
+  },
+  "panel_setting_title": {
+    "message": "Adjust layout"
+  },
+  "quick_panel_title": {
+    "message": "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Quick Panel"
+  },
+  "birthday_record_title": {
+    "message": "🎂 Save Birthday"
+  },
+  "button_confirm": {
+    "message": "OK"
+  },
+  "birthday_countdown_label": {
+    "message": "Days until birthday"
+  },
+  "day_unit": {
+    "message": "days"
+  },
+  "reset_date": {
+    "message": "Reset date"
+  },
+  "birthday_surprise": {
+    "message": "Nomi prepared a little surprise for you. <span id=\"goSurprise\" style=\"text-decoration: underline; cursor: pointer; font-weight: bold;\">Take a look</span>"
+  },
+  "go_surprise": {
+    "message": "Take a look"
+  },
+  "back": {
+    "message": "Back"
+  },
+  "music_select_song": {
+    "message": "Choose a song"
+  },
+  "music_artist_empty": {
+    "message": "--"
+  },
+  "music_prev_title": {
+    "message": "Previous song"
+  },
+  "music_play_pause_title": {
+    "message": "Play/Pause"
+  },
+  "music_next_title": {
+    "message": "Next song"
+  },
+  "music_stop_title": {
+    "message": "Stop"
+  },
+  "music_playlist_title": {
+    "message": "Playlist"
+  },
+  "ai_chat_title": {
+    "message": "😺 AI Chat Nomi"
+  },
+  "clear_chat": {
+    "message": "Clear history"
+  },
+  "image_mode_title": {
+    "message": "Switch image generation mode"
+  },
+  "chat_input_placeholder": {
+    "message": "Type your message..."
+  },
+  "button_send": {
+    "message": "Send"
+  },
+  "todo_title": {
+    "message": "📝 Memo"
+  },
+  "todo_placeholder": {
+    "message": "Write a note..."
+  },
+  "calc_title": {
+    "message": "🧮 Calculator"
+  },
+  "fortune_title": {
+    "message": "🎐 Daily Cat Fortune"
+  },
+  "draw_fortune": {
+    "message": "✨ Draw Today's Fortune"
+  },
+  "fortune_default_title": {
+    "message": "Great Luck"
+  },
+  "fortune_default_text": {
+    "message": "Good: coding | Avoid: fixing bugs"
+  },
+  "game_center_title": {
+    "message": "🎮 Game Center"
+  },
+  "game_contra": {
+    "message": "🔫 Contra 30 Lives S Bullet"
+  },
+  "game_mario": {
+    "message": "🍄 Super Mario"
+  },
+  "game_snake": {
+    "message": "🐍 Snake"
+  },
+  "game_memory": {
+    "message": "🃏 Memory Cards"
+  },
+  "back_lobby": {
+    "message": "⬅ Back to Lobby"
+  },
+  "nes_sound_title": {
+    "message": "Game sound"
+  },
+  "load_game": {
+    "message": "Load"
+  },
+  "contra_title": {
+    "message": "🔫 Contra 30 Lives S Bullet"
+  },
+  "contra_controls": {
+    "message": "Controls: WASD move | J shoot | K jump | Shift select | Enter start"
+  },
+  "mario_title": {
+    "message": "🍄 Super Mario"
+  },
+  "mario_controls": {
+    "message": "Controls: WASD move | J run/fireball | K jump | Shift select | Enter start"
+  },
+  "snake_title": {
+    "message": "🐍 Snake Battle"
+  },
+  "snake_controls": {
+    "message": "🎮 WASD / Arrow keys"
+  },
+  "score_label": {
+    "message": "Score:"
+  },
+  "high_score_label": {
+    "message": "Best:"
+  },
+  "memory_title": {
+    "message": "🃏 Memory Cards"
+  },
+  "difficulty_easy": {
+    "message": "Easy"
+  },
+  "difficulty_medium": {
+    "message": "Medium"
+  },
+  "difficulty_hard": {
+    "message": "Hard"
+  },
+  "restart_title": {
+    "message": "Restart"
+  },
+  "memory_flips": {
+    "message": "Flips:"
+  },
+  "memory_matches": {
+    "message": "Matches:"
+  },
+  "memory_record": {
+    "message": "🏆 Records:"
+  },
+  "today_title": {
+    "message": "Back to today"
+  },
+  "today_button": {
+    "message": "Today"
+  },
+  "cal_week_sun": {
+    "message": "Sun"
+  },
+  "cal_week_mon": {
+    "message": "Mon"
+  },
+  "cal_week_tue": {
+    "message": "Tue"
+  },
+  "cal_week_wed": {
+    "message": "Wed"
+  },
+  "cal_week_thu": {
+    "message": "Thu"
+  },
+  "cal_week_fri": {
+    "message": "Fri"
+  },
+  "cal_week_sat": {
+    "message": "Sat"
+  },
+  "context_fullscreen": {
+    "message": "🖥️ Toggle Fullscreen"
+  },
+  "context_exit_fullscreen": {
+    "message": "🖥️ Exit Fullscreen"
+  },
+  "context_reload": {
+    "message": "🔄 Reload Page"
+  },
+  "context_wallpaper": {
+    "message": "🖼️ Change Wallpaper"
+  },
+  "context_mouse_trail": {
+    "message": "✨ Mouse Trail"
+  },
+  "trail_particle": {
+    "message": "⚪ Pearl Foam"
+  },
+  "trail_line": {
+    "message": "➖ Rainbow Flow"
+  },
+  "trail_sparkle": {
+    "message": "✨ Sparkling Stardust"
+  },
+  "trail_laser": {
+    "message": "⚡️ Aurora Beam"
+  },
+  "trail_off": {
+    "message": "🚫 Turn Effects Off"
+  },
+  "meme_click": {
+    "message": "Meme Clicks"
+  },
+  "context_zen": {
+    "message": "🍃 Zen Mode (show/hide UI)"
+  },
+  "context_language": {
+    "message": "🌐 Switch Language"
+  },
+  "context_about": {
+    "message": "🐱 About the Author"
+  },
+  "input_copy": {
+    "message": "📄 Copy"
+  },
+  "input_cut": {
+    "message": "✂️ Cut"
+  },
+  "input_paste": {
+    "message": "📋 Paste"
+  },
+  "input_select_all": {
+    "message": "🔲 Select All"
+  },
+  "cmd_hint_close": {
+    "message": "Press ESC to close"
+  },
+  "welcome_title": {
+    "message": "🎉 Welcome to G-web!"
+  },
+  "welcome_intro": {
+    "message": "For the best experience, please finish these basic settings:"
+  },
+  "welcome_gpu_title": {
+    "message": "1. Enable graphics acceleration"
+  },
+  "welcome_gpu_desc": {
+    "message": "Settings → System and performance → Enable graphics acceleration"
+  },
+  "welcome_edge_title": {
+    "message": "2. Turn off the Edge hover bar"
+  },
+  "welcome_edge_desc": {
+    "message": "Settings → Appearance → Context menus → Turn off video quick actions"
+  },
+  "welcome_features": {
+    "message": "<div>🤖 <strong>Built-in AI</strong> and retro games</div><div>🔍 Recommended zoom <strong>90%</strong></div><div><strong>Right-click</strong> to customize</div><div>📂 Hideable sidebars</div>"
+  },
+  "enter_explore": {
+    "message": "Start Exploring"
+  },
+  "disclaimer_link": {
+    "message": "📜 Disclaimer"
+  },
+  "copyright_title": {
+    "message": "📜 Copyright Notice"
+  },
+  "copyright_body": {
+    "message": "<p><strong>The wallpapers in this extension come from Wallpaper Engine Workshop, Zhutix, and Pinterest</strong>. Copyright belongs to the original creators. This extension is for personal, non-commercial recommendation only. If you are an original creator and want content adjusted, please contact me.</p><p style=\"margin-top: 15px;\">The wallpapers are cropped for personal viewing and non-commercial use only. Profit-making use, resale, reposting, AI training, and similar uses are prohibited.</p><p style=\"margin-top: 15px;\">Respect and thanks to every original creator. If you enjoy these works, please follow the links in the lower-left corner of each wallpaper and support the source.</p>"
+  },
+  "zen_date_sample": {
+    "message": "Jan 01, 2024"
+  },
+  "zen_week_sample": {
+    "message": "Monday"
+  },
+  "zen_weather_sample": {
+    "message": "Sunny 25℃"
+  },
+  "zen_hint_title": {
+    "message": "Music shortcut tips"
+  },
+  "zen_hint_aria": {
+    "message": "Zen mode shortcut tips"
+  },
+  "zen_hint_play": {
+    "message": "Play / Pause"
+  },
+  "zen_hint_prev": {
+    "message": "Previous song"
+  },
+  "zen_hint_next": {
+    "message": "Next song"
+  },
+  "zen_hint_tip": {
+    "message": "These shortcuts only control the music player in the right panel, not music from external websites."
+  },
+  "zen_care_name": {
+    "message": "Nomi"
+  },
+  "zen_care_text": {
+    "message": "Remember to drink some water."
+  },
+  "engine_bing_placeholder": {
+    "message": "Search with Bing..."
+  },
+  "engine_google_placeholder": {
+    "message": "Google Search..."
+  },
+  "engine_baidu_name": {
+    "message": "Baidu"
+  },
+  "engine_baidu_placeholder": {
+    "message": "Search Baidu..."
+  },
+  "engine_sogou_name": {
+    "message": "Sogou"
+  },
+  "engine_sogou_placeholder": {
+    "message": "Search Sogou..."
+  },
+  "wallpaper_custom_hint": {
+    "message": "💡 Click the button above to upload a local image or video (MP4).<br>It will be applied automatically and saved in the browser cache."
+  },
+  "manage_alt": {
+    "message": "Manage"
+  },
+  "button_delete": {
+    "message": "Delete"
+  },
+  "button_delete_cache": {
+    "message": "Delete cache"
+  },
+  "wallpaper_link": {
+    "message": "Wallpaper link →"
+  },
+  "download_link": {
+    "message": "Download link →"
+  },
+  "confirm_delete_wallpaper_cache": {
+    "message": "Delete this wallpaper cache?"
+  },
+  "wallpaper_saved_label": {
+    "message": "Saving..."
+  },
+  "wallpaper_download_failed": {
+    "message": "Download failed"
+  },
+  "daily_wallpaper_label": {
+    "message": "Daily refresh"
+  },
+  "smart_wallpaper_label": {
+    "message": "Changes by time"
+  },
+  "upload_wallpaper": {
+    "message": "Upload"
+  },
+  "today_character": {
+    "message": "Today"
+  },
+  "day_label_short": {
+    "message": "days"
+  },
+  "snake_game_over": {
+    "message": "💔 Game Over"
+  },
+  "snake_retry": {
+    "message": "Click anywhere to try again"
+  },
+  "snake_start": {
+    "message": "🐍 Click to start"
+  },
+  "snake_start_hint": {
+    "message": "Use WASD or arrow keys"
+  },
+  "calendar_month_format": {
+    "message": "{month}/{year}"
+  },
+  "calendar_lunar_first_day": {
+    "message": "1st"
+  },
+  "calendar_lunar_month_suffix": {
+    "message": " mo."
+  },
+  "no_matching_commands": {
+    "message": "No matching commands"
+  },
+  "search_type_for": {
+    "message": "Searching for: \"{query}\""
+  },
+  "ai_thinking": {
+    "message": "Thinking..."
+  },
+  "ai_error": {
+    "message": "Connection failed."
+  },
+  "image_mode_on_title": {
+    "message": "Image generation mode (click to return to chat)"
+  },
+  "image_prompt_placeholder": {
+    "message": "Describe an image, then send..."
+  },
+  "button_generate": {
+    "message": "Generate"
+  },
+  "image_generating": {
+    "message": "🎨 Generating, please wait..."
+  },
+  "image_open_title": {
+    "message": "Click to open the original image in a new tab"
+  },
+  "image_generated_badge": {
+    "message": "✨ Generated"
+  },
+  "image_history_label": {
+    "message": "[Image] {url}"
+  },
+  "image_error": {
+    "message": "Image generation failed. Try another prompt or come back later."
+  },
+  "chat_welcome": {
+    "message": "Hi! I am Nomi, your AI assistant. What can I help with?"
+  },
+  "confirm_clear_chat": {
+    "message": "Clear all chat history and memory?"
+  },
+  "today_signed": {
+    "message": "Drawn today (click to view)"
+  },
+  "memory_times": {
+    "message": " flips"
+  },
+  "memory_new_record": {
+    "message": " 🏆 New record!"
+  },
+  "memory_best_note": {
+    "message": " (best {flips} flips)"
+  },
+  "memory_win_stats": {
+    "message": "{flips} flips · time {time}{bestNote}"
+  },
+  "nes_running": {
+    "message": "Running"
+  },
+  "music_delete_title": {
+    "message": "Delete"
+  },
+  "music_download_title": {
+    "message": "Download"
+  },
+  "confirm_delete_song": {
+    "message": "Delete \"{title}\" including lyrics?"
+  },
+  "music_download_done": {
+    "message": "\"{title}\" downloaded!"
+  },
+  "music_download_first": {
+    "message": "Please download it first."
+  },
+  "no_lyrics": {
+    "message": "Instrumental / no lyrics"
+  },
+  "select_song_first": {
+    "message": "Choose a song first."
+  },
+  "no_downloaded_songs": {
+    "message": "No downloaded songs."
+  },
+  "playback_resume": {
+    "message": "▶️ Playing"
+  },
+  "playback_pause": {
+    "message": "⏸️ Paused"
+  },
+  "playback_prev": {
+    "message": "⏮️ Previous song"
+  },
+  "playback_next": {
+    "message": "⏭️ Next song"
+  },
+  "weather_failed": {
+    "message": "Weather failed to load"
+  },
+  "weather_default_city": {
+    "message": "Beijing"
+  },
+  "weather_api_language": {
+    "message": "en"
+  },
+  "zen_date_format": {
+    "message": "{year}-{month}-{date}"
+  },
+  "weather_loading_short": {
+    "message": "Loading weather"
+  },
+  "engine_switch_replies_1": {
+    "message": "Trying another search engine."
+  },
+  "engine_switch_replies_2": {
+    "message": "Let us see which search result is smarter."
+  },
+  "engine_switch_replies_3": {
+    "message": "Search engine switched."
+  },
+  "search_focus_prompts_1": {
+    "message": "What would you like to search?"
+  },
+  "search_focus_prompts_2": {
+    "message": "Looking for something?"
+  },
+  "search_focus_prompts_3": {
+    "message": "Type a keyword and I will help."
+  },
+  "birthday_special_1": {
+    "message": "Happy birthday! 🎂 Today is your day. Enjoy it!"
+  },
+  "birthday_special_2": {
+    "message": "Happy birthday! 🎉 Make a wish and I will guard it."
+  },
+  "birthday_special_3": {
+    "message": "Happy Birthday! ✨ Wishing you a wonderful year ahead."
+  },
+  "greeting_morning_replies_1": {
+    "message": "Good morning!"
+  },
+  "greeting_morning_replies_2": {
+    "message": "A new day begins."
+  },
+  "greeting_morning_replies_3": {
+    "message": "Morning. Let us start with energy."
+  },
+  "greeting_noon_replies_1": {
+    "message": "Good noon."
+  },
+  "greeting_noon_replies_2": {
+    "message": "Lunch time. Eat well first."
+  },
+  "greeting_noon_replies_3": {
+    "message": "Take a small break at noon."
+  },
+  "greeting_afternoon_replies_1": {
+    "message": "Good afternoon!"
+  },
+  "greeting_afternoon_replies_2": {
+    "message": "Afternoons are perfect for a little reset."
+  },
+  "greeting_afternoon_replies_3": {
+    "message": "Maybe coffee, tea, and a quiet moment."
+  },
+  "greeting_evening_replies_1": {
+    "message": "Good evening."
+  },
+  "greeting_evening_replies_2": {
+    "message": "You worked hard today. Rest early."
+  },
+  "greeting_evening_replies_3": {
+    "message": "Evening is for slowing down."
+  },
+  "greeting_default_replies_1": {
+    "message": "Hello there."
+  },
+  "greeting_default_replies_2": {
+    "message": "I am here."
+  },
+  "greeting_default_replies_3": {
+    "message": "What are you thinking about?"
+  },
+  "time_greetings_1": {
+    "message": "The morning light is gentle."
+  },
+  "time_greetings_2": {
+    "message": "It is noon. Remember to eat."
+  },
+  "time_greetings_3": {
+    "message": "Afternoon is a good time for a quick rest."
+  },
+  "time_greetings_4": {
+    "message": "It is late. Try to rest soon."
+  },
+  "todo_added_1": {
+    "message": "Got it. I wrote it down."
+  },
+  "todo_added_2": {
+    "message": "Noted. Small steps count."
+  },
+  "todo_added_3": {
+    "message": "You can do it."
+  },
+  "weather_sunny_1": {
+    "message": "The weather is lovely. Maybe get some sun."
+  },
+  "weather_sunny_2": {
+    "message": "Warm sunlight always feels nice."
+  },
+  "weather_cloudy_1": {
+    "message": "A gray day. Good for staying cozy."
+  },
+  "weather_cloudy_2": {
+    "message": "Foggy outside. Take it slow."
+  },
+  "weather_rainy_1": {
+    "message": "It is raining. Remember an umbrella."
+  },
+  "weather_rainy_2": {
+    "message": "Rain sounds can be very calming."
+  },
+  "weather_sand_1": {
+    "message": "Dusty outside. Keep the windows closed."
+  },
+  "weather_sand_2": {
+    "message": "The air looks rough. A mask may help."
+  },
+  "weather_sand_3": {
+    "message": "Take care of your lungs today."
+  },
+  "weather_snow_1": {
+    "message": "It is snowing. A quiet white day."
+  },
+  "weather_snow_2": {
+    "message": "Snowflakes are drifting outside."
+  },
+  "weather_unknown_1": {
+    "message": "The weather feels mysterious."
+  },
+  "weather_unknown_2": {
+    "message": "Whatever the weather, I am here."
+  },
+  "bili_hover_1": {
+    "message": "This is the author's Bilibili page."
+  },
+  "bili_hover_2": {
+    "message": "There is also a Bilibili corner here."
+  },
+  "bili_hover_3": {
+    "message": "Nice find. That is the Bilibili entrance."
+  },
+  "youtube_hover_1": {
+    "message": "This is the author's YouTube page."
+  },
+  "youtube_hover_2": {
+    "message": "YouTube has a trace of me too."
+  },
+  "youtube_hover_3": {
+    "message": "This is the YouTube portal."
+  },
+  "search_fun_phrases_1": {
+    "message": "Search something interesting..."
+  },
+  "search_fun_phrases_2": {
+    "message": "What is the weather today?"
+  },
+  "search_fun_phrases_3": {
+    "message": "What should I eat for lunch?"
+  },
+  "search_fun_phrases_4": {
+    "message": "Any good songs lately?"
+  },
+  "search_fun_phrases_5": {
+    "message": "Check today's trending news"
+  },
+  "search_fun_phrases_6": {
+    "message": "Where to go this weekend?"
+  },
+  "search_fun_phrases_7": {
+    "message": "Useful life tips"
+  },
+  "search_fun_phrases_8": {
+    "message": "Stay curious..."
+  },
+  "about_messages_1": {
+    "message": "The author is hiding somewhere near the edge of the screen."
+  },
+  "about_messages_2": {
+    "message": "Try moving your mouse around the corners. Something may happen."
+  },
+  "about_messages_3": {
+    "message": "Look around the edges. Finding it counts as a win."
+  },
+  "about_messages_4": {
+    "message": "The author is shy. Try catching him near the screen edge."
+  },
+  "tsundere_ai_1": {
+    "message": "What is it? Do not poke me for nothing."
+  },
+  "tsundere_ai_2": {
+    "message": "Want me to draw? Fine, but no complaining."
+  },
+  "tsundere_ai_3": {
+    "message": "Fine, I will help you this once."
+  },
+  "zen_care_messages_1": {
+    "message": "You have been looking at the screen for a while. Blink and drink water."
+  },
+  "zen_care_messages_2": {
+    "message": "Spacing out? I will keep you company."
+  },
+  "zen_care_messages_3": {
+    "message": "Take a deep breath and relax your shoulders."
+  },
+  "zen_care_messages_4": {
+    "message": "Stand up and stretch for a moment."
+  },
+  "zen_care_messages_5": {
+    "message": "Time moves fast. Rest your eyes a little."
+  },
+  "zen_care_messages_6": {
+    "message": "I am here with you. Remember to balance work and rest."
+  },
+  "zen_care_messages_7": {
+    "message": "Eyes feeling tired? Look into the distance."
+  },
+  "zen_care_messages_8": {
+    "message": "Keep a good mood today."
+  },
+  "zen_care_messages_9": {
+    "message": "Daydreaming is a good kind of rest."
+  },
+  "zen_care_messages_10": {
+    "message": "You have held that posture for a while. Move your neck a bit."
+  },
+  "zen_care_messages_11": {
+    "message": "This melody feels relaxing."
+  },
+  "zen_care_messages_12": {
+    "message": "Being in your own quiet world can feel wonderful."
+  },
+  "zen_care_messages_13": {
+    "message": "I like sharing quiet moments like this with you."
+  },
+  "zen_care_messages_14": {
+    "message": "Do you hear a favorite rhythm? Sway along gently."
+  },
+  "zen_care_messages_15": {
+    "message": "Let the worries go for now. This is your relaxing time."
+  },
+  "zen_care_messages_16": {
+    "message": "This atmosphere is perfect for closing your eyes."
+  },
+  "zen_care_messages_17": {
+    "message": "Pause whenever you feel tired. I will be here."
+  },
+  "zen_care_messages_18": {
+    "message": "Enjoy this calm moment."
+  },
+  "zen_care_messages_19": {
+    "message": "Drink some warm water and keep enjoying the moment."
+  },
+  "zen_care_messages_20": {
+    "message": "I am saving this cozy feeling in my heart."
+  },
+  "dynamic_pet_click_1": {
+    "message": "Need something?"
+  },
+  "dynamic_pet_click_2": {
+    "message": "Let us do our best today."
+  },
+  "dynamic_pet_click_3": {
+    "message": "You are doing pretty well."
+  },
+  "dynamic_pet_click_4": {
+    "message": "It is okay to rest."
+  },
+  "dynamic_pet_click_5": {
+    "message": "Do not be too hard on yourself."
+  },
+  "dynamic_pet_click_6": {
+    "message": "Today will go smoothly."
+  },
+  "dynamic_pet_click_7": {
+    "message": "I am cheering for you nearby."
+  },
+  "dynamic_pet_click_8": {
+    "message": "If you are tired, drink some warm tea and unwind."
+  },
+  "dynamic_pet_click_9": {
+    "message": "Step outside when you can and get some air."
+  },
+  "dynamic_pet_click_10": {
+    "message": "Share happy things with me anytime."
+  },
+  "dynamic_pet_click_11": {
+    "message": "Drink water and take care of yourself."
+  },
+  "dynamic_pet_click_12": {
+    "message": "Remember to eat on time."
+  },
+  "dynamic_pet_hide_1": {
+    "message": "I will step away for a bit. Call me when needed."
+  },
+  "dynamic_pet_hide_2": {
+    "message": "I will stand by nearby."
+  },
+  "dynamic_pet_hide_3": {
+    "message": "I am going offline for a tiny while, but I will be back."
+  },
+  "dynamic_pet_hide_4": {
+    "message": "Click again when you need me."
+  },
+  "dynamic_pet_hide_5": {
+    "message": "I am taking a tiny break. Call me when you need me."
+  },
+  "dynamic_pet_hide_6": {
+    "message": "I will take a walk in the cloud. Call me back anytime."
+  },
+  "music_hover_1": {
+    "message": "Nice song choice."
+  },
+  "music_hover_2": {
+    "message": "This sounds good. I could sway to it."
+  },
+  "music_hover_3": {
+    "message": "That song has a good mood."
+  },
+  "music_hover_4": {
+    "message": "Good music makes the page feel alive."
+  },
+  "music_hover_5": {
+    "message": "I could listen to this all day."
+  },
+  "music_hover_6": {
+    "message": "The cover has a nice vibe too."
+  }
+}

@@ -38,7 +38,7 @@ function calculateDays(birthdayStr) {
     const savedDate = localStorage.getItem(STORAGE_KEY_BIRTHDAY);
     if (savedDate) {
       const days = calculateDays(savedDate);
-      daysNumber.textContent = days === 0 ? "今" : days;
+      daysNumber.textContent = days === 0 ? gwT('today_character', "今") : days;
       
       // 显示倒计时卡片
       pickerSection.style.display = 'none';
@@ -48,7 +48,7 @@ function calculateDays(birthdayStr) {
       // 如果是今天，显示惊喜入口
       if (days === 0) {
         surpriseLink.style.display = 'block';
-        daysNumber.nextElementSibling.textContent = "天";
+        daysNumber.nextElementSibling.textContent = gwT('day_label_short', "天");
       } else {
         surpriseLink.style.display = 'none';
       }
@@ -62,14 +62,14 @@ function calculateDays(birthdayStr) {
   saveBtn.addEventListener('click', () => {
     const dateVal = dateInput.value;
     if (!dateVal) {
-      alert("请选择日期喵~");
+      alert(gwT('birthday_pick_date', "请选择日期喵~"));
       return;
     }
     localStorage.setItem(STORAGE_KEY_BIRTHDAY, dateVal);
     updateUI();
     // 使用现有的 showBubble 函数反馈
     if (typeof showBubble === 'function') {
-      showBubble("已经记下你的生日啦喵！✨");
+      showBubble(gwT('birthday_saved', "已经记下你的生日啦喵！✨"));
     }
   });
   
@@ -91,7 +91,7 @@ function calculateDays(birthdayStr) {
     
     // 2. 小猫弹出祝福（假设你已有名为 showBubble 的函数）
     if (typeof showBubble === 'function') {
-      showBubble("✨ 哇！祝你生日快乐喵！快看我为你准备的蛋糕~ 🎂");
+      showBubble(gwT('birthday_surprise_bubble', "✨ 哇！祝你生日快乐喵！快看我为你准备的蛋糕~ 🎂"));
     }
   });
 
@@ -280,7 +280,7 @@ function handleAddTodo() {
   loadTodos(); // 重新加载以显示新任务
   
   if (typeof showBubble === 'function') {
-    const msgs = ["收到！记下来了喵~", "好记性不如烂笔头喵！", "加油完成哦喵~"];
+    const msgs = gwList('todo_added', ["收到！记下来了喵~", "好记性不如烂笔头喵！", "加油完成哦喵~"]);
     showBubble(msgs[Math.floor(Math.random() * msgs.length)]);
   }
 }
@@ -310,7 +310,7 @@ function toggleTodo(index) {
     loadTodos();
     
     if (todos[index].done && typeof showBubble === 'function') {
-      showBubble("太棒了！又完成一件事喵！🎉");
+      showBubble(gwT('todo_done', "太棒了！又完成一件事喵！🎉"));
     }
   }
 }
@@ -470,12 +470,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // 小猫互动
           if(typeof showBubble === 'function' && result !== 'Error' && Math.random() > 0.8) {
-             showBubble("算数我在行喵！");
+             showBubble(gwT('calc_success', "算数我在行喵！"));
           }
         } catch (e) {
           console.error(e);
           display.value = 'Error';
-          if(typeof showBubble === 'function') showBubble("算式太难了喵...");
+          if(typeof showBubble === 'function') showBubble(gwT('calc_error', "算式太难了喵..."));
         }
       } 
       // 4. 输入处理

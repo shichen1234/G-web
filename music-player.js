@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   const DUAL_COLUMN_LYRIC_SONG_IDS = new Set([
-    12, 21, 22, 23, 24, 26, 31, 35, 36, 37, 38, 40, 43, 44, 45, 46,48,50,54,55,56,58,62,66,75,76,77,78,79,84,85,86,87,92,96,98,100,32,109
+    12, 21, 22, 23, 24, 26, 31, 35, 36, 37, 38, 40, 43, 44, 45, 46,48,50,54,55,56,58,62,66,75,76,77,78,79,84,85,86,87,92,96,98,100,32,109,115,116,117,118,119
   ]);
 
   // music-player.js
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 54, filename: "54--僕らの手には何もないけど、--RAM WIRE.mp3" },
     { id: 55, filename: "55--動く、動く--久保ユリカ&水瀬いのり.mp3" },
     { id: 56, filename: "56--Immortals--Fall Out Boy.mp3" },
-    { id: 57, filename: "57--下雨天--南拳妈妈.mp3" },
+    { id: 57, filename: "57--下雨天--芝麻Mochi(翻唱).mp3" },
     { id: 58, filename: "58--TICKING AWAY (VCT ANTHEM 2023) (流光似箭)--Grabbitz&无畏契约&bbno$.mp3" },
     { id: 59, filename: "59--告白气球--周杰伦.mp3" },
     { id: 60, filename: "60--青花瓷--周杰伦.mp3" },
@@ -178,6 +178,16 @@ document.addEventListener('DOMContentLoaded', () => {
       { id: 108, filename: "108--空待--洛天依Official&王朝.mp3" },  
       { id: 109, filename: "109--向日葵(Sunflower)--流星P,巡音流歌.mp3" },  
       { id: 110, filename: "110--类似爱情--萧亚轩.mp3" },
+      { id: 111, filename: "111--いのちの名前--久石让.mp3" },
+      { id: 112, filename: "112--云海--千亿.mp3" },
+      { id: 113, filename: "113--Felicity--Isaac Shepard.mp3" },
+      { id: 114, filename: "114--Drowning in the Fog of Yours--Cicada.mp3" },
+      { id: 115, filename: "115--Counting Stars--OneRepublic.mp3" },
+      { id: 116, filename: "116--HACK--末吉秀太.mp3" },
+      { id: 117, filename: "117--恋文--やなぎなぎ.mp3" },
+      { id: 118, filename: "118--ギフト--DECO27.mp3" },
+      { id: 119, filename: "119--ミチノチモシーキミノキモチ--森永千才.mp3" },
+      { id: 120, filename: "120--那些你很冒险的梦--林俊杰.mp3" }
   ];
 
 songDatabase.forEach(song => {

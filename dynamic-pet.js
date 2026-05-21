@@ -246,7 +246,7 @@ class DynamicPet {
             onFinish: () => {
                 this.isInteracting = false;
                 this.setState('idle', true);
-                this.showBubble('我回来了，继续出发！', true, true);
+                this.showBubble('我回来啦，我们继续吧~', true, true);
             }
         });
     }

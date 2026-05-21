@@ -161,16 +161,22 @@ document.getElementById("beijingTime").addEventListener("mouseenter", () => {
     const date = beijingTime.getDate();
     const hours = beijingTime.getHours();
     let timeGreeting = "";
-    if (hours >= 6 && hours <= 10) timeGreeting = "清晨的阳光真温柔～";
-    else if (hours >= 11 && hours <= 13) timeGreeting = "中午啦，记得吃饭哦～";
-    else if (hours >= 14 && hours <= 17) timeGreeting = "下午时光，适合小憩一下～";
-    else timeGreeting = "夜深了，早点休息吧～";
-    showBubble(`现在是${month}月${date}日｜${timeGreeting}`);
+    const timeGreetings = gwList('time_greetings', [
+      "清晨的阳光真温柔～",
+      "中午啦，记得吃饭哦～",
+      "下午时光，适合小憩一下～",
+      "夜深了，早点休息吧～"
+    ]);
+    if (hours >= 6 && hours <= 10) timeGreeting = timeGreetings[0];
+    else if (hours >= 11 && hours <= 13) timeGreeting = timeGreetings[1];
+    else if (hours >= 14 && hours <= 17) timeGreeting = timeGreetings[2];
+    else timeGreeting = timeGreetings[3];
+    showBubble(gwT('time_hover_message', `现在是${month}月${date}日｜${timeGreeting}`, { month, date, greeting: timeGreeting }));
 });
 
 document.getElementById("weekDay").addEventListener("mouseenter", () => {
     const weekText = document.getElementById("weekDay").textContent.trim();
-    showBubble(`今天是${weekText}，要加油哦！`);
+    showBubble(gwT('weekday_hover_message', `今天是${weekText}，要加油哦！`, { weekday: weekText }));
 });
 
 // === 变量定义 ===
@@ -216,7 +222,7 @@ function showBubble(message, lock = false, force = false, specialClass = '') {
 // 搜索框和问候语监听 (保持不变)
 searchInput.addEventListener("focus", () => {
     if (isMenuOperating) return;
-    const prompts = ["今天要搜索什么呀？", "想找点什么呢～", "输入关键词，小猫来帮你找！"];
+    const prompts = gwList('search_focus_prompts', ["今天要搜索什么呀？", "想找点什么呢～", "输入关键词，小猫来帮你找！"]);
     showBubble(prompts[Math.floor(Math.random() * prompts.length)]);
 });
 
@@ -232,11 +238,11 @@ function checkSpecialDayGreeting() {
         const bDay = parseInt(parts[2], 10);
 
         if ((today.getMonth() + 1) === bMonth && today.getDate() === bDay) {
-            const specialGreetings = [
+            const specialGreetings = gwList('birthday_special', [
                 "生日快乐喵！🎂 今天你是全宇宙的主角，要开开心心哦！",
                 "喵呜！祝你生日快乐！🎉 许个愿望吧，小猫会帮你守护它的！",
                 "Happy Birthday！✨ 今天的小鱼干都分给你，祝你万事胜意喵！"
-            ];
+            ]);
             const randomMsg = specialGreetings[Math.floor(Math.random() * specialGreetings.length)];
             return { msg: randomMsg, class: 'bubble-birthday' };
         }
@@ -248,36 +254,36 @@ function checkSpecialDayGreeting() {
         const lunar = Lunar.fromDate(today);
 
         const solarGreetings = {
-          "1-1": { msg: "元旦快乐喵！🎆 新的一年，希望你的猫罐头永远吃不完！", class: "bubble-yuandan" },
-          "2-14": { msg: "情人节快乐喵！💖 没有对象？没关系，你有我这只可爱的小猫咪呀！", class: "bubble-qingrenjie" },
-          "3-8": "妇女节快乐喵！👑 今天你最美，不接受反驳！",
-          "3-12": "植树节到了喵！🌳 要不要一起去种猫草？",
-          "4-1": "愚人节快乐！🤪 小猫才不会骗你呢... 除非有罐头！",
-          "4-5": "清明时节雨纷纷喵... 🌱 记得带伞哦。",
-          "5-1": { msg: "劳动节快乐！🛠️ 今天不抓老鼠，我们要一起躺平喵～", class: "bubble-wuYi" },
-          "5-4": "青年节快乐喵！💪 永远年轻，永远热泪盈眶！",
-          "5-20": "520快乐喵！❤️ 虽然我不懂爱，但我知道我喜欢你！",
-          "6-1": { msg: "六一儿童节快乐喵！🎈 谁还不是个几百个月的宝宝呢？", class: "bubble-ertong" },
-          "7-1": "建党节快乐喵！🚩 红旗飘飘，小猫敬礼！",
-          "8-1": "建军节快乐喵！🫡 向最可爱的人致敬！",
-          "9-10": "教师节快乐喵！👩‍🏫 老师辛苦啦，送你一朵小红花！",
-          "10-1":  { msg: "国庆节快乐！ 愿祖国繁荣昌盛，国泰民安！", class: "bubble-guoqing" },
-          "10-24": "程序员节快乐喵！💻 愿你的代码没有Bug，发量依然浓密！",
-          "10-31": { msg: "不给糖就捣蛋！🎃 快把你的小鱼干交出来！", class: "bubble-wanshengjie" }, 
-          "11-11": "双十一快乐喵！🛒 购物车满了吗？记得给小猫买零食哦！",
-          "12-24": "平安夜快乐喵！🍎 记得吃苹果，平平安安哦～",
-          "12-25":  { msg: "圣诞快乐喵！🎄 把袜子挂好，等着收礼物吧！", class: "bubble-shengdan" }
+          "1-1": { msg: gwT('festival_new_year_day', "元旦快乐喵！🎆 新的一年，希望你的猫罐头永远吃不完！"), class: "bubble-yuandan" },
+          "2-14": { msg: gwT('festival_valentine', "情人节快乐喵！💖 没有对象？没关系，你有我这只可爱的小猫咪呀！"), class: "bubble-qingrenjie" },
+          "3-8": gwT('festival_womens_day', "妇女节快乐喵！👑 今天你最美，不接受反驳！"),
+          "3-12": gwT('festival_tree_day', "植树节到了喵！🌳 要不要一起去种猫草？"),
+          "4-1": gwT('festival_april_fools', "愚人节快乐！🤪 小猫才不会骗你呢... 除非有罐头！"),
+          "4-5": gwT('festival_qingming', "清明时节雨纷纷喵... 🌱 记得带伞哦。"),
+          "5-1": { msg: gwT('festival_labor_day', "劳动节快乐！🛠️ 今天不抓老鼠，我们要一起躺平喵～"), class: "bubble-wuYi" },
+          "5-4": gwT('festival_youth_day', "青年节快乐喵！💪 永远年轻，永远热泪盈眶！"),
+          "5-20": gwT('festival_520', "520快乐喵！❤️ 虽然我不懂爱，但我知道我喜欢你！"),
+          "6-1": { msg: gwT('festival_childrens_day', "六一儿童节快乐喵！🎈 谁还不是个几百个月的宝宝呢？"), class: "bubble-ertong" },
+          "7-1": gwT('festival_cpc_day', "建党节快乐喵！🚩 红旗飘飘，小猫敬礼！"),
+          "8-1": gwT('festival_army_day', "建军节快乐喵！🫡 向最可爱的人致敬！"),
+          "9-10": gwT('festival_teachers_day', "教师节快乐喵！👩‍🏫 老师辛苦啦，送你一朵小红花！"),
+          "10-1":  { msg: gwT('festival_national_day', "国庆节快乐！ 愿祖国繁荣昌盛，国泰民安！"), class: "bubble-guoqing" },
+          "10-24": gwT('festival_programmers_day', "程序员节快乐喵！💻 愿你的代码没有Bug，发量依然浓密！"),
+          "10-31": { msg: gwT('festival_halloween', "不给糖就捣蛋！🎃 快把你的小鱼干交出来！"), class: "bubble-wanshengjie" }, 
+          "11-11": gwT('festival_double_11', "双十一快乐喵！🛒 购物车满了吗？记得给小猫买零食哦！"),
+          "12-24": gwT('festival_christmas_eve', "平安夜快乐喵！🍎 记得吃苹果，平平安安哦～"),
+          "12-25":  { msg: gwT('festival_christmas', "圣诞快乐喵！🎄 把袜子挂好，等着收礼物吧！"), class: "bubble-shengdan" }
         };
         const lunarGreetings = {
-          "1-1":{ msg:"过年啦！🧨 恭喜发财，红包拿来买猫粮喵！新年快乐！", class: "bubble-chunjie" },
-          "1-15":{ msg: "元宵节快乐喵！🏮 猜灯谜？不如猜猜我今天吃了多少小鱼干？", class: "bubble-yuanxiao" },
-          "2-2": "龙抬头喵！🐉 要不要带我去理个发，剪个帅气猫头？",
-          "5-5": { msg: "端午安康！🐲 粽子虽好，可不要贪吃哦，把肉馅的留给我！", class: "bubble-duanwu" },
-          "7-7": { msg: "七夕快乐！🌌 今晚的星星会唱歌，你听到了吗？", class: "bubble-qixi" },
-          "7-15": "中元节喵... 👻 晚上早点回家，小猫会保护你的！",
-          "8-15": { msg: "中秋节快乐！🌕 月饼分我一半，不然...我就对着月亮告状说你欺负我！", class: "bubble-zhongqiu" },
-          "12-8": "腊八节快乐喵！🥣 过了腊八就是年，粥好喝吗？",
-          "12-23": "小年快乐喵！🍬 灶神爷爷上天言好事，我在凡间讨鱼吃～"
+          "1-1":{ msg: gwT('festival_lunar_new_year', "过年啦！🧨 恭喜发财，红包拿来买猫粮喵！新年快乐！"), class: "bubble-chunjie" },
+          "1-15":{ msg: gwT('festival_lantern', "元宵节快乐喵！🏮 猜灯谜？不如猜猜我今天吃了多少小鱼干？"), class: "bubble-yuanxiao" },
+          "2-2": gwT('festival_dragon_head', "龙抬头喵！🐉 要不要带我去理个发，剪个帅气猫头？"),
+          "5-5": { msg: gwT('festival_dragon_boat', "端午安康！🐲 粽子虽好，可不要贪吃哦，把肉馅的留给我！"), class: "bubble-duanwu" },
+          "7-7": { msg: gwT('festival_qixi', "七夕快乐！🌌 今晚的星星会唱歌，你听到了吗？"), class: "bubble-qixi" },
+          "7-15": gwT('festival_ghost', "中元节喵... 👻 晚上早点回家，小猫会保护你的！"),
+          "8-15": { msg: gwT('festival_mid_autumn', "中秋节快乐！🌕 月饼分我一半，不然...我就对着月亮告状说你欺负我！"), class: "bubble-zhongqiu" },
+          "12-8": gwT('festival_laba', "腊八节快乐喵！🥣 过了腊八就是年，粥好喝吗？"),
+          "12-23": gwT('festival_little_new_year', "小年快乐喵！🍬 灶神爷爷上天言好事，我在凡间讨鱼吃～")
         };
         
         const solarStr = `${solar.getMonth()}-${solar.getDay()}`;
@@ -286,7 +292,7 @@ function checkSpecialDayGreeting() {
         let festivalData = null; 
         
         if (lunar.getFestivals().includes("除夕")) {
-             festivalData = { msg: "除夕快乐喵！🧨 今晚不许睡，陪我守岁抢红包！", class: "bubble-chunjie" };
+             festivalData = { msg: gwT('festival_new_year_eve', "除夕快乐喵！🧨 今晚不许睡，陪我守岁抢红包！"), class: "bubble-chunjie" };
         } else {
             if (solarGreetings[solarStr]) {
               festivalData = solarGreetings[solarStr];
@@ -317,18 +323,23 @@ greetingEl.addEventListener("mouseenter", () => {
   }
   
   // If not a special day, continue with the original logic
-  const greetingText = greetingEl.textContent.trim();
-
   const replies = {
-    "早上好": ["早上好呀！", "新的一天开始啦～", "早安早安，今天也要元气满满！"],
-    "中午好": ["中午好呀～", "午饭时间到啦，吃饱才有力气喵！", "中午好，来休息一下吧～"],
-    "下午好": ["下午好呀！", "下午时光最适合发呆了～", "下午好，来杯咖啡或下午茶，享受片刻的悠闲吧。"],
-    "晚上好": ["晚上好呀～", "辛苦啦，今晚早点休息哦～", "夜晚是属于放松的时间～"],
-    "默认": ["你好呀～", "喵～你来啦！", "嘿嘿，在想什么呢？"]
+    "早上好": gwList('greeting_morning_replies', ["早上好呀！", "新的一天开始啦～", "早安早安，今天也要元气满满！"]),
+    "中午好": gwList('greeting_noon_replies', ["中午好呀～", "午饭时间到啦，吃饱才有力气喵！", "中午好，来休息一下吧～"]),
+    "下午好": gwList('greeting_afternoon_replies', ["下午好呀！", "下午时光最适合发呆了～", "下午好，来杯咖啡或下午茶，享受片刻的悠闲吧。"]),
+    "晚上好": gwList('greeting_evening_replies', ["晚上好呀～", "辛苦啦，今晚早点休息哦～", "夜晚是属于放松的时间～"]),
+    "默认": gwList('greeting_default_replies', ["你好呀～", "喵～你来啦！", "嘿嘿，在想什么呢？"])
   };
 
-  let matchedKey = Object.keys(replies).find(key => greetingText.includes(key));
-  if (!matchedKey) matchedKey = "默认";
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const beijingTime = new Date(utc + 8 * 3600000);
+  const hours = beijingTime.getHours();
+  let matchedKey = "默认";
+  if (hours >= 6 && hours <= 10) matchedKey = "早上好";
+  else if (hours >= 11 && hours <= 12) matchedKey = "中午好";
+  else if (hours >= 13 && hours <= 17) matchedKey = "下午好";
+  else matchedKey = "晚上好";
 
   const options = replies[matchedKey];
   const reply = options[Math.floor(Math.random() * options.length)];
@@ -449,7 +460,7 @@ document.addEventListener("keydown", (event) => {
             bubbleDisabled = true;
             playCatTransition("close", () => {
                 catVisible = false;
-                showBubble("小猫先躲起来啦～", true, true);
+                showBubble(gwT('pet_hide_legacy', "小猫先躲起来啦～"), true, true);
                 localStorage.setItem("catVisible", "false");
             });
         } else {
@@ -460,7 +471,7 @@ document.addEventListener("keydown", (event) => {
             playCatTransition("open", () => {
                 catVisible = true;
                 bubbleDisabled = false;
-                showBubble("小猫回来啦喵～", true);
+                showBubble(gwT('pet_show_legacy', "小猫回来啦喵～"), true);
                 localStorage.setItem("catVisible", "true");
             });
         }
@@ -504,7 +515,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // 🌀 触发头晕
             if (clickCount >= 8) {
                 isLocked = true;
-                showBubble("喵呜呜……有点晕了喵～");
+                showBubble(gwT('pet_dizzy', "喵呜呜……有点晕了喵～"));
 
                 // 切换到忧愁 GIF (使用 dizzy 专属时长)
                 catImg.src = getGifUrl("./cat/youchou.gif");
@@ -518,7 +529,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // 🐱 正常点击互动
-            const meowReplies = ["喵~", "喵呜~", "喵喵喵？"];
+            const meowReplies = gwList('pet_meow_replies', ["喵~", "喵呜~", "喵喵喵？"]);
             showBubble(meowReplies[Math.floor(Math.random() * meowReplies.length)]);
 
             // ✅ 核心修改：从 reactionConfig 中随机选择并播放
@@ -553,11 +564,11 @@ searchInput.addEventListener("focus", () => {
   // 🔴 新增：如果是菜单操作触发的聚焦，直接忽略，不弹气泡
   if (isMenuOperating) return; 
 
-  const prompts = [
+  const prompts = gwList('search_focus_prompts', [
     "今天要搜索什么呀？",
     "想找点什么呢～",
     "输入关键词，小猫来帮你找！"
-  ];
+  ]);
   const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
   showBubble(randomPrompt);
 });
@@ -587,7 +598,7 @@ document.addEventListener("keydown", (event) => {
         if (catVideo) catVideo.style.display = "none";
         if (catShadow) catShadow.style.display = "none"; 
         catVisible = false;
-        showBubble("小猫先躲起来啦～", true, true);
+        showBubble(gwT('pet_hide_legacy', "小猫先躲起来啦～"), true, true);
         localStorage.setItem("catVisible", "false");
       });
     } else {
@@ -607,7 +618,7 @@ document.addEventListener("keydown", (event) => {
         if (catShadow) catShadow.style.visibility = "visible";
         catVisible = true;
         bubbleDisabled = false;
-        showBubble("小猫回来啦喵～", true);
+        showBubble(gwT('pet_show_legacy', "小猫回来啦喵～"), true);
         localStorage.setItem("catVisible", "true");
       });
     }
@@ -807,7 +818,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // 2. If no special greeting was shown, show the default initial greeting
     if (!greetingShown) {
-      showBubble("喵喵！！（你好！！）", false, true);
+      showBubble(gwT('pet_initial_hello', "喵喵！！（你好！！）"), false, true);
     }
     
     // Mark that the initial greeting routine has run to prevent it from running again in the same session
@@ -848,11 +859,11 @@ setTimeout(() => {
   });
 
   // ✅ 选择背景后弹出小猫评论
-  const wallpaperComments = [
+  const wallpaperComments = gwList('wallpaper_upload_comments', [
     "哇~新壁纸好漂亮喵！",
     "小猫喜欢这个背景～很有感觉喵！",
     "换了新壁纸，气氛都不一样了喵～"
-  ];
+  ]);
   const comment = wallpaperComments[Math.floor(Math.random() * wallpaperComments.length)];
   showBubble(comment);
 // 重置 input
@@ -996,19 +1007,19 @@ input.addEventListener("blur", () => {
       const formatted = `${year}.${month}.${date} ${padZero(hours)}:${minutes}:${seconds}`;
       document.getElementById('beijingTime').textContent = formatted;
       // ✅ 星期几显示
-const weekDays = ["星期日💜","星期一❤️","星期二🧡","星期三💛","星期四💚","星期五💙","星期六🩵"];
+const weekDays = gwList('weekday_names', ["星期日💜","星期一❤️","星期二🧡","星期三💛","星期四💚","星期五💙","星期六🩵"]);
 document.getElementById('weekDay').textContent = weekDays[beijingTime.getDay()];
       // 问候语逻辑
       const greetingEl = document.getElementById('greetingMessage');
       let greeting = "";
       if (hours >= 6 && hours <= 10) {
-        greeting = " 😉 早上好 ";
+        greeting = gwT('greeting_morning', " 😉 早上好 ");
       } else if (hours >= 11 && hours <= 12) {
-        greeting = "😊️ 中午好 ";
+        greeting = gwT('greeting_noon', "😊️ 中午好 ");
       } else if (hours >= 13 && hours <= 17) {
-        greeting = "️😘️ 下午好 ";
+        greeting = gwT('greeting_afternoon', "️😘️ 下午好 ");
       } else {
-        greeting = "😌 晚上好 ";
+        greeting = gwT('greeting_evening', "😌 晚上好 ");
       }
       greetingEl.textContent = greeting;
     }
@@ -1017,7 +1028,7 @@ document.getElementById('weekDay').textContent = weekDays[beijingTime.getDay()];
 // =======================================================
 
 const WEATHER_KEY = (window.APP_CONFIG && window.APP_CONFIG.WEATHER_KEY) || ""; // 从 config.js 读取
-const DEFAULT_CITY = "Beijing"; // 默认城市
+const DEFAULT_CITY = gwT('weather_default_city', "Beijing"); // 默认城市
 
 // 1. 渲染天气 UI
 function renderWeatherUI(data) {
@@ -1059,7 +1070,7 @@ async function fetchWeather(locationStr) {
   // --- B. 发起网络请求 ---
   try {
     // 心知天气 API: 支持直接传 "lat:lon" 格式
-    const url = `https://api.seniverse.com/v3/weather/now.json?key=${WEATHER_KEY}&location=${locationStr}&language=zh-Hans&unit=c`;
+    const url = `https://api.seniverse.com/v3/weather/now.json?key=${WEATHER_KEY}&location=${locationStr}&language=${gwT('weather_api_language', 'zh-Hans')}&unit=c`;
     
     const res = await fetch(url);
     const json = await res.json();
@@ -1082,7 +1093,7 @@ async function fetchWeather(locationStr) {
   } catch (e) {
     console.error("天气请求失败:", e);
     const textEl = document.getElementById("weather-text");
-    if(textEl) textEl.textContent = "天气加载失败";
+    if(textEl) textEl.textContent = gwT('weather_failed', "天气加载失败");
   }
 }
 
@@ -1310,8 +1321,8 @@ if ('mediaSession' in navigator) {
 
     const titleEl = widget.querySelector('.title');
     const artistEl = widget.querySelector('.artist');
-    if (titleEl) titleEl.textContent = metadata.title || '无标题';
-    if (artistEl) artistEl.textContent = metadata.artist || '未知艺术家';
+    if (titleEl) titleEl.textContent = metadata.title || gwT('media_untitled', '无标题');
+    if (artistEl) artistEl.textContent = metadata.artist || gwT('media_unknown_artist', '未知艺术家');
 
     const coverDiv = document.getElementById('mediaCover');
     const coverUrl = getArtworkUrl(metadata.artwork);
@@ -1377,8 +1388,8 @@ if ('mediaSession' in navigator) {
       const artistEl = widget.querySelector('.artist');
       const coverDiv = document.getElementById('mediaCover');
       
-      if (titleEl) titleEl.textContent = '无标题';
-      if (artistEl) artistEl.textContent = '未知艺术家';
+      if (titleEl) titleEl.textContent = gwT('media_untitled', '无标题');
+      if (artistEl) artistEl.textContent = gwT('media_unknown_artist', '未知艺术家');
       
       // ✅ 清空时也恢复为默认图标，或者隐藏
       if (coverDiv) coverDiv.style.backgroundImage = 'none';
@@ -1449,14 +1460,14 @@ document.addEventListener("DOMContentLoaded", function () {
         // 如果组件当前不可见或处于折叠/隐藏状态，则不触发小猫评论
         if (!isElementVisible(mediaContainer)) return;
 
-        const musicComments = [
+        const musicComments = gwList('music_hover', [
           "这个歌曲口味不错喵～",
           "好听喵～小猫都想跟着摇摆了～",
           "哇，这歌让我想打滚喵～",
           "听到好歌，小猫要喵喵叫了～",
           "好听喵～给我听一整天也不腻～",
           "这封面也很有感觉喵～"
-        ];
+        ]);
         showBubble(musicComments[Math.floor(Math.random() * musicComments.length)]);
       });
     }

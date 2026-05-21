@@ -1487,7 +1487,7 @@ body::after {
 /* 提示按钮基础样式 */
 #zenHintBtn {
   position: fixed; /* 确保是固定定位 */
-  z-index: 1000;
+  z-index: 8999;
   /* 初始过渡：必须包含 left/right 属性，且与主组件的时间函数一致 */
   transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
               left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
@@ -1497,7 +1497,6 @@ body::after {
 /* 提示弹窗基础样式 */
 #zenHintPopup {
   position: fixed;
-  z-index: 1001;
   transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
               transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
               left 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -2183,7 +2182,7 @@ body::after {
   text-align: center;
   width: 90%;
   max-width: 1000px; /* 允许更宽的歌词显示区域 */
-  z-index: 99; /* 层级低于时间组件 */
+  z-index: 8999; /* 层级低于时间组件 */
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -2508,7 +2507,6 @@ body::after {
   font-size: 11px;
   line-height: 1;
   cursor: pointer;
-  z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2538,7 +2536,7 @@ body::after {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 13px 15px 11px;
-  z-index: 201;
+  z-index: 8999;
   color: rgba(255, 255, 255, 0.82);
   font-size: 12.5px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);

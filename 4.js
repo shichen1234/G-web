@@ -773,9 +773,9 @@ function openLeftPanel() {
     // --- 核心功能 ---
     { 
       id: 'toggle-cat', 
-      icon: '⚔️', 
-      title: '小人助手', 
-      desc: '让小人登场或退场，他会在右上角给你提示 (快捷键 Alt+C)', 
+      icon: '🥰', 
+      title: '桌面助手', 
+      desc: '召唤或隐藏你的专属桌面助手，她可以在页面上移动并为你提供提示 (快捷键Alt+C关闭/开启)', 
       action: () => {
         const event = new KeyboardEvent('keydown', { code: 'KeyC', altKey: true, bubbles: true });
         document.dispatchEvent(event);

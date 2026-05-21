@@ -608,7 +608,7 @@ button:disabled *,
               right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   
   /* 层级与交互 */
-  z-index: 7999;
+  z-index: 8999;
   pointer-events: none;
 }
 

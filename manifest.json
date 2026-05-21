@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "__MSG_appName__",
-    "version": "4.5.1",
+    "version": "4.5.2",
     "description": "__MSG_appDesc__",
     "default_locale": "zh_CN",
     "sandbox": {
@@ -17,9 +17,9 @@
     "action": {
         "default_title": "G-web"
     },
-    "chrome_url_overrides": {
-        "newtab": "index.html"
-    },
+"chrome_url_overrides": {
+  "newtab": "index.html"
+},
     "permissions": [
         "storage",
         "tabs",

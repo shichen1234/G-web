@@ -1,0 +1,947 @@
+{
+  "appName": {
+    "message": "G-web - 个性化新标签页与萌宠助手"
+  },
+  "appDesc": {
+    "message": "更改新标签页为个人定制页面，包含猫猫互动、音乐检测及快捷面板等功能。"
+  },
+  "social_youtube_title": {
+    "message": "作者油管主页"
+  },
+  "social_bilibili_title": {
+    "message": "作者B站主页"
+  },
+  "video_unsupported": {
+    "message": "你的浏览器不支持视频标签。"
+  },
+  "web_wallpaper_comment": {
+    "message": "网页壁纸沙盒 iframe"
+  },
+  "greeting_loading": {
+    "message": "问候加载中..."
+  },
+  "beijing_time_loading": {
+    "message": "北京时间加载中..."
+  },
+  "weekday_loading": {
+    "message": "星期加载中..."
+  },
+  "weather_loading": {
+    "message": "正在获取天气..."
+  },
+  "cmd_icon_alt": {
+    "message": "指令"
+  },
+  "cmd_icon_title": {
+    "message": "功能菜单"
+  },
+  "media_untitled": {
+    "message": "无标题"
+  },
+  "media_unknown_artist": {
+    "message": "未知艺术家"
+  },
+  "search_engine_alt": {
+    "message": "搜索引擎"
+  },
+  "search_placeholder": {
+    "message": "搜索..."
+  },
+  "ai_search_title": {
+    "message": "使用豆包 AI 搜索"
+  },
+  "wallpaper_modal_title": {
+    "message": "🎨 更换壁纸"
+  },
+  "drag_hint": {
+    "message": "按住标题栏区域可以拖动整个面板哦😽"
+  },
+  "wp_tab_static": {
+    "message": "🖼️ 静态壁纸"
+  },
+  "wp_tab_dynamic": {
+    "message": "🎬 动态壁纸"
+  },
+  "wp_tab_web": {
+    "message": "🌐 网页壁纸"
+  },
+  "wp_tab_custom": {
+    "message": "📂 自定义壁纸"
+  },
+  "parallax_label": {
+    "message": "背景视差"
+  },
+  "liquid_label": {
+    "message": "水波特效"
+  },
+  "volume_label": {
+    "message": "背景声音"
+  },
+  "wp_tip_title_attr": {
+    "message": "查看提示"
+  },
+  "wp_tip_title": {
+    "message": "🐾 小猫的壁纸百科："
+  },
+  "wp_tip_content": {
+    "message": "<p style=\"font-size: 16px;\">🌟 <strong>这里有哪些壁纸种类？</strong></p><p>主人可以随心切换<strong>静态美图</strong>、<strong>丝滑视频</strong>和<strong>可以互动的网页壁纸</strong>作为背景喵！还可以自己上传<strong>自定义壁纸</strong>喵！</p><p style=\"font-size: 16px; margin-top: 15px;\">✨ <strong>什么是“背景视差”？</strong></p><p>这是一个超神奇的魔法！开启后，背景会随着主人的<strong>鼠标滑动</strong>而轻轻晃动，</p><p>让你的桌面瞬间变得有趣，深邃又灵动喵！</p><p style=\"font-size: 16px; margin-top: 15px;\">🌊 <strong>什么是“水波特效”？</strong></p><p>它能让静态壁纸像水面一样泛起温柔的涟漪，看着超级治愈喵！不过这个很吃电脑性能，酌情选择哦～</p><p style=\"font-size: 13px; color: #777;\">（偷偷提醒主人：这个魔法只会在静态壁纸上显灵的哦～）</p><hr><p>快去亲手试试看吧，打扮得漂亮一点喵！😽😽😽</p><h3 style=\"text-align: right;\">猫猫 &nbsp; 留</h3>"
+  },
+  "add_shortcut_title": {
+    "message": "添加快捷方式"
+  },
+  "label_name": {
+    "message": "名称"
+  },
+  "shortcut_name_placeholder": {
+    "message": "例如：哔哩哔哩"
+  },
+  "label_icon_optional": {
+    "message": "图标（可选）"
+  },
+  "shortcut_url_placeholder": {
+    "message": "例如：bilibili.com"
+  },
+  "button_cancel": {
+    "message": "取消"
+  },
+  "button_save": {
+    "message": "保存"
+  },
+  "quick_apps_title": {
+    "message": "快捷应用"
+  },
+  "quick_apps_hint": {
+    "message": "（可以通过拖动改变位置）"
+  },
+  "add_shortcut_title_attr": {
+    "message": "添加快捷方式"
+  },
+  "panel_setting_title": {
+    "message": "调整布局"
+  },
+  "quick_panel_title": {
+    "message": "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;快捷面板"
+  },
+  "birthday_record_title": {
+    "message": "🎂 记录生日"
+  },
+  "button_confirm": {
+    "message": "确定"
+  },
+  "birthday_countdown_label": {
+    "message": "距离生日还有"
+  },
+  "day_unit": {
+    "message": "天"
+  },
+  "reset_date": {
+    "message": "重置日期"
+  },
+  "birthday_surprise": {
+    "message": "小猫为你准备了一个小惊喜，<span id=\"goSurprise\" style=\"text-decoration: underline; cursor: pointer; font-weight: bold;\">去看看</span>"
+  },
+  "go_surprise": {
+    "message": "去看看"
+  },
+  "back": {
+    "message": "返回"
+  },
+  "music_select_song": {
+    "message": "选择歌曲播放"
+  },
+  "music_artist_empty": {
+    "message": "--"
+  },
+  "music_prev_title": {
+    "message": "上一首"
+  },
+  "music_play_pause_title": {
+    "message": "播放/暂停"
+  },
+  "music_next_title": {
+    "message": "下一首"
+  },
+  "music_stop_title": {
+    "message": "停止"
+  },
+  "music_playlist_title": {
+    "message": "播放列表"
+  },
+  "ai_chat_title": {
+    "message": "😺 AI 聊天喵"
+  },
+  "clear_chat": {
+    "message": "清除记录"
+  },
+  "image_mode_title": {
+    "message": "切换图片生成模式"
+  },
+  "chat_input_placeholder": {
+    "message": "输入你想说的话..."
+  },
+  "button_send": {
+    "message": "发送"
+  },
+  "todo_title": {
+    "message": "📝 备忘录"
+  },
+  "todo_placeholder": {
+    "message": "记录事项..."
+  },
+  "calc_title": {
+    "message": "🧮 计算器"
+  },
+  "fortune_title": {
+    "message": "🎐 每日猫咪灵签"
+  },
+  "draw_fortune": {
+    "message": "✨ 抽取今日运势"
+  },
+  "fortune_default_title": {
+    "message": "大吉"
+  },
+  "fortune_default_text": {
+    "message": "宜：写代码 | 忌：修Bug"
+  },
+  "game_center_title": {
+    "message": "🎮 游戏中心"
+  },
+  "game_contra": {
+    "message": "🔫 魂斗罗30命S弹版"
+  },
+  "game_mario": {
+    "message": "🍄 超级玛丽"
+  },
+  "game_snake": {
+    "message": "🐍 贪吃蛇"
+  },
+  "game_memory": {
+    "message": "🃏 记忆翻牌"
+  },
+  "back_lobby": {
+    "message": "⬅ 返回大厅"
+  },
+  "nes_sound_title": {
+    "message": "游戏声音"
+  },
+  "load_game": {
+    "message": "点击载入"
+  },
+  "contra_title": {
+    "message": "🔫 魂斗罗30命S弹版 (Contra)"
+  },
+  "contra_controls": {
+    "message": "操作：WASD移动 | J射击 | K跳跃 | Shift选择 | 回车开始"
+  },
+  "mario_title": {
+    "message": "🍄 超级玛丽 (Mario)"
+  },
+  "mario_controls": {
+    "message": "操作：WASD移动 | J加速/火球 | K跳跃 | Shift选择 | 回车开始"
+  },
+  "snake_title": {
+    "message": "🐍 贪吃蛇大作战"
+  },
+  "snake_controls": {
+    "message": "🎮 WASD / 方向键控制"
+  },
+  "score_label": {
+    "message": "得分:"
+  },
+  "high_score_label": {
+    "message": "最高:"
+  },
+  "memory_title": {
+    "message": "🃏 记忆翻牌"
+  },
+  "difficulty_easy": {
+    "message": "简单"
+  },
+  "difficulty_medium": {
+    "message": "中等"
+  },
+  "difficulty_hard": {
+    "message": "困难"
+  },
+  "restart_title": {
+    "message": "重新开始"
+  },
+  "memory_flips": {
+    "message": "翻牌:"
+  },
+  "memory_matches": {
+    "message": "匹配:"
+  },
+  "memory_record": {
+    "message": "🏆 记录:"
+  },
+  "today_title": {
+    "message": "回到今天"
+  },
+  "today_button": {
+    "message": "今天"
+  },
+  "cal_week_sun": {
+    "message": "日"
+  },
+  "cal_week_mon": {
+    "message": "一"
+  },
+  "cal_week_tue": {
+    "message": "二"
+  },
+  "cal_week_wed": {
+    "message": "三"
+  },
+  "cal_week_thu": {
+    "message": "四"
+  },
+  "cal_week_fri": {
+    "message": "五"
+  },
+  "cal_week_sat": {
+    "message": "六"
+  },
+  "context_fullscreen": {
+    "message": "🖥️ 切换全屏"
+  },
+  "context_exit_fullscreen": {
+    "message": "🖥️ 退出全屏"
+  },
+  "context_reload": {
+    "message": "🔄 刷新页面"
+  },
+  "context_wallpaper": {
+    "message": "🖼️ 更换壁纸"
+  },
+  "context_mouse_trail": {
+    "message": "✨ 鼠标拖尾"
+  },
+  "trail_particle": {
+    "message": "⚪ 珍珠泡沫"
+  },
+  "trail_line": {
+    "message": "➖ 彩虹流光"
+  },
+  "trail_sparkle": {
+    "message": "✨ 闪烁星尘"
+  },
+  "trail_laser": {
+    "message": "⚡️ 极光射线"
+  },
+  "trail_off": {
+    "message": "🚫 关闭特效"
+  },
+  "meme_click": {
+    "message": "表情包点击"
+  },
+  "context_zen": {
+    "message": "🍃 禅模式 (显/隐UI)"
+  },
+  "context_language": {
+    "message": "🌐 切换语言"
+  },
+  "context_about": {
+    "message": "🐱 关于作者"
+  },
+  "input_copy": {
+    "message": "📄 复制"
+  },
+  "input_cut": {
+    "message": "✂️ 剪切"
+  },
+  "input_paste": {
+    "message": "📋 粘贴"
+  },
+  "input_select_all": {
+    "message": "🔲 全选"
+  },
+  "cmd_hint_close": {
+    "message": "点击ESC关闭"
+  },
+  "welcome_title": {
+    "message": "🎉 欢迎使用 G-web！"
+  },
+  "welcome_intro": {
+    "message": "为了确保最佳体验，请完成以下基础配置："
+  },
+  "welcome_gpu_title": {
+    "message": "1. 启用图形加速"
+  },
+  "welcome_gpu_desc": {
+    "message": "设置 → 系统与性能 → 开启“图形加速”"
+  },
+  "welcome_edge_title": {
+    "message": "2. 关闭 Edge 悬浮条"
+  },
+  "welcome_edge_desc": {
+    "message": "设置 → 外观 → 上下文菜单 → 关闭“视频快速操作”"
+  },
+  "welcome_features": {
+    "message": "<div>🤖 <strong>内置 AI</strong> 与经典怀旧游戏</div><div>🔍 建议缩放 <strong>90%</strong></div><div>鼠标 <strong>右键</strong> 个性化</div><div>📂 侧边栏支持隐藏</div>"
+  },
+  "enter_explore": {
+    "message": "进入探索"
+  },
+  "disclaimer_link": {
+    "message": "📜 免责声明"
+  },
+  "copyright_title": {
+    "message": "📜 版权声明"
+  },
+  "copyright_body": {
+    "message": "<p><strong>扩展中壁纸均来自于 Wallpaper Engine 创意工坊、致美化和 Pinterest</strong>，著作权归原作者所有。本扩展仅作个人非商业推荐，若您是原作者并希望调整内容，请随时联系我。</p><p style=\"margin-top: 15px;\">本扩展内壁纸经过裁剪处理，仅供个人欣赏与非商业用途，严禁用于盈利、二次销售、平台搬运、AI训练等行为。</p><p style=\"margin-top: 15px;\">在此，向每一位原创作者致以诚挚的敬意与感谢，若各位用户喜爱这些内容，我在各个壁纸左下角设置了壁纸链接，建议前往原出处支持作者。</p>"
+  },
+  "zen_date_sample": {
+    "message": "2024年01月01日"
+  },
+  "zen_week_sample": {
+    "message": "星期一"
+  },
+  "zen_weather_sample": {
+    "message": "晴 25℃"
+  },
+  "zen_hint_title": {
+    "message": "音乐快捷键提示"
+  },
+  "zen_hint_aria": {
+    "message": "禅模式快捷键提示"
+  },
+  "zen_hint_play": {
+    "message": "播放 / 暂停"
+  },
+  "zen_hint_prev": {
+    "message": "上一首"
+  },
+  "zen_hint_next": {
+    "message": "下一首"
+  },
+  "zen_hint_tip": {
+    "message": "只能够控制右侧面板的音乐播放器组件的音乐，无法控制外部网页的音乐"
+  },
+  "zen_care_name": {
+    "message": "糯米"
+  },
+  "zen_care_text": {
+    "message": "记得喝水哦喵～"
+  },
+  "engine_bing_placeholder": {
+    "message": "通过 Bing 搜索..."
+  },
+  "engine_google_placeholder": {
+    "message": "Google 搜索..."
+  },
+  "engine_baidu_name": {
+    "message": "百度"
+  },
+  "engine_baidu_placeholder": {
+    "message": "百度一下..."
+  },
+  "engine_sogou_name": {
+    "message": "搜狗"
+  },
+  "engine_sogou_placeholder": {
+    "message": "搜狗搜索..."
+  },
+  "wallpaper_custom_hint": {
+    "message": "💡 点击上方按钮上传本地图片或视频 (MP4) <br>上传后将自动应用并保存到浏览器缓存中"
+  },
+  "manage_alt": {
+    "message": "管理"
+  },
+  "button_delete": {
+    "message": "删除"
+  },
+  "button_delete_cache": {
+    "message": "删除缓存"
+  },
+  "wallpaper_link": {
+    "message": "壁纸链接 →"
+  },
+  "download_link": {
+    "message": "下载链接 →"
+  },
+  "confirm_delete_wallpaper_cache": {
+    "message": "确定要删除这个壁纸缓存吗？"
+  },
+  "wallpaper_saved_label": {
+    "message": "保存中..."
+  },
+  "wallpaper_download_failed": {
+    "message": "下载失败"
+  },
+  "daily_wallpaper_label": {
+    "message": "一天一换"
+  },
+  "smart_wallpaper_label": {
+    "message": "随时间变化"
+  },
+  "upload_wallpaper": {
+    "message": "点击上传"
+  },
+  "today_character": {
+    "message": "今"
+  },
+  "day_label_short": {
+    "message": "天"
+  },
+  "snake_game_over": {
+    "message": "💔 游戏结束"
+  },
+  "snake_retry": {
+    "message": "点击任意处 再来一次"
+  },
+  "snake_start": {
+    "message": "🐍 点击开始游戏"
+  },
+  "snake_start_hint": {
+    "message": "使用 WASD 或 方向键 控制"
+  },
+  "calendar_month_format": {
+    "message": "{year}年 {month}月"
+  },
+  "calendar_lunar_first_day": {
+    "message": "初一"
+  },
+  "calendar_lunar_month_suffix": {
+    "message": "月"
+  },
+  "no_matching_commands": {
+    "message": "No matching commands"
+  },
+  "search_type_for": {
+    "message": "Searching for: \"{query}\""
+  },
+  "ai_thinking": {
+    "message": "思考中喵..."
+  },
+  "ai_error": {
+    "message": "连接失败了喵~"
+  },
+  "image_mode_on_title": {
+    "message": "当前：图片生成模式（点击切回对话）"
+  },
+  "image_prompt_placeholder": {
+    "message": "输入图片描述，点击发送生成..."
+  },
+  "button_generate": {
+    "message": "生成"
+  },
+  "image_generating": {
+    "message": "🎨 生成中喵，请稍候..."
+  },
+  "image_open_title": {
+    "message": "点击在新标签页查看原图"
+  },
+  "image_generated_badge": {
+    "message": "✨ 已生成喵"
+  },
+  "image_history_label": {
+    "message": "[图片] {url}"
+  },
+  "image_error": {
+    "message": "图片生成失败了喵，换个描述或稍后再试试～"
+  },
+  "chat_welcome": {
+    "message": "你好喵！我是你的专属 AI 猫娘糯米，有什么可以帮你的吗？"
+  },
+  "confirm_clear_chat": {
+    "message": "确定要清除所有聊天记录和记忆吗？"
+  },
+  "today_signed": {
+    "message": "今日已签 (点击查看)"
+  },
+  "memory_times": {
+    "message": " 次"
+  },
+  "memory_new_record": {
+    "message": " 🏆 新纪录！"
+  },
+  "memory_best_note": {
+    "message": " (最佳 {flips} 次)"
+  },
+  "memory_win_stats": {
+    "message": "翻牌 {flips} 次 · 用时 {time}{bestNote}"
+  },
+  "nes_running": {
+    "message": "运行中"
+  },
+  "music_delete_title": {
+    "message": "删除"
+  },
+  "music_download_title": {
+    "message": "下载"
+  },
+  "confirm_delete_song": {
+    "message": "删除 \"{title}\" (含歌词)?"
+  },
+  "music_download_done": {
+    "message": "\"{title}\" 下载完毕！"
+  },
+  "music_download_first": {
+    "message": "请先下载！"
+  },
+  "no_lyrics": {
+    "message": "纯音乐 / 无歌词"
+  },
+  "select_song_first": {
+    "message": "请先选择歌曲"
+  },
+  "no_downloaded_songs": {
+    "message": "没有已下载的歌曲"
+  },
+  "playback_resume": {
+    "message": "▶️ 继续播放"
+  },
+  "playback_pause": {
+    "message": "⏸️ 音乐暂停"
+  },
+  "playback_prev": {
+    "message": "⏮️ 上一首"
+  },
+  "playback_next": {
+    "message": "⏭️ 下一首"
+  },
+  "weather_failed": {
+    "message": "天气加载失败"
+  },
+  "weather_default_city": {
+    "message": "Beijing"
+  },
+  "weather_api_language": {
+    "message": "zh-Hans"
+  },
+  "zen_date_format": {
+    "message": "{year}年{month}月{date}日"
+  },
+  "weather_loading_short": {
+    "message": "天气加载中"
+  },
+  "engine_switch_replies_1": {
+    "message": "换个搜索引擎试试喵～看看谁更聪明！"
+  },
+  "engine_switch_replies_2": {
+    "message": "小猫也想知道哪个搜索结果更好喵～"
+  },
+  "engine_switch_replies_3": {
+    "message": "咕噜咕噜～切换成功喵！"
+  },
+  "search_focus_prompts_1": {
+    "message": "今天要搜索什么呀？"
+  },
+  "search_focus_prompts_2": {
+    "message": "想找点什么呢～"
+  },
+  "search_focus_prompts_3": {
+    "message": "输入关键词，小猫来帮你找！"
+  },
+  "birthday_special_1": {
+    "message": "生日快乐喵！🎂 今天你是全宇宙的主角，要开开心心哦！"
+  },
+  "birthday_special_2": {
+    "message": "喵呜！祝你生日快乐！🎉 许个愿望吧，小猫会帮你守护它的！"
+  },
+  "birthday_special_3": {
+    "message": "Happy Birthday！✨ 今天的小鱼干都分给你，祝你万事胜意喵！"
+  },
+  "greeting_morning_replies_1": {
+    "message": "早上好呀！"
+  },
+  "greeting_morning_replies_2": {
+    "message": "新的一天开始啦～"
+  },
+  "greeting_morning_replies_3": {
+    "message": "早安早安，今天也要元气满满！"
+  },
+  "greeting_noon_replies_1": {
+    "message": "中午好呀～"
+  },
+  "greeting_noon_replies_2": {
+    "message": "午饭时间到啦，吃饱才有力气喵！"
+  },
+  "greeting_noon_replies_3": {
+    "message": "中午好，来休息一下吧～"
+  },
+  "greeting_afternoon_replies_1": {
+    "message": "下午好呀！"
+  },
+  "greeting_afternoon_replies_2": {
+    "message": "下午时光最适合发呆了～"
+  },
+  "greeting_afternoon_replies_3": {
+    "message": "下午好，来杯咖啡或下午茶，享受片刻的悠闲吧。"
+  },
+  "greeting_evening_replies_1": {
+    "message": "晚上好呀～"
+  },
+  "greeting_evening_replies_2": {
+    "message": "辛苦啦，今晚早点休息哦～"
+  },
+  "greeting_evening_replies_3": {
+    "message": "夜晚是属于放松的时间～"
+  },
+  "greeting_default_replies_1": {
+    "message": "你好呀～"
+  },
+  "greeting_default_replies_2": {
+    "message": "喵～你来啦！"
+  },
+  "greeting_default_replies_3": {
+    "message": "嘿嘿，在想什么呢？"
+  },
+  "time_greetings_1": {
+    "message": "清晨的阳光真温柔～"
+  },
+  "time_greetings_2": {
+    "message": "中午啦，记得吃饭哦～"
+  },
+  "time_greetings_3": {
+    "message": "下午时光，适合小憩一下～"
+  },
+  "time_greetings_4": {
+    "message": "夜深了，早点休息吧～"
+  },
+  "todo_added_1": {
+    "message": "收到！记下来了喵~"
+  },
+  "todo_added_2": {
+    "message": "好记性不如烂笔头喵！"
+  },
+  "todo_added_3": {
+    "message": "加油完成哦喵~"
+  },
+  "weather_sunny_1": {
+    "message": "天气真好喵～出去晒晒太阳吧！"
+  },
+  "weather_sunny_2": {
+    "message": "阳光暖暖的，小猫都想打滚了～"
+  },
+  "weather_cloudy_1": {
+    "message": "今天灰灰的喵～适合窝在家里～"
+  },
+  "weather_cloudy_2": {
+    "message": "雾蒙蒙的，小猫都看不清路啦～"
+  },
+  "weather_rainy_1": {
+    "message": "下雨啦喵～记得带伞别淋湿了～"
+  },
+  "weather_rainy_2": {
+    "message": "雨声好治愈，小猫要蜷起来睡觉～"
+  },
+  "weather_sand_1": {
+    "message": "咳咳……外面风沙好大喵，快把窗户关紧！"
+  },
+  "weather_sand_2": {
+    "message": "呜哇～外面黄沙漫天，小猫不想吃土喵～"
+  },
+  "weather_sand_3": {
+    "message": "要戴好口罩哦，小猫会心疼你的肺喵～"
+  },
+  "weather_snow_1": {
+    "message": "下雪啦喵～想和你一起踩雪花～"
+  },
+  "weather_snow_2": {
+    "message": "雪花飘飘，小猫变成雪球啦～"
+  },
+  "weather_unknown_1": {
+    "message": "外面的天气好神秘喵～"
+  },
+  "weather_unknown_2": {
+    "message": "不管什么天气，小猫都陪着你～"
+  },
+  "bili_hover_1": {
+    "message": "这是作者B站主页哦~"
+  },
+  "bili_hover_2": {
+    "message": "B站也有我的小窝喔，偷偷告诉你~"
+  },
+  "bili_hover_3": {
+    "message": "你居然找到了我的B站入口，好眼力！"
+  },
+  "youtube_hover_1": {
+    "message": "这是作者油管主页哦~"
+  },
+  "youtube_hover_2": {
+    "message": "YouTube 也藏着我的身影喔~"
+  },
+  "youtube_hover_3": {
+    "message": "偷偷告诉你，这里是我的油管传送门！"
+  },
+  "search_fun_phrases_1": {
+    "message": "搜索感兴趣的内容..."
+  },
+  "search_fun_phrases_2": {
+    "message": "今天天气怎么样？"
+  },
+  "search_fun_phrases_3": {
+    "message": "中午吃点什么好呢？"
+  },
+  "search_fun_phrases_4": {
+    "message": "最近有什么好听的歌？"
+  },
+  "search_fun_phrases_5": {
+    "message": "查查今天的热点新闻"
+  },
+  "search_fun_phrases_6": {
+    "message": "周末去哪里玩？"
+  },
+  "search_fun_phrases_7": {
+    "message": "生活小常识"
+  },
+  "search_fun_phrases_8": {
+    "message": "保持好奇心..."
+  },
+  "about_messages_1": {
+    "message": "喵？作者藏在屏幕的某个角落里睡觉呢，把鼠标移过去找找看～"
+  },
+  "about_messages_2": {
+    "message": "偷偷告诉你，把鼠标移到角落里晃一晃，或许会有神奇的发现喵！✨"
+  },
+  "about_messages_3": {
+    "message": "这种事情都要问我嘛？自己去角落里翻翻看，找到了算你厉害喵～"
+  },
+  "about_messages_4": {
+    "message": "作者太害羞躲起来啦！快去屏幕边缘把他“抓”出来喵！🐾"
+  },
+  "tsundere_ai_1": {
+    "message": "干嘛？没事别随便点我喵！💢"
+  },
+  "tsundere_ai_2": {
+    "message": "想让我画画？先说好，不满意不许抱怨喵！"
+  },
+  "tsundere_ai_3": {
+    "message": "哼，真是拿你没办法喵～"
+  },
+  "zen_care_messages_1": {
+    "message": "看屏幕有一会儿啦，眨眨眼睛喝点水吧，喵~"
+  },
+  "zen_care_messages_2": {
+    "message": "在发呆吗？糯米陪你一起放空~"
+  },
+  "zen_care_messages_3": {
+    "message": "深呼吸，放松一下肩膀，闭上眼睛休息一会儿吧！"
+  },
+  "zen_care_messages_4": {
+    "message": "站起来伸个懒腰会舒服很多哦~"
+  },
+  "zen_care_messages_5": {
+    "message": "时间过得真快，揉揉眼睛再继续吧！"
+  },
+  "zen_care_messages_6": {
+    "message": "糯米在这里乖乖陪你，记得劳逸结合呀~"
+  },
+  "zen_care_messages_7": {
+    "message": "眼睛有点酸了吧？看看远处的风景吧！"
+  },
+  "zen_care_messages_8": {
+    "message": "今天也要保持好心情哦，喵~"
+  },
+  "zen_care_messages_9": {
+    "message": "发呆也是一种很好的休息方式呢！"
+  },
+  "zen_care_messages_10": {
+    "message": "保持这个坐姿太久啦，稍微活动一下脖子吧~"
+  },
+  "zen_care_messages_11": {
+    "message": "这里的旋律真好听，糯米也跟着放松下来了呢~"
+  },
+  "zen_care_messages_12": {
+    "message": "沉浸在自己的小世界里感觉真棒，喵~"
+  },
+  "zen_care_messages_13": {
+    "message": "糯米很喜欢和你一起度过这样安静的时光。"
+  },
+  "zen_care_messages_14": {
+    "message": "听到喜欢的节奏了吗？跟着轻轻摇摆吧~"
+  },
+  "zen_care_messages_15": {
+    "message": "把烦恼都抛到脑后，现在是属于你的放松时间。"
+  },
+  "zen_care_messages_16": {
+    "message": "糯米觉得现在的氛围特别好，很适合闭眼休息呢。"
+  },
+  "zen_care_messages_17": {
+    "message": "累了就随时停下来，糯米会一直在这里守着你。"
+  },
+  "zen_care_messages_18": {
+    "message": "享受当下这份宁静吧，喵呜~"
+  },
+  "zen_care_messages_19": {
+    "message": "喝口温水润润嗓子，再继续享受这段时光吧。"
+  },
+  "zen_care_messages_20": {
+    "message": "糯米要把这份惬意偷偷藏进心里啦！"
+  },
+  "dynamic_pet_click_1": {
+    "message": "有什么事吗？"
+  },
+  "dynamic_pet_click_2": {
+    "message": "今天也一起加油！"
+  },
+  "dynamic_pet_click_3": {
+    "message": "你已经做得很不错啦。"
+  },
+  "dynamic_pet_click_4": {
+    "message": "休息一下也没关系。"
+  },
+  "dynamic_pet_click_5": {
+    "message": "别给自己太大压力。"
+  },
+  "dynamic_pet_click_6": {
+    "message": "今天也会顺利的。"
+  },
+  "dynamic_pet_click_7": {
+    "message": "我在旁边给你打气。"
+  },
+  "dynamic_pet_click_8": {
+    "message": "累了就喝杯热茶，稍微放空一下吧。"
+  },
+  "dynamic_pet_click_9": {
+    "message": "有空可以出去走走，吹吹风哦。"
+  },
+  "dynamic_pet_click_10": {
+    "message": "有什么开心的事，随时可以跟我分享。"
+  },
+  "dynamic_pet_click_11": {
+    "message": "多喝水，照顾好自己喔。"
+  },
+  "dynamic_pet_click_12": {
+    "message": "记得按时吃饭，别饿着肚子呀。"
+  },
+  "dynamic_pet_hide_1": {
+    "message": "我先离开一会儿，需要时再叫我！"
+  },
+  "dynamic_pet_hide_2": {
+    "message": "我去旁边待命啦，随时回来。"
+  },
+  "dynamic_pet_hide_3": {
+    "message": "我先悄悄下线一小会儿，保证随叫随到。"
+  },
+  "dynamic_pet_hide_4": {
+    "message": "需要我的时候，再点一下就好。"
+  },
+  "dynamic_pet_hide_5": {
+    "message": "我去摸会儿鱼，等你需要我的时候再闪亮登场！"
+  },
+  "dynamic_pet_hide_6": {
+    "message": "我去云端散个步，你想我了就叫我回来。"
+  },
+  "music_hover_1": {
+    "message": "这个歌曲口味不错喵～"
+  },
+  "music_hover_2": {
+    "message": "好听喵～小猫都想跟着摇摆了～"
+  },
+  "music_hover_3": {
+    "message": "哇，这歌让我想打滚喵～"
+  },
+  "music_hover_4": {
+    "message": "听到好歌，小猫要喵喵叫了～"
+  },
+  "music_hover_5": {
+    "message": "好听喵～给我听一整天也不腻～"
+  },
+  "music_hover_6": {
+    "message": "这封面也很有感觉喵～"
+  }
+}

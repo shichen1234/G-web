@@ -14,7 +14,6 @@
   font-weight: 300;
   line-height: 1;
   cursor: pointer;
-  z-index: 200;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -44,7 +43,6 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 13px 15px 11px;
-  z-index: 201;
   color: rgb(255, 255, 255);
   font-size: 12.5px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
@@ -151,7 +149,7 @@
   top: auto !important;
   left: 40px !important;    
   bottom: 40px !important;  
-  
+  z-index: 8999 !important;
   /* 移除原来的中心点缩放，改为从左侧微微滑入的初始状态 */
   transform: translateX(-20px) scale(0.95) !important;
   
@@ -166,6 +164,7 @@
 
 /* 进场动画：滑入并恢复原始大小 */
 #zenTimeWidget.visible {
+    z-index: 8999 !important;
   transform: translateX(0) scale(1) !important;
 }
 
