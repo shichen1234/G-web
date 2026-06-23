@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G-web Privacy Policy / 隐私政策</title>
+    <style>
+        :root {
+            --primary-color: #0b74de;
+            --primary-hover: #0a64c2;
+            --bg-color: #f4f7fa;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #607d8b;
+            --border-color: #e2e8f0;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            --radius: 16px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary-color: #0b74de;
+                --primary-hover: #1e88e5;
+                --bg-color: #0f172a;
+                --card-bg: #1e293b;
+                --text-main: #f1f5f9;
+                --text-muted: #94a3b8;
+                --border-color: #334155;
+                --shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 40px 20px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        header {
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(11, 116, 222, 0.1) 0%, rgba(11, 116, 222, 0.02) 100%);
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(11, 116, 222, 0.3);
+        }
+
+        .logo-text h1 {
+            font-size: 22px;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-text p {
+            font-size: 13px;
+            margin: 4px 0 0 0;
+            color: var(--text-muted);
+        }
+
+        .lang-switch {
+            display: flex;
+            background: rgba(0, 0, 0, 0.05);
+            padding: 4px;
+            border-radius: 30px;
+            border: 1px solid var(--border-color);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .lang-switch {
+                background: rgba(255, 255, 255, 0.05);
+            }
+        }
+
+        .lang-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .lang-btn.active {
+            background: var(--card-bg);
+            color: var(--primary-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .content-panel {
+            padding: 40px;
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .content-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            font-size: 20px;
+            margin-top: 36px;
+            margin-bottom: 16px;
+            color: var(--primary-color);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 18px;
+            background-color: var(--primary-color);
+            border-radius: 2px;
+        }
+
+        p, li {
+            font-size: 15px;
+            color: var(--text-main);
+            opacity: 0.9;
+            margin-bottom: 14px;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin-bottom: 24px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        code {
+            font-family: Consolas, Monaco, monospace;
+            background: rgba(11, 116, 222, 0.08);
+            color: var(--primary-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        footer {
+            padding: 30px 40px;
+            border-top: 1px solid var(--border-color);
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.02) 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .update-date {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .contact-info {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .contact-info a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            header, .content-panel, footer {
+                padding: 24px;
+            }
+            .logo-text h1 {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-section">
+                <div class="logo-icon">G</div>
+                <div class="logo-text">
+                    <h1>G-web Privacy Policy / 隐私政策</h1>
+                    <p>Personalized New Tab Extension</p>
+                </div>
+            </div>
+            <div class="lang-switch">
+                <button class="lang-btn active" onclick="switchLang('zh')">中文</button>
+                <button class="lang-btn" onclick="switchLang('en')">English</button>
+            </div>
+        </header>
+
+        <!-- 中文版隐私政策 -->
+        <div id="panel-zh" class="content-panel active">
+            <p>本隐私政策说明了“G-web - 个性化新标签页”浏览器扩展程序（以下简称“本扩展”）如何收集、使用和保护您的个人信息。我们承诺保护您的隐私，并在符合法律法规的前提下保障您的个人信息安全。</p>
+
+            <h2>1. 数据收集与使用</h2>
+            <ul>
+                <li><strong>本地数据存储</strong>：本扩展是一款新标签页工具，您在扩展内配置的自定义设置（如壁纸偏好、备忘录待办列表、生日记录、界面布局等）完全保存在您本地的浏览器存储中（通过浏览器的 <code>chrome.storage.local</code> API）。我们不会将这些数据上传到任何我们控制的远程服务器。</li>
+                <li><strong>第三方服务交互</strong>：
+                    <ul>
+                        <li><strong>AI 助手功能</strong>：当您主动使用扩展内集成的 AI 对话功能时，您输入的对话文本会发送至第三方 AI 接口（如硅基流动 SiliconFlow 或字节跳动豆包 AI 接口）以获取回复。我们本身不会收集、记录或存储您的对话内容。</li>
+                        <li><strong>搜索联想建议</strong>：当您在搜索框中键起内容时，系统会向百度（https://suggestion.baidu.com）发送搜索词以获取联想词。</li>
+                        <li><strong>网络资源加载</strong>：本扩展会从公开的源获取天气信息及必应每日壁纸。</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h2>2. 权限声明</h2>
+            <p>为了提供核心功能，本扩展在 <code>manifest.json</code> 中申请了以下权限：</p>
+            <ul>
+                <li><code>storage</code>：用于本地保存您的壁纸配置、待办事项和自定义偏好。</li>
+                <li><code>tabs</code> 与 <code>activeTab</code>：用于管理新标签页打开与跳转，以及在特定交互中进行页面定位。</li>
+                <li><code>scripting</code>：用于提升特定的壁纸和动态效果交互体验。</li>
+            </ul>
+
+            <h2>3. 数据共享与披露</h2>
+            <p>我们不会与任何未授权的第三方分享您的任何个人数据。您的所有偏好设置与敏感配置均保留在本地。仅在您主动使用 AI 对话或搜索时，相关必要请求数据才会发送到对应的受信任服务提供商进行处理。</p>
+
+            <h2>4. 您的权利</h2>
+            <p>您对本地保存的数据拥有完全的控制权。您随时可以通过扩展程序的清除按钮或直接在浏览器管理页面中卸载本扩展，卸载后保存在本地的所有数据将被自动并彻底删除。</p>
+
+            <h2>5. 隐私政策的更新</h2>
+            <p>如果本扩展新增了其他收集或使用数据的特性，我们会适时更新本隐私政策，并在扩展更新时予以说明。</p>
+        </div>
+
+        <!-- 英文版隐私政策 -->
+        <div id="panel-en" class="content-panel">
+            <p>This Privacy Policy explains how "G-web - Personalized New Tab" browser extension (hereinafter referred to as "the Extension") collects, uses, and protects your personal information. We are committed to protecting your privacy and securing your personal information in compliance with applicable laws and regulations.</p>
+
+            <h2>1. Data Collection and Usage</h2>
+            <ul>
+                <li><strong>Local Data Storage</strong>: The Extension is a new tab customizer. All custom configurations (such as wallpaper preferences, Todo list, birthday records, interface layout, etc.) are stored strictly on your local browser (using the browser's <code>chrome.storage.local</code> API). We do not collect or upload this data to any remote servers under our control.</li>
+                <li><strong>Third-Party Service Interactivity</strong>:
+                    <ul>
+                        <li><strong>AI Assistant</strong>: When you actively use the integrated AI chat feature, the dialogue text you input is transmitted to third-party AI APIs (e.g., SiliconFlow or ByteDance Doubao AI) to retrieve responses. We do not collect, log, or store your conversations.</li>
+                        <li><strong>Search Suggestions</strong>: When you type in the search bar, queries are sent to Baidu (https://suggestion.baidu.com) to fetch autocomplete suggestion keywords.</li>
+                        <li><strong>Network Resource Loading</strong>: The Extension fetches current weather and Bing Daily Wallpapers from public endpoints.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h2>2. Permissions Declaration</h2>
+            <p>To deliver core features, the Extension requests the following browser permissions in <code>manifest.json</code>:</p>
+            <ul>
+                <li><code>storage</code>: Used to save your wallpaper configurations, to-do lists, and layout preferences locally.</li>
+                <li><code>tabs</code> & <code>activeTab</code>: Used to manage tab opening and transitions, as well as page targeting in specific interactions.</li>
+                <li><code>scripting</code>: Used to enhance specific wallpaper animations and dynamic rendering behaviors.</li>
+            </ul>
+
+            <h2>3. Data Sharing and Disclosure</h2>
+            <p>We do not share any of your personal data with unauthorized third parties. All your preferences and configurations remain strictly on your local device. Only when you actively trigger AI chat or web searches will the necessary request payloads be securely transmitted to trusted providers.</p>
+
+            <h2>4. Your Rights</h2>
+            <p>You have full control over the data stored locally. You can clear your settings at any time via the extension's reset buttons or simply uninstall the Extension from your browser. Upon uninstallation, all locally cached data will be automatically and permanently removed.</p>
+
+            <h2>5. Updates to This Policy</h2>
+            <p>Should the Extension introduce additional features that involve data collection or processing, we will update this Privacy Policy accordingly and declare it during updates.</p>
+        </div>
+
+        <footer>
+            <div class="update-date">最近更新 / Last Updated: 2026-06-23</div>
+            <div class="contact-info">联系邮箱 / Contact: <a href="mailto:shichen12324@outlook.com">shichen12324@outlook.com</a></div>
+        </footer>
+    </div>
+
+    <script>
+        function switchLang(lang) {
+            // Toggle active button
+            const buttons = document.querySelectorAll('.lang-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            // Highlight clicked button
+            event.currentTarget.classList.add('active');
+
+            // Toggle active panel
+            const panels = document.querySelectorAll('.content-panel');
+            panels.forEach(panel => panel.classList.remove('active'));
+            document.getElementById('panel-' + lang).classList.add('active');
+        }
+    </script>
+</body>
+</html>
