@@ -151,8 +151,9 @@ function manageZenLyricsWidget() {
   
     if (shouldBeVisible) {
         const lyrics = player.getLyrics();
-        // ✅ 尝试获取翻译歌词 (如果接口未更新，则默认为空数组)
-        const transLyrics = (player.getTransLyrics && typeof player.getTransLyrics === 'function') 
+        // ✅ 尝试获取翻译歌词 (如果接口未更新，或者在英文环境下，则默认为空数组)
+        const isEnglish = window.GwebI18n && window.GwebI18n.locale === 'en';
+        const transLyrics = (!isEnglish && player.getTransLyrics && typeof player.getTransLyrics === 'function') 
                             ? player.getTransLyrics() 
                             : [];
         
@@ -236,13 +237,13 @@ function updateZenTimeWidget() {
     lastTimeString = newTimeString;
   }
   
-  if (zenDateEl) zenDateEl.textContent = `${year}年${month}月${date}日`;
+  if (zenDateEl) zenDateEl.textContent = gwT("zen_date_format", `${year}年${month}月${date}日`, { year, month, date });
   
   if (zenWeekDayEl && sourceWeekDayEl) {
     zenWeekDayEl.textContent = sourceWeekDayEl.textContent;
   }
   if (zenWeatherEl && sourceWeatherEl) {
-    const fullWeatherText = sourceWeatherEl.textContent || "天气加载中";
+    const fullWeatherText = sourceWeatherEl.textContent || gwT("weather_loading_short", "天气加载中");
     const weatherParts = fullWeatherText.split('|');
     const weatherInfo = weatherParts.length > 1 ? weatherParts[1].trim() : fullWeatherText;
     zenWeatherEl.textContent = weatherInfo;
@@ -370,7 +371,7 @@ window.toggleZenMode = function() {
     const isPetVisible = window.dynamicPet ? window.dynamicPet.petVisible : true;
     
     if (isPetVisible) {
-        showBubble(isZen ? "禅模式已开启，享受宁静吧！🍃" : "欢迎回来，继续出发！✨", false, true);
+        showBubble(isZen ? gwT("zen_on_bubble", "禅模式已开启，享受宁静吧！🍃") : gwT("zen_off_bubble", "欢迎回来，继续出发！✨"), false, true);
     }
   }
 };

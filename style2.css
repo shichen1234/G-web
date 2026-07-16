@@ -2894,3 +2894,35 @@ body::after {
 #g-web-pet:active {
     cursor: grabbing;
 }
+
+/* ========================================================
+   🌐 English Environment Styles for NES Games Control Bar
+   ======================================================== */
+.lang-en .back-lobby-btn {
+    top: 13px !important;
+    right: 13px !important;
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+}
+
+.lang-en #load-contra, 
+.lang-en #load-mario {
+    margin-right: 125px !important;
+    font-size: 11px !important;
+    padding: 2px 6px !important;
+}
+
+.lang-en #nes-mute-contra, 
+.lang-en #nes-mute-mario {
+    font-size: 11px !important;
+    padding: 2px 5px !important;
+}
+
+.lang-en #contraView h4, 
+.lang-en #marioView h4 {
+    font-size: 12px !important;
+    max-width: 150px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}

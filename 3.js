@@ -38,7 +38,7 @@ function calculateDays(birthdayStr) {
     const savedDate = localStorage.getItem(STORAGE_KEY_BIRTHDAY);
     if (savedDate) {
       const days = calculateDays(savedDate);
-      daysNumber.textContent = days === 0 ? gwT('today_character', "今") : days;
+      daysNumber.textContent = days === 0 ? gwT("today_character", "今") : days;
       
       // 显示倒计时卡片
       pickerSection.style.display = 'none';
@@ -48,7 +48,7 @@ function calculateDays(birthdayStr) {
       // 如果是今天，显示惊喜入口
       if (days === 0) {
         surpriseLink.style.display = 'block';
-        daysNumber.nextElementSibling.textContent = gwT('day_label_short', "天");
+        daysNumber.nextElementSibling.textContent = gwT("day_label_short", "天");
       } else {
         surpriseLink.style.display = 'none';
       }
@@ -62,14 +62,14 @@ function calculateDays(birthdayStr) {
   saveBtn.addEventListener('click', () => {
     const dateVal = dateInput.value;
     if (!dateVal) {
-      alert(gwT('birthday_pick_date', "请选择日期喵~"));
+      alert(gwT("birthday_pick_date", "请选择日期喵~"));
       return;
     }
     localStorage.setItem(STORAGE_KEY_BIRTHDAY, dateVal);
     updateUI();
     // 使用现有的 showBubble 函数反馈
     if (typeof showBubble === 'function') {
-      showBubble(gwT('birthday_saved', "已经记下你的生日啦喵！✨"));
+      showBubble(gwT("birthday_saved", "已经记下你的生日啦喵！✨"));
     }
   });
   
@@ -91,7 +91,7 @@ function calculateDays(birthdayStr) {
     
     // 2. 小猫弹出祝福（假设你已有名为 showBubble 的函数）
     if (typeof showBubble === 'function') {
-      showBubble(gwT('birthday_surprise_bubble', "✨ 哇！祝你生日快乐喵！快看我为你准备的蛋糕~ 🎂"));
+      showBubble(gwT("birthday_surprise_bubble", "✨ 哇！祝你生日快乐喵！快看我为你准备的蛋糕~ 🎂"));
     }
   });
 
@@ -280,7 +280,7 @@ function handleAddTodo() {
   loadTodos(); // 重新加载以显示新任务
   
   if (typeof showBubble === 'function') {
-    const msgs = gwList('todo_added', ["收到！记下来了喵~", "好记性不如烂笔头喵！", "加油完成哦喵~"]);
+    const msgs = gwList("todo_added_messages", ["收到！记下来了喵~", "好记性不如烂笔头喵！", "加油完成哦喵~"]);
     showBubble(msgs[Math.floor(Math.random() * msgs.length)]);
   }
 }
@@ -310,7 +310,7 @@ function toggleTodo(index) {
     loadTodos();
     
     if (todos[index].done && typeof showBubble === 'function') {
-      showBubble(gwT('todo_done', "太棒了！又完成一件事喵！🎉"));
+      showBubble(gwT("todo_done_bubble", "太棒了！又完成一件事喵！🎉"));
     }
   }
 }
@@ -470,12 +470,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // 小猫互动
           if(typeof showBubble === 'function' && result !== 'Error' && Math.random() > 0.8) {
-             showBubble(gwT('calc_success', "算数我在行喵！"));
+             showBubble(gwT("calc_success_bubble", "算数我在行喵！"));
           }
         } catch (e) {
           console.error(e);
           display.value = 'Error';
-          if(typeof showBubble === 'function') showBubble(gwT('calc_error', "算式太难了喵..."));
+          if(typeof showBubble === 'function') showBubble(gwT("calc_error_bubble", "算式太难了喵..."));
         }
       } 
       // 4. 输入处理
@@ -780,7 +780,7 @@ if (toTodayBtn) {
     // 2. 重新渲染日历
     renderCalendar(currentDate);
     if (typeof showBubble === 'function') {
-      showBubble("回到今天啦喵～📅");
+      showBubble(gwT("calendar_back_today_bubble", "回到今天啦喵～📅"));
     }
   });
 }
@@ -792,7 +792,7 @@ if (toTodayBtn) {
     const year = date.getFullYear();
     const month = date.getMonth(); 
     
-    monthYearEl.textContent = `${year}年 ${month + 1}月`;
+    monthYearEl.textContent = gwT("calendar_month_year", `${year}年 ${month + 1}月`, { year, month: month + 1 });
     gridEl.innerHTML = '';
 
     const firstDay = new Date(year, month, 1).getDay(); // 当月第一天星期几
@@ -811,6 +811,7 @@ if (toTodayBtn) {
       // --- 核心改动：计算农历和节日 ---
       // 创建当前日期的对象
       const currentLoopDate = new Date(year, month, d);
+      const isEn = window.GwebI18n && window.GwebI18n.locale === 'en';
       let lunarText = '';
       let isFestival = false;
 
@@ -819,37 +820,64 @@ if (toTodayBtn) {
         const solar = Solar.fromDate(currentLoopDate);
         const lunar = Lunar.fromDate(currentLoopDate);
 
-        // 1. 获取农历基础日期 (初一、十五等)
-        let dayStr = lunar.getDayInChinese();
-        if (dayStr === '初一') dayStr = lunar.getMonthInChinese() + '月';
-
-        // 2. 获取节气 (清明、冬至等)
-        const jieqi = lunar.getJieQi();
-
-        // 3. 获取节日 (优先显示)
-        // 获取公历节日 (如元旦、国庆)
-        const solarFestivals = solar.getFestivals();
-        // 获取农历节日 (如春节、中秋)
-        const lunarFestivals = lunar.getFestivals();
-
-        // 优先级逻辑：节日 > 节气 > 农历初一 > 普通农历
-        if (lunarFestivals.length > 0) {
-          lunarText = lunarFestivals[0];
-          isFestival = true;
-          // 修正：如果遇到“春节”，显示这两个字
-          // 显示完整节日名称（不再限制长度） 
-        } else if (solarFestivals.length > 0) {
-          lunarText = solarFestivals[0];
-          isFestival = true;
-           // 显示完整节日名称（不再限制长度）
-        } else if (jieqi) {
-          lunarText = jieqi;
-          isFestival = true; // 节气也高亮
+        if (isEn) {
+          // English environment: only international holidays
+          const solarFestivals = solar.getFestivals();
+          const enSolarFestivals = {
+            "元旦": "New Year",
+            "情人节": "Valentine",
+            "妇女节": "Women's Day",
+            "愚人节": "April Fool",
+            "劳动节": "May Day",
+            "儿童节": "Children",
+            "万圣节": "Halloween",
+            "平安夜": "Xmas Eve",
+            "圣诞节": "Christmas",
+            "母亲节": "Mother's Day",
+            "父亲节": "Father's Day"
+          };
+          
+          let matchedEn = '';
+          if (solarFestivals && solarFestivals.length > 0) {
+            for (let f of solarFestivals) {
+              const cleanF = f.trim();
+              if (enSolarFestivals[cleanF]) {
+                matchedEn = enSolarFestivals[cleanF];
+                break;
+              }
+            }
+          }
+          if (matchedEn) {
+            lunarText = matchedEn;
+            isFestival = true;
+          } else {
+            lunarText = '';
+            isFestival = false;
+          }
         } else {
-          lunarText = dayStr;
+          // Chinese environment: original logic
+          let dayStr = lunar.getDayInChinese();
+          if (dayStr === '初一') dayStr = lunar.getMonthInChinese() + '月';
+          const jieqi = lunar.getJieQi();
+          const solarFestivals = solar.getFestivals();
+          const lunarFestivals = lunar.getFestivals();
+
+          if (lunarFestivals.length > 0) {
+            lunarText = lunarFestivals[0];
+            isFestival = true;
+          } else if (solarFestivals.length > 0) {
+            lunarText = solarFestivals[0];
+            isFestival = true;
+          } else if (jieqi) {
+            lunarText = jieqi;
+            isFestival = true;
+          } else {
+            lunarText = dayStr;
+            isFestival = false;
+          }
         }
       } else {
-        lunarText = '...'; // 库没加载出来的兜底
+        lunarText = isEn ? '' : '...';
       }
 
       // --- 构建 HTML ---
@@ -900,7 +928,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('searchInput');
   
   // 1. 趣味提示词 (打字机循环播放的内容)
- const funPhrases = [
+ const funPhrases = gwList("search_fun_phrases", [
     "搜索感兴趣的内容...",
     "今天天气怎么样？",
     "中午吃点什么好呢？",
@@ -909,16 +937,16 @@ document.addEventListener('DOMContentLoaded', () => {
     "周末去哪里玩？",
     "生活小常识",
     "保持好奇心..."
-  ];
+  ]);
 
   // 2. 引擎默认提示词 (用于点击时恢复显示)
   // ⚠️ 注意：这里的顺序必须和你上面 engines 数组的顺序完全一致！
-  const enginePlaceholders = [
+  const enginePlaceholders = gwList("search_engine_placeholders", [
     "通过bing搜索...",   // 对应 index 0 (Bing)
     "Google 搜索...",    // 对应 index 1 (Google)
     "百度一下...",       // 对应 index 2 (百度)
     "搜狗搜索..."        // 对应 index 3 (搜狗)
-  ];
+  ]);
 
   let phraseIndex = 0;
   let charIndex = 0;
@@ -972,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // === ✨ AI 模式打字机逻辑 (打完不消失) ===
       if (aiTypingTimer) clearTimeout(aiTypingTimer);
       
-      const aiText = "向豆包提问...";
+      const aiText = gwT("ai_search_placeholder", "向豆包提问...");
       let i = 0;
       input.setAttribute('placeholder', ''); // 先清空
 
@@ -1337,15 +1365,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (typeof showBubble === 'function') {
         if (style === 'off') {
-            showBubble("鼠标特效已关闭，现在的鼠标静悄悄的喵～🤫");
+            showBubble(gwT("trail_off_bubble", "鼠标特效已关闭，现在的鼠标静悄悄的喵～🤫"));
         } else {
             let name = "";
-            if(style === 'particle') name = "珍珠泡沫";
-            if(style === 'line') name = "彩虹流光";
-            if(style === 'sparkle') name = "闪亮星尘";
-            if(style === 'laser') name = "极光射线"; 
+            if(style === 'particle') name = gwT("trail_particle_name", "珍珠泡沫");
+            if(style === 'line') name = gwT("trail_line_name", "彩虹流光");
+            if(style === 'sparkle') name = gwT("trail_sparkle_name", "闪亮星尘");
+            if(style === 'laser') name = gwT("trail_laser_name", "极光射线"); 
             
-            showBubble(`鼠标拖尾已切换为：${name} 喵！✨`);
+            showBubble(gwT("trail_switched_bubble", `鼠标拖尾已切换为：${name} 喵！✨`, { name }));
         }
     }
   };
@@ -1452,8 +1480,8 @@ document.addEventListener('DOMContentLoaded', () => {
     syncUI();
     if (typeof showBubble === 'function') {
       showBubble(enabled
-        ? '表情包点击已开启，快点击屏幕试试喵！🎭'
-        : '表情包点击已关闭喵～🤫'
+        ? gwT("emoji_click_on_bubble", '表情包点击已开启，快点击屏幕试试喵！🎭')
+        : gwT("emoji_click_off_bubble", '表情包点击已关闭喵～🤫')
       );
     }
   });

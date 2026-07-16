@@ -73,3 +73,28 @@
     color: #222 !important;
     text-shadow: 0 1px 1px rgba(255, 255, 255, 0.9) !important;
 }
+
+/* ========================================================
+   🌐 English Environment Styles for Wallpaper Controls Row
+   ======================================================== */
+.lang-en .liquid-setting-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin: 0 !important;
+}
+
+.lang-en .liquid-switch {
+    margin-left: 0 !important;
+}
+
+.lang-en #wallpaperModal .liquid-setting-item > span,
+.lang-en .parallax-label,
+.lang-en .volume-label {
+    font-size: 13px !important;
+    white-space: nowrap !important;
+}
+
+.lang-en input[type="range"]#volumeSlider {
+    width: 100px !important;
+}

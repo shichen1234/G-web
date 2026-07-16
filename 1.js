@@ -310,7 +310,7 @@ document.addEventListener("DOMContentLoaded", function () {
       param: "q",
       smallLogo: "logo/bing-logo-small.png",
       bigLogo: "logo/bing-logo.png",
-      placeholder: gwT('engine_bing_placeholder', '通过 Bing 搜索...')
+      placeholder: "通过bing搜索..."
     },
     {
       name: "Google",
@@ -318,24 +318,24 @@ document.addEventListener("DOMContentLoaded", function () {
       param: "q",
       smallLogo: "logo/google-logo-small.png",
       bigLogo: "logo/google-logo.png",
-      placeholder: gwT('engine_google_placeholder', 'Google 搜索...')
+      placeholder: "Google 搜索..."
     },
     {
-      name: gwT('engine_baidu_name', '百度'),
+      name: "百度",
       url: "https://www.baidu.com/s",
       param: "wd",
       smallLogo: "logo/baidu-logo-small.png",
       bigLogo: "logo/baidu-logo.png",
-      placeholder: gwT('engine_baidu_placeholder', '百度一下...')
+      placeholder: "百度一下..."
     },
     {
-      name: gwT('engine_sogou_name', '搜狗'),
+      name: "搜狗",
       url: "https://www.sogou.com/web",
       param: "query",                 // 搜狗必须是 query
       extraParams: "ie=utf-8",         // 防止中文乱码
       smallLogo: "logo/sogou-logo-small.png",
       bigLogo: "logo/sogou-logo.png",
-      placeholder: gwT('engine_sogou_placeholder', '搜狗搜索...')
+      placeholder: "搜狗搜索..."
     }
   ];
 
@@ -403,11 +403,11 @@ function switchEngine(e) {
     applyEngine(current);
 
     // ✅ Pop up cat comments after switching engine (random message)
-    const engineReplies = gwList('engine_switch_replies', [
-      "换个搜索引擎试试喵～看看谁更聪明！",
-      "小猫也想知道哪个搜索结果更好喵～",
-      "咕噜咕噜～切换成功喵！"
-    ]);
+    const engineReplies = [
+      gwT("engine_switch_bubble_1", "换个搜索引擎试试喵～看看谁更聪明！"),
+      gwT("engine_switch_bubble_2", "小猫也想知道哪个搜索结果更好喵～"),
+      gwT("engine_switch_bubble_3", "咕噜咕噜～切换成功喵！")
+    ];
     showBubble(engineReplies[Math.floor(Math.random() * engineReplies.length)]);
 
 engineIcon.classList.add("fade-in");
@@ -660,13 +660,22 @@ function initWallpaperModal() {
       });
     });
 
+    // 后台静默预加载自定义壁纸文件夹数据
+    if (typeof window.loadCustomFolderFromIndexedDB === 'function') {
+      window.loadCustomFolderFromIndexedDB().catch(()=>{});
+    }
+
     // Default render static wallpapers
     renderWallpapers('static');
   }
 
 // 🚀 [性能优化] 渲染主函数：先加载 Key，再渲染
 async function renderWallpapers(type) {
-    // 1. 等待 IndexedDB 中的 ID 列表加载到内存
+    window.renderWallpapers = renderWallpapers;
+    const grid = document.querySelector('.wallpaper-grid');
+    if (!grid) return;
+
+    // Load active wallpaper key before rendering (if needed by cards)
     await cacheDownloadedKeys();
 
     grid.innerHTML = ''; // Clear current content
@@ -677,17 +686,38 @@ async function renderWallpapers(type) {
     // 2. Get right scroll container
     const rightPanel = document.querySelector('.wp-right-panel');
 
-    // ✅ Core logic: first remove "no-scroll" by default, to prevent non-scrollable when switching back to other categories
+    // ✅ Core logic: first remove "no-scroll" by default
     if (rightPanel) rightPanel.classList.remove('no-scroll');
+
+    const statusBar = _ensureCustomFolderStatusBar();
+    if (statusBar && type !== 'custom') {
+      statusBar.style.display = 'none';
+    }
 
     // 3. Distribute rendering by type
     if (type === 'custom') {
-      grid.classList.add('custom-mode'); // Add center layout
+      if (typeof window.loadCustomFolderFromIndexedDB === 'function') {
+        try {
+          // 每次切换到自定义壁纸选项卡时，尝试从本地或者 Handle 刷新最新内容
+          await window.loadCustomFolderFromIndexedDB(true);
+        } catch (err) {}
+      }
 
-      // ✅ If it is a custom page, add "no-scroll" class to the container
-      if (rightPanel) rightPanel.classList.add('no-scroll');
-
-      renderCustomPage();
+      if (!window._customWallpaperFolderFiles || window._customWallpaperFolderFiles.length === 0) {
+        grid.classList.add('custom-mode'); // Add center layout
+        if (rightPanel) rightPanel.classList.add('no-scroll');
+        if (statusBar) statusBar.style.display = 'none';
+        renderCustomPage();
+      } else {
+        grid.classList.remove('custom-mode');
+        if (rightPanel) rightPanel.classList.remove('no-scroll');
+        if (statusBar) {
+          statusBar.style.display = 'flex';
+          const pathText = document.getElementById('customFolderPathText');
+          if (pathText) pathText.textContent = '当前本地绝对/选定目录：' + (window._customWallpaperFolderPath || '已选择壁纸文件夹');
+        }
+        renderCustomFolderCards();
+      }
     } else if (type === 'static') {
       renderStaticWallpapers();
     } else if (type === 'dynamic') {
@@ -696,15 +726,223 @@ async function renderWallpapers(type) {
       renderWebWallpapers();
     }
   }
+
+function _ensureCustomFolderStatusBar() {
+  const rightPanel = document.querySelector('.wp-right-panel');
+  if (!rightPanel) return null;
+  let statusBar = document.getElementById('customFolderStatusBar');
+  if (!statusBar) {
+    statusBar = document.createElement('div');
+    statusBar.id = 'customFolderStatusBar';
+    statusBar.style.cssText = `
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      box-sizing: border-box;
+      flex-shrink: 0;
+      z-index: 100;
+    `;
+    statusBar.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; flex: 1; margin-right: 12px;">
+        <span style="font-size: 18px; flex-shrink: 0;">📁</span>
+        <span style="font-size: 14px; color: #222; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 1px rgba(255,255,255,0.9);" id="customFolderPathText">当前绝对/选定目录：...</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+        <button id="refreshFolderBtn" style="
+          background: #34a853;
+          color: white;
+          border: none;
+          padding: 6px 14px;
+          border-radius: 20px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: var(--g-cursor-link, pointer) !important;
+          white-space: nowrap;
+          box-shadow: 0 4px 12px rgba(52, 168, 83, 0.3);
+          transition: all 0.2s ease;
+        " title="扫描重新探测文件夹内新增的壁纸">🔄 重新探测</button>
+        <button id="changeFolderBtn" style="
+          background: #0b74de;
+          color: white;
+          border: none;
+          padding: 6px 16px;
+          border-radius: 20px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: var(--g-cursor-link, pointer) !important;
+          white-space: nowrap;
+          box-shadow: 0 4px 12px rgba(11, 116, 222, 0.3);
+          transition: all 0.2s ease;
+        ">更改文件夹路径</button>
+      </div>
+    `;
+    rightPanel.appendChild(statusBar);
+
+    const refreshBtn = statusBar.querySelector('#refreshFolderBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        if (typeof window.loadCustomFolderFromIndexedDB === 'function') {
+          const files = await window.loadCustomFolderFromIndexedDB(true);
+          if (typeof window.renderWallpapers === 'function') {
+            window.renderWallpapers('custom');
+          }
+          if (typeof showBubble === 'function') {
+            showBubble(files ? `重新扫描完成，目前文件夹下共有 ${files.length} 个壁纸喵！✨` : "重新扫描已完成了喵！");
+          }
+        }
+      });
+    }
+
+    const changeBtn = statusBar.querySelector('#changeFolderBtn');
+    if (changeBtn) {
+      changeBtn.addEventListener('click', () => {
+        if (typeof window.triggerFolderSelection === 'function') {
+          window.triggerFolderSelection();
+        }
+      });
+    }
+  }
+  return statusBar;
+}
+
+function renderCustomFolderCards() {
+  grid.innerHTML = '';
+  const statics = (window._customWallpaperFolderFiles || []).filter(f => f.isStatic).sort((a,b) => (a.name || '').localeCompare(b.name || ''));
+  const dynamics = (window._customWallpaperFolderFiles || []).filter(f => !f.isStatic).sort((a,b) => (a.name || '').localeCompare(b.name || ''));
+  const sortedFiles = [...statics, ...dynamics];
+
+  sortedFiles.forEach((fileItem, idx) => {
+    const tile = document.createElement("div");
+    tile.className = "video-tile";
+
+    const thumbBox = document.createElement("div");
+    thumbBox.className = "lazy-video-thumb";
+    thumbBox.style.cssText = "position:relative;width:100%;height:130px;border-radius:8px;cursor:var(--g-cursor-link, pointer) !important;overflow:hidden;background:#1a1a2e;";
+
+    const objectUrl = URL.createObjectURL(fileItem.blob || fileItem);
+    const mediaEl = document.createElement(fileItem.isStatic ? "img" : "video");
+    mediaEl.src = objectUrl;
+    mediaEl.style.cssText = "width:100%;height:100%;object-fit:cover;transition:transform 0.3s;";
+
+    if (!fileItem.isStatic) {
+      mediaEl.muted = true;
+      mediaEl.loop = true;
+      mediaEl.playsInline = true;
+      mediaEl.addEventListener("loadeddata", () => {
+        mediaEl.currentTime = 0.1;
+      });
+      thumbBox.addEventListener("mouseenter", () => {
+        mediaEl.play().catch(() => {});
+        mediaEl.style.transform = "scale(1.05)";
+      });
+      thumbBox.addEventListener("mouseleave", () => {
+        mediaEl.pause();
+        mediaEl.style.transform = "scale(1)";
+      });
+    } else {
+      thumbBox.addEventListener("mouseenter", () => {
+        mediaEl.style.transform = "scale(1.05)";
+      });
+      thumbBox.addEventListener("mouseleave", () => {
+        mediaEl.style.transform = "scale(1)";
+      });
+    }
+
+    const badge = document.createElement("div");
+    badge.className = "custom-type-badge";
+    badge.style.cssText = `
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+      background: ${fileItem.isStatic ? 'rgba(46, 204, 113, 0.88)' : 'rgba(231, 76, 60, 0.88)'};
+      backdrop-filter: blur(4px);
+      padding: 3px 8px;
+      border-radius: 12px;
+      z-index: 10;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      pointer-events: none;
+    `;
+    badge.textContent = fileItem.isStatic ? "静态" : "动态";
+
+    const nameLabel = document.createElement("div");
+    nameLabel.style.cssText = `
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 16px 8px 6px 8px;
+      background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+      color: white;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: none;
+      z-index: 5;
+    `;
+    nameLabel.textContent = fileItem.name || `壁纸_${idx+1}`;
+
+    thumbBox.appendChild(mediaEl);
+    thumbBox.appendChild(badge);
+    thumbBox.appendChild(nameLabel);
+    tile.appendChild(thumbBox);
+
+    thumbBox.addEventListener("click", async () => {
+      const modal = document.getElementById("wallpaperModal");
+      const blobToUse = fileItem.blob || fileItem;
+      try {
+        await setBackgroundFromBlob(blobToUse);
+        if (typeof window.cleanupUnusedWallpapers === 'function') {
+          window.cleanupUnusedWallpapers().catch(() => {});
+        }
+      } catch (e) {
+        console.error('[G-web] 设置选择的壁纸失败:', e);
+      }
+
+      if (modal) {
+        modal.classList.remove("show");
+        setTimeout(() => { modal.style.display = "none"; }, 350);
+      }
+
+      localStorage.setItem("wallpaperType", "upload");
+      localStorage.setItem("currentWallpaperKey", "bgVideo");
+      localStorage.removeItem("wallpaper");
+      if (window.chrome && window.chrome.storage && window.chrome.storage.local) {
+        window.chrome.storage.local.set({ currentWallpaperKey: "bgVideo" }).catch(() => {});
+      }
+
+      saveVideoToIndexedDB(blobToUse).then(() => {
+        console.log("[G-web] 自定义壁纸已成功保存到 IndexedDB");
+      }).catch(() => {});
+
+      if (typeof showBubble === 'function') {
+        showBubble(gwT("custom_wp_success", "自定义壁纸设置成功喵！✨"));
+      }
+    });
+
+    grid.appendChild(tile);
+  });
+}
+
   // New: Render custom page logic
 function renderCustomPage() {
     renderAddButton();
 
     // Hint text
     const hint = document.createElement('div');
-    // ✅ Add text-align: center to center the text as well
     hint.style.cssText = "width:100%; color:#999; font-size:14px; text-align:center; line-height: 1.6;";
-    hint.innerHTML = gwT('wallpaper_custom_hint', "💡 点击上方按钮上传本地图片或视频 (MP4) <br>上传后将自动应用并保存到浏览器缓存中");
+    hint.innerHTML = "💡 点击上方按钮选择包含图片或视频 (MP4) 的本地文件夹<br>系统将自动扫描并分类展示文件夹内所有的静态与动态壁纸";
     grid.appendChild(hint);
   }
 // 1. Render static wallpapers (🎉 Newly upgraded: supports online download + gear management)
@@ -713,7 +951,7 @@ function renderCustomPage() {
 // Helper: Create and replace placeholder (this is the core of lazy loading)
 function createAndReplacePlaceholder(placeholder, type) {
     const grid = placeholder.parentElement;
-    const GITHUB_BASE = "https://ghproxy.net/https://raw.githubusercontent.com/shichen1234/wallpapers/main/";
+    const GITHUB_BASE = "https://ghfast.top/https://raw.githubusercontent.com/shichen1234/wallpapers/main/";
 
     // Read information from placeholder's data-* attributes
     const i = placeholder.dataset.index;
@@ -746,11 +984,11 @@ function createAndReplacePlaceholder(placeholder, type) {
     const gearBtn = document.createElement("button");
     gearBtn.className = "iconSettings";
     gearBtn.style.cssText = "position:absolute;bottom:8px;right:8px;border:none;cursor:pointer;z-index:10;";
-    gearBtn.innerHTML = `<img src="images/chilun.png" alt="${gwT('manage_alt', '管理')}">`;
+    gearBtn.innerHTML = '<img src="images/chilun.png" alt="管理">';
 
     const popover = document.createElement("div");
     popover.className = "iconPopover overlay";
-    popover.innerHTML = `<button class="delBtn" type="button">${gwT('button_delete', '删除')}</button><button class="cancelBtn" type="button">${gwT('button_cancel', '取消')}</button>`;
+    popover.innerHTML = `<button class="delBtn" type="button">删除</button><button class="cancelBtn" type="button">取消</button>`;
 
     thumbBox.appendChild(img);
     thumbBox.appendChild(mask);
@@ -786,10 +1024,10 @@ function createAndReplacePlaceholder(placeholder, type) {
     link.addEventListener('mouseleave', () => link.style.transform = 'scale(1)');
 
     if (!isStatic) { // Dynamic wallpaper
-        link.textContent = gwT('wallpaper_link', '壁纸链接 →');
+        link.textContent = '壁纸链接 →';
         link.href = wallpaperAuthorLinks[i-1] || '#';
     } else { // Static wallpaper
-        link.textContent = gwT('download_link', '下载链接 →');
+        link.textContent = '下载链接 →';
         link.href = `https://shichen1234.github.io/wallpapers/${i}.jpg`;
         link.setAttribute('download', `${i}.jpg`); // Key: add download attribute
     }
@@ -841,7 +1079,7 @@ function createAndReplacePlaceholder(placeholder, type) {
 
     popover.querySelector('.delBtn').addEventListener("click", async (e) => {
         e.stopPropagation();
-        if (confirm(gwT('confirm_delete_wallpaper_cache', '确定要删除这个壁纸缓存吗？'))) {
+        if (confirm(`确定要删除这个壁纸缓存吗？`)) {
             await deleteVideoFromIndexedDB(dbKey);
             // 🚀 [性能优化] 删除后同步更新内存 Set
             downloadedKeys.delete(dbKey);
@@ -849,7 +1087,7 @@ function createAndReplacePlaceholder(placeholder, type) {
             tile.dataset.downloaded = "false";
             badge.style.display = "none";
             popover.classList.remove("show");
-            if(typeof showBubble === 'function') showBubble(gwT('wallpaper_cache_deleted', '壁纸缓存已删除喵！🗑️'));
+            if(typeof showBubble === 'function') showBubble(gwT("bubble_wallpaper_cache_deleted", "壁纸缓存已删除喵！🗑️"));
         }
     });
 
@@ -869,10 +1107,10 @@ tile.addEventListener("click", async (e) => {
                 await setBackgroundFromBlob(file);
                 localStorage.setItem("wallpaperType", "upload");
                 localStorage.setItem("currentWallpaperKey", dbKey);
-                if (typeof showBubble === 'function') showBubble(gwT('wallpaper_switch_success', '壁纸切换成功喵！'));
+                if (typeof showBubble === 'function') showBubble(gwT("bubble_wallpaper_switch_success", "壁纸切换成功喵！"));
             } catch (err) {
                 console.error('[G-web] 设置已下载壁纸失败:', err);
-                if (typeof showBubble === 'function') showBubble(gwT('wallpaper_apply_failed', '应用壁纸失败了喵...'));
+                if (typeof showBubble === 'function') showBubble(gwT("bubble_wallpaper_apply_failed", "应用壁纸失败了喵..."));
             }
         }
         return;
@@ -905,7 +1143,7 @@ tile.addEventListener("click", async (e) => {
         await setBackgroundFromBlob(blob);
 
         // 保存壁纸
-        progressText.textContent = gwT('wallpaper_saved_label', '保存中...');
+        progressText.textContent = '保存中...';
         try {
             await saveVideoToIndexedDB(blob, dbKey);
             // 🚀 [性能优化] 下载成功后更新内存 Set
@@ -917,7 +1155,7 @@ tile.addEventListener("click", async (e) => {
             localStorage.setItem("wallpaperType", "upload");
             localStorage.setItem("currentWallpaperKey", dbKey);
             
-            if (typeof showBubble === 'function') showBubble(gwT('wallpaper_download_apply_success', '下载并应用成功喵！🎉'));
+            if (typeof showBubble === 'function') showBubble(gwT("bubble_download_apply_success", "下载并应用成功喵！🎉"));
 
         } catch (saveErr) {
             // 🔥 核心修复：捕获保存错误并通知用户
@@ -925,9 +1163,9 @@ tile.addEventListener("click", async (e) => {
             if (typeof showBubble === 'function') {
                 // 判断是否是空间不足的错误
                 if (saveErr.name === 'QuotaExceededError') {
-                    showBubble(gwT('wallpaper_quota_exceeded', '存储空间不足！请在壁纸管理中删除一些旧壁纸再试喵～😿'), true, true);
+                    showBubble(gwT("bubble_quota_exceeded", "存储空间不足！请在壁纸管理中删除一些旧壁纸再试喵～😿"), true, true);
                 } else {
-                    showBubble(gwT('wallpaper_save_failed', '壁纸保存失败了喵，请稍后再试。'), true, true);
+                    showBubble(gwT("bubble_save_failed", "壁纸保存失败了喵，请稍后再试。"), true, true);
                 }
             }
             // 即使保存失败，也把壁纸删掉，让用户可以重新下载
@@ -936,7 +1174,7 @@ tile.addEventListener("click", async (e) => {
 
     } catch (fetchErr) {
         console.error('[G-web] 下载壁纸失败:', fetchErr);
-        progressText.textContent = gwT('wallpaper_download_failed', '下载失败');
+        progressText.textContent = "下载失败";
     } finally {
         // 无论成功与否，2秒后都移除遮罩
         setTimeout(() => mask.classList.remove("active"), 2000);
@@ -983,7 +1221,8 @@ function renderStaticWallpapers() {
 
                     const img = document.createElement("img");
                     // ✅ Your custom cover image
-                    img.src = "wallpapers/pictures/special image.png";
+                    const isEn = window.GwebI18n && window.GwebI18n.locale === 'en';
+                    img.src = isEn ? "wallpapers/pictures/special image en.png" : "wallpapers/pictures/special image.png";
                     img.style.cssText = "width:100%;height:100%;object-fit:cover;transition:transform 0.3s;";
                     // Fallback: if cover image not found, use default poster
                     img.onerror = () => { img.src = 'wallpapers/poster.jpg'; };
@@ -991,7 +1230,7 @@ function renderStaticWallpapers() {
                     // ✅ Top right "daily change" label
                     const timeLabel = document.createElement("div");
                     timeLabel.className = "wallpaper-special-tag1"; // Reuse previous style or ensure CSS has this class
-                    timeLabel.textContent = gwT('daily_wallpaper_label', '一天一换');
+                    timeLabel.textContent = "一天一换";
                     // To ensure style takes effect, if not in CSS, add inline fallback here
                     timeLabel.style.cssText = "position: absolute;top: 6px;left: 6px;background: linear-gradient(135deg, #20b5ff, #ff8b8b); /* Warm gradient */color: white;font-size: 13px;font-weight: bold;padding: 3px 7px;border-radius: 5px;box-shadow: 0 2px 5px rgba(0,0,0,0.3);text-shadow: 1px 1px 1px rgba(0,0,0,0.4);z-index: 10;pointer-events: none;";
 
@@ -1028,7 +1267,7 @@ function renderStaticWallpapers() {
                         }
 
                         // 4. Close popup and prompt
-                        if(typeof showBubble === 'function') showBubble(gwT('daily_wallpaper_success', '已切换到每日必应壁纸，每天都有新风景喵～🌏'));
+                        if(typeof showBubble === 'function') showBubble(gwT("daily_bing_wp_success", "已切换到每日必应壁纸，每天都有新风景喵～🌏"));
                     });
 
                     target.replaceWith(specialTile);
@@ -1082,7 +1321,7 @@ function renderDynamicWallpapers() {
                     img.onerror = () => { img.src = 'wallpapers/poster.jpg'; };
                     const timeLabel = document.createElement("div");
                     timeLabel.className = "wallpaper-special-tag";
-                    timeLabel.textContent = gwT('smart_wallpaper_label', '随时间变化');
+                    timeLabel.textContent = gwT("wallpaper_time_varying_tag", "随时间变化");
                     thumbBox.appendChild(img);
                     thumbBox.appendChild(timeLabel);
 
@@ -1093,7 +1332,7 @@ function renderDynamicWallpapers() {
                     authorLink.className = 'wallpaper-author-link';
                     authorLink.href = 'https://steamcommunity.com/sharedfiles/filedetails/?id=3373205871';
                     authorLink.target = '_blank';
-                    authorLink.textContent = gwT('wallpaper_link', '壁纸链接 →');
+                    authorLink.textContent = '壁纸链接 →';
                     authorLink.style.cssText = `
                         position: absolute;
                         bottom: 8px;
@@ -1143,7 +1382,7 @@ function renderDynamicWallpapers() {
                         } else {
                             location.reload();
                         }
-                        if(typeof showBubble === 'function') showBubble(gwT('smart_wallpaper_success', '已切换为随时间变化的智能壁纸喵！☀️🌧️'));
+                        if(typeof showBubble === 'function') showBubble(gwT("wallpaper_switched_time_varying", "已切换为随时间变化的智能壁纸喵！☀️🌧️"));
                     });
 
                     // ============================================================
@@ -1190,10 +1429,12 @@ function renderDynamicWallpapers() {
 function renderAddButton() {
     const addBox = document.createElement("div");
     addBox.className = "add-wallpaper";
-    addBox.innerHTML = `<span>+</span><div style="font-size:16px;margin-top:5px;font-weight:bold;">${gwT('upload_wallpaper', '点击上传')}</div>`;
+    addBox.innerHTML = `<span>+</span><div style="font-size:16px;margin-top:5px;font-weight:bold;">点击选择壁纸文件夹</div>`;
     addBox.style.flexDirection = "column";
     addBox.addEventListener("click", () => {
-      videoUpload.click();
+      if (typeof window.triggerFolderSelection === 'function') {
+        window.triggerFolderSelection();
+      }
     });
     grid.appendChild(addBox);
   }
@@ -1206,27 +1447,7 @@ function renderAddButton() {
 
   // --- Bind general events ---
   closeBtn?.addEventListener("click", closeWallpaperModal);
-  // Upload file listener (logic unchanged)
-  videoUpload.addEventListener("change", async function(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    // 使用统一 helper 来设置背景并管理临时 URL
-    try {
-      await setBackgroundFromBlob(file);
-      window.cleanupUnusedWallpapers(); 
-    } catch (e) {
-      console.error('[G-web] 设置上传壁纸失败:', e);
-    }
-
-    closeWallpaperModal();
-    saveVideoToIndexedDB(file).then(() => {
-      localStorage.setItem("wallpaperType", "upload");
-      localStorage.setItem("currentWallpaperKey", "bgVideo");
-      localStorage.removeItem("wallpaper");
-    });
-    if(typeof showBubble === 'function') showBubble(gwT('custom_wallpaper_success', '自定义壁纸设置成功喵！✨'));
-    event.target.value = "";
-  });
+  // Upload file listener removed (merged into 2.js)
 
 });
 document.getElementById("weather").addEventListener("mouseenter", () => {
@@ -1234,27 +1455,45 @@ document.getElementById("weather").addEventListener("mouseenter", () => {
 
 let replies = [];
 
-if (weatherInfo.includes("晴") || weatherInfo.includes("多云")) {
-  replies = gwList('weather_sunny', ["天气真好喵～出去晒晒太阳吧！", "阳光暖暖的，小猫都想打滚了～"]);
-} else if (weatherInfo.includes("阴") || weatherInfo.includes("雾") || weatherInfo.includes("霾")) {
-  replies = gwList('weather_cloudy', ["今天灰灰的喵～适合窝在家里～", "雾蒙蒙的，小猫都看不清路啦～"]);
+if (weatherInfo.includes("晴") || weatherInfo.includes("多云") || weatherInfo.toLowerCase().includes("sunny") || weatherInfo.toLowerCase().includes("clear") || weatherInfo.toLowerCase().includes("cloudy")) {
+  replies = [
+    gwT("weather_hover_sunny_1", "天气真好喵～出去晒晒太阳吧！"),
+    gwT("weather_hover_sunny_2", "阳光暖暖的，小猫都想打滚了～")
+  ];
+} else if (weatherInfo.includes("阴") || weatherInfo.includes("雾") || weatherInfo.includes("霾") || weatherInfo.toLowerCase().includes("overcast") || weatherInfo.toLowerCase().includes("fog") || weatherInfo.toLowerCase().includes("haze") || weatherInfo.toLowerCase().includes("mist")) {
+  replies = [
+    gwT("weather_hover_cloudy_1", "今天灰灰的喵～适合窝在家里～"),
+    gwT("weather_hover_cloudy_2", "雾蒙蒙的，小猫都看不清路啦～")
+  ];
 } else if (
   weatherInfo.includes("雨") ||
   weatherInfo.includes("雷阵雨") ||
-  weatherInfo.includes("雨夹雪")
+  weatherInfo.includes("雨夹雪") ||
+  weatherInfo.toLowerCase().includes("rain") ||
+  weatherInfo.toLowerCase().includes("shower") ||
+  weatherInfo.toLowerCase().includes("storm")
 ) {
-  replies = gwList('weather_rainy', ["下雨啦喵～记得带伞别淋湿了～", "雨声好治愈，小猫要蜷起来睡觉～"]);
-}else if (weatherInfo.includes("扬沙")) {
-replies = gwList('weather_sand', [
-    "咳咳……外面风沙好大喵，快把窗户关紧！",
-    "呜哇～外面黄沙漫天，小猫不想吃土喵～",
-    "要戴好口罩哦，小猫会心疼你的肺喵～"
-  ]);
+  replies = [
+    gwT("weather_hover_rainy_1", "下雨啦喵～记得带伞别淋湿了～"),
+    gwT("weather_hover_rainy_2", "雨声好治愈，小猫要蜷起来睡觉～")
+  ];
+}else if (weatherInfo.includes("扬沙") || weatherInfo.toLowerCase().includes("sand") || weatherInfo.toLowerCase().includes("dust")) {
+replies = [
+    gwT("weather_hover_sand_1", "咳咳……外面风沙好大喵，快把窗户关紧！"),
+    gwT("weather_hover_sand_2", "呜哇～外面黄沙漫天，小猫不想吃土喵～"),
+    gwT("weather_hover_sand_3", "要戴好口罩哦，小猫会心疼你的肺喵～")
+  ];
 }
- else if (weatherInfo.includes("雪")) {
-  replies = gwList('weather_snow', ["下雪啦喵～想和你一起踩雪花～", "雪花飘飘，小猫变成雪球啦～"]);
+ else if (weatherInfo.includes("雪") || weatherInfo.toLowerCase().includes("snow")) {
+  replies = [
+    gwT("weather_hover_snowy_1", "下雪啦喵～想和你一起踩雪花～"),
+    gwT("weather_hover_snowy_2", "雪花飘飘，小猫变成雪球啦～")
+  ];
 } else {
-  replies = gwList('weather_unknown', ["外面的天气好神秘喵～", "不管什么天气，小猫都陪着你～"]);
+  replies = [
+    gwT("weather_hover_default_1", "外面的天气好神秘喵～"),
+    gwT("weather_hover_default_2", "不管什么天气，小猫都陪着你～")
+  ];
 }
 
 const reply = replies[Math.floor(Math.random() * replies.length)];
@@ -1263,22 +1502,22 @@ showBubble(reply);
 });
 
 document.getElementById("biliIcon").addEventListener("mouseenter", () => {
-  const biliReplies = gwList('bili_hover', [
+  const biliReplies = [
     "这是作者B站主页哦~",
     "B站也有我的小窝喔，偷偷告诉你~",
     "你居然找到了我的B站入口，好眼力！"
-  ]);
+  ];
   const reply = biliReplies[Math.floor(Math.random() * biliReplies.length)];
   showBubble(reply);
 });
 
 // YouTube icon hover
 document.getElementById("extraIcon").addEventListener("mouseenter", () => {
-  const youtubeReplies = gwList('youtube_hover', [
+  const youtubeReplies = [
     "这是作者油管主页哦~",
     "YouTube 也藏着我的身影喔~",
     "偷偷告诉你，这里是我的油管传送门！"
-  ]);
+  ];
   const reply = youtubeReplies[Math.floor(Math.random() * youtubeReplies.length)];
   showBubble(reply);
 });
@@ -1425,7 +1664,7 @@ const wallpaperModalContent = document.querySelector('#wallpaperModal .modal-con
 
 // ⚙️ 配置区 —— 只需修改这两行
 const WEB_WP_GITHUB_RAW = 'https://raw.githubusercontent.com/shichen1234/wallpapers/main/';
-const WEB_WP_PROXY_BASE = 'https://ghproxy.net/' + WEB_WP_GITHUB_RAW;
+const WEB_WP_PROXY_BASE = 'https://ghfast.top/' + WEB_WP_GITHUB_RAW;
 const WEB_WP_TOTAL = 15; // 仓库 web/ 目录下 zip 的总数 (1.zip ~ N.zip)
 
 // 当前已创建的 Blob URL 列表，切换壁纸时统一 revoke
@@ -1507,7 +1746,7 @@ function renderWebWallpapers() {
 
     const popover = document.createElement('div');
     popover.className = 'iconPopover overlay';
-    popover.innerHTML = `<button class="delBtn" type="button">${gwT('button_delete_cache', '删除缓存')}</button><button class="cancelBtn" type="button">${gwT('button_cancel', '取消')}</button>`;
+    popover.innerHTML = `<button class="delBtn" type="button">删除缓存</button><button class="cancelBtn" type="button">取消</button>`;
 
     thumbBox.append(img, mask, badge, dlLink, gearBtn, popover);
     tile.appendChild(thumbBox);
@@ -1538,13 +1777,13 @@ function renderWebWallpapers() {
     });
     popover.querySelector('.delBtn').addEventListener('click', async e => {
       e.stopPropagation();
-      if (confirm(gwT('confirm_delete_web_wallpaper_cache', '确定删除这个网页壁纸的缓存吗？'))) {
+      if (confirm('确定删除这个网页壁纸的缓存吗？')) {
         await deleteVideoFromIndexedDB(dbKey);
         downloadedKeys.delete(dbKey);
         tile.dataset.downloaded = 'false';
         badge.style.display = 'none';
         popover.classList.remove('show');
-        if (typeof showBubble === 'function') showBubble(gwT('cache_deleted', '缓存已删除喵！🗑️'));
+        if (typeof showBubble === 'function') showBubble(gwT("bubble_web_wallpaper_cache_deleted", "缓存已删除喵！🗑️"));
       }
     });
 
@@ -1564,11 +1803,11 @@ function renderWebWallpapers() {
             await applyWebWallpaper(zipBlob);
             localStorage.setItem('wallpaperType', 'web');
             localStorage.setItem('currentWallpaperKey', dbKey);
-            if (typeof showBubble === 'function') showBubble(gwT('web_wallpaper_switch_success', '网页壁纸切换成功喵！🌐'));
+            if (typeof showBubble === 'function') showBubble(gwT("bubble_web_wallpaper_switch_success", "网页壁纸切换成功喵！🌐"));
           }
         } catch (err) {
           console.error('[G-web] 应用网页壁纸失败:', err);
-          if (typeof showBubble === 'function') showBubble('应用失败了喵，请重试～');
+          if (typeof showBubble === 'function') showBubble(gwT("bubble_web_wallpaper_apply_failed", "应用失败了喵，请重试～"));
         } finally {
           setTimeout(() => mask.classList.remove('active'), 1500);
         }
@@ -1603,20 +1842,20 @@ function renderWebWallpapers() {
         localStorage.setItem('wallpaperType', 'web');
         localStorage.setItem('currentWallpaperKey', dbKey);
 
-        progressText.textContent = gwT('wallpaper_saved_label', '保存中...');
+        progressText.textContent = '保存中...';
         try {
           await saveVideoToIndexedDB(zipBlob, dbKey);
           downloadedKeys.add(dbKey);
           tile.dataset.downloaded = 'true';
           badge.style.display = 'block';
-          if (typeof showBubble === 'function') showBubble(gwT('wallpaper_download_apply_success', '下载并应用成功喵！🎉'));
+          if (typeof showBubble === 'function') showBubble(gwT("bubble_download_apply_success", "下载并应用成功喵！🎉"));
         } catch (saveErr) {
           console.error('[G-web] 保存失败:', saveErr);
           if (typeof showBubble === 'function') {
             if (saveErr.name === 'QuotaExceededError') {
-              showBubble(gwT('web_wallpaper_quota_exceeded', '存储空间不足！请先删除旧壁纸再试喵～😿'), true, true);
+              showBubble(gwT("bubble_quota_exceeded_web", "存储空间不足！请先删除旧壁纸再试喵～😿"), true, true);
             } else {
-              showBubble('壁纸保存失败了喵，请稍后再试。', true, true);
+              showBubble(gwT("bubble_save_failed", "壁纸保存失败了喵，请稍后再试。"), true, true);
             }
           }
           await deleteVideoFromIndexedDB(dbKey).catch(() => {});
@@ -1624,7 +1863,7 @@ function renderWebWallpapers() {
 
       } catch (fetchErr) {
         console.error('[G-web] 下载失败:', fetchErr);
-        progressText.textContent = gwT('wallpaper_download_failed', '下载失败');
+        progressText.textContent = '下载失败';
       } finally {
         setTimeout(() => mask.classList.remove('active'), 2000);
       }
@@ -2368,6 +2607,9 @@ bgWebFrame.contentWindow.postMessage({
       const bgImg = document.getElementById('bgImage');
       if (bgImg && localStorage.getItem('wallpaperType') === 'web') {
         bgImg.style.display = 'none';
+      }
+      if (typeof sendMouseStyleToIframe === 'function') {
+        sendMouseStyleToIframe(localStorage.getItem('mouseStyle') || 'xiaoshou');
       }
     }
   });

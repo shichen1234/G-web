@@ -12,14 +12,40 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!container || !drawBtn || !titleEl || !textEl) return;
 
   // 🔧 使用 const 而非创建新数组
-  const fortunes = [
+  const rawFortunes = gwList("fortune_items", [
     { t: "大吉", c: "宜:攻克难题,给小猫加餐 | 忌:犹豫不决" },
     { t: "中吉", c: "宜:学习新知识,整理桌面 | 忌:久坐不动" },
     { t: "小吉", c: "宜:喝杯咖啡,听首好歌 | 忌:忘记保存" },
     { t: "平",   c: "宜:保持平常心,按时睡觉 | 忌:暴饮暴食" },
     { t: "上上签", c: "桃花运旺盛,代码一次过 | 忌:无" },
     { t: "上签", c: "宜:及早回家,摸猫解压 | 忌:乱改需求" }
-  ];
+  ]);
+
+  const fortunes = [];
+  if (Array.isArray(rawFortunes) && rawFortunes.length > 0) {
+    if (typeof rawFortunes[0] === 'object' && rawFortunes[0] !== null && 't' in rawFortunes[0]) {
+      // Direct array of objects
+      fortunes.push(...rawFortunes);
+    } else {
+      // Array of strings (check if they have "::" separator or are alternating)
+      const hasSeparator = rawFortunes.some(item => String(item).includes('::'));
+      if (hasSeparator) {
+        rawFortunes.forEach(item => {
+          const [t, c] = String(item).split('::');
+          fortunes.push(c ? { t, c } : { t: item, c: '' });
+        });
+      } else {
+        // Alternating entries (title, content, title, content...)
+        for (let i = 0; i < rawFortunes.length; i += 2) {
+          if (i + 1 < rawFortunes.length) {
+            fortunes.push({ t: String(rawFortunes[i]), c: String(rawFortunes[i + 1]) });
+          } else {
+            fortunes.push({ t: String(rawFortunes[i]), c: '' });
+          }
+        }
+      }
+    }
+  }
 
   const todayStr = new Date().toDateString();
   const STORAGE_KEY = 'daily_fortune_record';
@@ -43,11 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function checkDailyFortune() {
     const record = getCachedRecord();
     
-    if (record && record.date === todayStr) {
+    if (record && record.date === todayStr && record.data && record.data.t) {
       titleEl.textContent = record.data.t;
       textEl.textContent = record.data.c;
       container.classList.add('flipped');
-      drawBtn.textContent = "今日已签 (点击查看)";
+      drawBtn.textContent = gwT("fortune_signed_button", "今日已签 (点击查看)");
     }
   }
 
@@ -56,10 +82,10 @@ document.addEventListener('DOMContentLoaded', () => {
     e.stopPropagation();
 
     const record = getCachedRecord();
-    if (record && record.date === todayStr) {
+    if (record && record.date === todayStr && record.data && record.data.t) {
       container.classList.add('flipped');
       if (typeof showBubble === 'function') {
-        showBubble("贪心是不行的喵~今天已经抽过啦!");
+        showBubble(gwT("fortune_already_bubble", "贪心是不行的喵~今天已经抽过啦!"));
       }
       return;
     }
@@ -82,10 +108,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     container.classList.add('flipped');
-    drawBtn.textContent = "今日已签 (点击查看)";
+    drawBtn.textContent = gwT("fortune_signed_button", "今日已签 (点击查看)");
 
     if (typeof showBubble === 'function') {
-      showBubble(`哇!是${random.t}喵!记得看运势哦~`);
+      showBubble(gwT("fortune_draw_bubble", `哇!是${random.t}喵!记得看运势哦~`, { fortune: random.t }));
     }
   });
 
@@ -173,6 +199,13 @@ document.addEventListener('DOMContentLoaded', () => {
 3. 组件：每日一签、禅意时钟、生日倒计时。
 4. 性能：鼠标粒子特效、离开页面自动休眠。`;
 
+  const GWEB_FEATURES_EN = `
+You are in an extension named G-web. Core features:
+1. Wallpapers: Supports HD videos, daily Bing updates, IndexedDB caching.
+2. Efficiency: Ctrl+K opens the shortcut command menu.
+3. Widgets: Daily fortune, Zen clock, birthday countdown.
+4. Performance: Mouse particle effects, auto-sleep when tab is inactive.`;
+
   function saveToLongTermMemory(text) {
     const keywords = ['记住', '我的', '名字', '喜欢', '是在'];
     if (keywords.some(k => text.includes(k))) {
@@ -187,7 +220,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getMemoryContext() {
     const memories = JSON.parse(localStorage.getItem(MEMORY_STORAGE_KEY) || "[]");
-    return memories.length > 0 ? `\n你记得关于用户的这些事：${memories.join('；')}。` : "";
+    if (memories.length === 0) return "";
+    const isEn = window.GwebI18n && window.GwebI18n.locale === 'en';
+    return isEn 
+      ? `\nYou remember these things about the user: ${memories.join('; ')}.`
+      : `\n你记得关于用户的这些事：${memories.join('；')}。`;
   }
 
   // ── 1. 核心：追加消息，返回整行 div ──
@@ -221,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── 2. 显示初始欢迎消息（使用标准气泡样式） ──
   function appendWelcomeMessage() {
-    appendMessage('你好喵！我是你的专属 AI 猫娘糯米，有什么可以帮你的吗？', false, false);
+    appendMessage(gwT("chat_welcome", '你好喵！我是你的专属 AI 猫娘糯米，有什么可以帮你的吗？'), false, false);
   }
 
   // ── 3. 从 localStorage 加载历史记录 ──
@@ -248,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── 4. 清除记录（带浏览器确认弹窗 + 清理记忆） ──
   clearChatBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (!confirm('确定要清除所有聊天记录和记忆吗？')) return;
+    if (!confirm(gwT("chat_clear_confirm", '确定要清除所有聊天记录和记忆吗？'))) return;
     
     chatMessages.innerHTML = '';
     localStorage.removeItem(CHAT_STORAGE_KEY);
@@ -269,12 +306,16 @@ async function handleChatSend() {
     saveToLongTermMemory(text); 
     appendMessage(text, true);
     
-    const aiMsgRow = appendMessage('思考中喵...', false, true);
+    const thinkingText = gwT("chat_thinking", '思考中喵...');
+    const aiMsgRow = appendMessage(thinkingText, false, true);
     const aiHistoryIdx = chatHistory.length - 1;
 
     // 👇 --- 【核心修复：调用 lunar.js 获取农历信息】 --- 👇
     const now = new Date();
-    let timeContext = `[当前系统时间] ${now.toLocaleString('zh-CN')}`;
+    const isEn = window.GwebI18n && window.GwebI18n.locale === 'en';
+    let timeContext = isEn 
+      ? `[Current System Time] ${now.toLocaleString('en-US')}`
+      : `[当前系统时间] ${now.toLocaleString('zh-CN')}`;
 
     try {
       // 检查 lunar.js 是否加载成功（Solar 类是否存在）
@@ -292,23 +333,37 @@ async function handleChatSend() {
         const solarFestivals = solar.getFestivals(); // 获取公历节日
         const jieQi = lunar.getJieQi(); // 获取节气
         
-        let holidayInfo = [...festivals, ...solarFestivals, jieQi].filter(x => x).join('、');
+        let holidayInfo = [...festivals, ...solarFestivals, jieQi].filter(x => x).join(isEn ? ', ' : '、');
         
-        timeContext += `\n[农历信息] ${lunarYear} ${lunarMonth}${lunarDay}`;
+        timeContext += isEn
+          ? `\n[Lunar Calendar] ${lunarYear} ${lunarMonth}${lunarDay}`
+          : `\n[农历信息] ${lunarYear} ${lunarMonth}${lunarDay}`;
         if (holidayInfo) {
-          timeContext += `\n[今日节日/节气] ${holidayInfo}`;
+          timeContext += isEn
+            ? `\n[Today's Festivals/Solar Terms] ${holidayInfo}`
+            : `\n[今日节日/节气] ${holidayInfo}`;
         }
       }
     } catch (e) {
       console.error("[G-web] 农历换算失败:", e);
     }
 
-    const systemPrompt = "你是一只可爱的傲娇猫娘助手，名叫糯米，可爱多一些，每句话大约20多或30多个字，可以使用一些颜文字，情感起伏一些，带些人情味，如果用户询问日期、农历或节日，只有提到关键词[日期,农历,节日]才能使用回答相关的东西句尾带喵。" 
-                         + GWEB_FEATURES 
-                         + getMemoryContext()
-                         + "\n请根据用户输入进行回答，保持语气可爱且有趣，适当使用一些网络流行语和颜文字。"
-                         + "\n如果用户输入包含敏感词，请委婉拒绝回答，并引导用户说些其他话题。"
-                         + "\n" + timeContext;
+    let systemPrompt = "";
+    if (isEn) {
+      systemPrompt = "You are a cute tsundere cat-girl assistant named Nuomi. Be cute, keep each reply to around 20-30 words, use emoticons/kaomoji, show some emotion and warm personality. End sentences with 'meow'. If the user asks about date, lunar calendar, or festivals, only answer them if they mention key words [date, lunar, calendar, festival]."
+                   + GWEB_FEATURES_EN
+                   + getMemoryContext()
+                   + "\nPlease reply entirely in English based on user input, keep your tone cute and interesting, appropriately using internet slangs and emoticons."
+                   + "\nIf the user input contains sensitive words, politely refuse to reply and guide them to other topics."
+                   + "\n" + timeContext;
+    } else {
+      systemPrompt = "你是一只可爱的傲娇猫娘助手，名叫糯米，可爱多一些，每句话大约20多或30多个字，可以使用一些颜文字，情感起伏一些，带些人情味，如果用户询问日期、农历或节日，只有提到关键词[日期,农历,节日]才能使用回答相关的东西句尾带喵。" 
+                   + GWEB_FEATURES 
+                   + getMemoryContext()
+                   + "\n请根据用户输入进行回答，保持语气可爱且有趣，适当使用一些网络流行语和颜文字。"
+                   + "\n如果用户输入包含敏感词，请委婉拒绝回答，并引导用户说些其他话题。"
+                   + "\n" + timeContext;
+    }
 
     try {      const response = await fetch("https://api.siliconflow.cn/v1/chat/completions", {
         method: "POST",
@@ -321,7 +376,7 @@ async function handleChatSend() {
           enable_thinking: false,
           messages: [
             { role: "system", content: systemPrompt },
-            ...chatHistory.filter(msg => msg.text !== '思考中喵...').slice(-5).map(msg => ({
+            ...chatHistory.filter(msg => msg.text !== thinkingText && msg.text !== '思考中喵...').slice(-5).map(msg => ({
               role: msg.isUser ? "user" : "assistant",
               content: msg.text
             })),
@@ -343,7 +398,7 @@ async function handleChatSend() {
       try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
 
     } catch (err) {
-      const errorText = '连接失败了喵~';
+      const errorText = gwT("chat_error", '连接失败了喵~');
       const bubble = aiMsgRow.querySelector('.chat-bubble');
       if (bubble) bubble.textContent = errorText;
 
@@ -364,17 +419,17 @@ async function handleChatSend() {
         imgModeBtn.classList.add('active');
         imgModeBtn.style.background = 'linear-gradient(135deg, #a855f7, #6366f1)';
         imgModeBtn.style.borderColor = '#a855f7';
-        imgModeBtn.title = '当前：图片生成模式（点击切回对话）';
-        chatInput.placeholder = '输入图片描述，点击发送生成...';
-        chatSendBtn.textContent = '生成';
+        imgModeBtn.title = gwT("image_mode_on_title", '当前：图片生成模式（点击切回对话）');
+        chatInput.placeholder = gwT("image_mode_placeholder", '输入图片描述，点击发送生成...');
+        chatSendBtn.textContent = gwT("image_generate_button", '生成');
         chatSendBtn.style.background = 'linear-gradient(135deg, #a855f7, #6366f1)';
       } else {
         imgModeBtn.classList.remove('active');
         imgModeBtn.style.background = 'rgba(255,255,255,0.15)';
         imgModeBtn.style.borderColor = 'rgba(255,255,255,0.25)';
-        imgModeBtn.title = '切换图片生成模式';
-        chatInput.placeholder = '输入你想说的话...';
-        chatSendBtn.textContent = '发送';
+        imgModeBtn.title = gwT("image_mode_off_title", '切换图片生成模式');
+        chatInput.placeholder = gwT("chat_input_placeholder", '输入你想说的话...');
+        chatSendBtn.textContent = gwT("chat_send_button", '发送');
         chatSendBtn.style.background = '#0b74de';
       }
     });
@@ -383,7 +438,7 @@ async function handleChatSend() {
   // ── SiliconFlow 图像生成（稳定可靠，约0.01元/张） ──
   async function handleImageGenerate(prompt) {
     // ── 1. 加载状态：用标准 AI 对话气泡 ──
-    const loadingRow = appendMessage('🎨 生成中喵，请稍候...', false, true);
+    const loadingRow = appendMessage(gwT("image_generating", '🎨 生成中喵，请稍候...'), false, true);
     const loadingIdx = chatHistory.length - 1;
 
     // ── 2. 中文检测：含中文则先翻译成英文 ──
@@ -437,7 +492,7 @@ async function handleChatSend() {
 
       const data = await res.json();
       const imgUrl = data?.images?.[0]?.url;
-      if (!imgUrl) throw new Error('响应中没有图片 URL');
+      if (!imgUrl) throw new Error(gwT("image_no_url_error", '响应中没有图片 URL'));
 
       // ── 4. 成功：移除加载气泡，插入全宽图片卡 ──
       loadingRow.remove();
@@ -449,27 +504,27 @@ async function handleChatSend() {
       const img = document.createElement('img');
       img.src = imgUrl;
       img.alt = prompt;
-      img.title = '点击在新标签页查看原图';
+      img.title = gwT("image_open_original_title", '点击在新标签页查看原图');
       img.style.cssText = 'width:100%;border-radius:10px;display:block;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,0.35);';
       img.addEventListener('click', () => window.open(imgUrl, '_blank'));
 
       // ── 5. 已生成喵 小字 ──
       const badge = document.createElement('div');
       badge.style.cssText = 'margin-top:6px;font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:0.5px;';
-      badge.textContent = '✨ 已生成喵';
+      badge.textContent = gwT("image_generated_badge", '✨ 已生成喵');
 
       card.appendChild(img);
       card.appendChild(badge);
       chatMessages.appendChild(card);
       chatMessages.scrollTop = chatMessages.scrollHeight;
 
-      chatHistory.push({ text: `[图片] ${imgUrl}`, isUser: false });
+      chatHistory.push({ text: gwT("image_history_label", `[图片] ${imgUrl}`, { url: imgUrl }), isUser: false });
       try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}
 
     } catch (err) {
       // ── 6. 失败：气泡内更新为错误提示（保持对话样式） ──
       const bubble = loadingRow.querySelector('.chat-bubble');
-      const errText = `图片生成失败了喵，换个描述或稍后再试试～`;
+      const errText = gwT("image_generate_error", `图片生成失败了喵，换个描述或稍后再试试～`);
       if (bubble) bubble.textContent = errText;
       chatHistory[loadingIdx].text = errText;
       try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chatHistory)); } catch(e) {}

@@ -295,6 +295,8 @@ async function deleteFromIndexedDB(key) {
 async function cleanOldWallpapers() {
   try {
     const db = await getDatabase();
+    const storageResult = await chrome.storage.local.get('currentWallpaperKey');
+    const currentKey = storageResult.currentWallpaperKey || null;
     
     return new Promise((resolve, reject) => {
       const tx = db.transaction("Videos", "readwrite");
@@ -307,7 +309,9 @@ async function cleanOldWallpapers() {
         
         const keysToDelete = allKeys.filter(key => 
           key !== DAILY_WALLPAPER_KEY && 
-          !key.startsWith('daily_external_wallpaper_pending')
+          !key.startsWith('daily_external_wallpaper_pending') &&
+          key !== 'bgVideo' &&
+          key !== currentKey
         );
         
         if (keysToDelete.length > MAX_WALLPAPER_CACHE - 1) {

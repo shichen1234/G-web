@@ -6,7 +6,7 @@
 
   const INTERVAL_MS = 3 * 60 * 1000; // 2 分钟
 
-  const CARE_MESSAGES = [
+  const CARE_MESSAGES = gwList("zen_care_messages", [
 '看屏幕有一会儿啦，眨眨眼睛喝点水吧，喵~',
 '在发呆吗？糯米陪你一起放空~',
 '深呼吸，放松一下肩膀，闭上眼睛休息一会儿吧！',
@@ -27,7 +27,7 @@
 '享受当下这份宁静吧，喵呜~',
 '喝口温水润润嗓子，再继续享受这段时光吧。',
 '糯米要把这份惬意偷偷藏进心里啦！'
-  ];
+  ]);
 
   let zenCareTimer = null;
 
@@ -125,7 +125,7 @@
     const best = loadBest();
     [9, 12, 15].forEach(p => {
       const el = document.getElementById('bestFlips' + p);
-      if (el) el.textContent = best[p] !== undefined ? best[p] + ' 次' : '--';
+      if (el) el.textContent = best[p] !== undefined ? best[p] + gwT("times_unit", " 次") : '--';
     });
   }
 
@@ -231,14 +231,14 @@
     const prevBest = loadBest()[currentPairs];
     saveBest(currentPairs, flipCount);
     const isNewBest = prevBest === undefined || flipCount < prevBest;
-    const bestNote  = isNewBest ? ' 🏆 新纪录！' : ` (最佳 ${prevBest} 次)`;
+    const bestNote  = isNewBest ? gwT("memory_new_record_suffix", ' 🏆 新纪录！') : gwT("memory_best_note", ` (最佳 ${prevBest} 次)`, { prevBest });
 
-    if (stats)  stats.textContent = `翻牌 ${flipCount} 次 · 用时 ${timeStr}${bestNote}`;
+    if (stats)  stats.textContent = gwT("memory_win_stats", `翻牌 ${flipCount} 次 · 用时 ${timeStr}${bestNote}`, { flipCount, timeStr, bestNote });
     if (banner) banner.style.display = 'block';
     if (typeof showBubble === 'function')
       showBubble(isNewBest
-        ? `通关啦喵！🏆 新纪录 ${flipCount} 次！`
-        : `全部翻对啦喵！🎉 共翻了 ${flipCount} 次！`);
+        ? gwT("memory_win_new_record_bubble", `通关啦喵！🏆 新纪录 ${flipCount} 次！`, { flipCount })
+        : gwT("memory_win_bubble", `全部翻对啦喵！🎉 共翻了 ${flipCount} 次！`, { flipCount }));
   }
 
   document.addEventListener('DOMContentLoaded', () => {

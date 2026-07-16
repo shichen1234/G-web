@@ -1,9 +1,43 @@
-﻿const CURSOR_STYLE = `
-html, body, * { cursor: url('mouse/Zhand.cur'), auto !important; }
-a, a *, button:not(:disabled), button:not(:disabled) *, [role="button"], [role="button"] *, summary, label, input[type="checkbox"], input[type="radio"], input[type="range"], select, option { cursor: url('mouse/Zlink.cur'), pointer !important; }
-input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"], input[type="number"], textarea, [contenteditable="true"] { cursor: url('mouse/Zbeam.png') 16 16, text !important; }
-button:disabled, button:disabled *, [aria-disabled="true"] { cursor: url('mouse/Zunavail.cur'), not-allowed !important; }
+const CURSOR_STYLE = `
+html, body, *, html *, body *, [style*="cursor"] { cursor: url('mouse/xiaoshou/Zhand.cur'), auto !important; }
+a, a *, button:not(:disabled), button:not(:disabled) *, [role="button"], [role="button"] *, summary, label, input[type="checkbox"], input[type="radio"], input[type="range"], select, option { cursor: url('mouse/xiaoshou/Zlink.cur'), pointer !important; }
+input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"], input[type="number"], textarea, [contenteditable="true"] { cursor: url('mouse/xiaoshou/Zbeam.cur') 16 16, text !important; }
+button:disabled, button:disabled *, [aria-disabled="true"] { cursor: url('mouse/xiaoshou/Zunavail.cur'), not-allowed !important; }
 `;
+
+function applySandboxCursorStyle() {
+  let cursorStyle = document.getElementById('dynamic-cursor-style');
+  if (!cursorStyle) {
+    cursorStyle = document.createElement('style');
+    cursorStyle.id = 'dynamic-cursor-style';
+    document.head.appendChild(cursorStyle);
+  }
+  const styleName = window.currentSandboxMouseStyleName || 'xiaoshou';
+  const config = window.currentSandboxMouseConfig || { Zhand: 'cur', Zlink: 'cur', Zbeam: 'cur', Zunavail: 'cur' };
+
+  if (styleName === 'furina') {
+    cursorStyle.textContent = `
+      html, body, *, html *, body *,
+      a, a *, button, button *, [role="button"], [role="button"] *, summary, label, input, select, option, textarea, [contenteditable="true"],
+      button:disabled, button:disabled *, [aria-disabled="true"], [style*="cursor"] {
+        cursor: none !important;
+      }
+    `;
+    return;
+  }
+
+  const handCss = (window.currentSandboxCursorCss && window.currentSandboxCursorCss.hand) ? window.currentSandboxCursorCss.hand : `url('${new URL(`mouse/${styleName}/Zhand.${config.Zhand || 'cur'}`, window.location.href).href}'), auto`;
+  const linkCss = (window.currentSandboxCursorCss && window.currentSandboxCursorCss.link) ? window.currentSandboxCursorCss.link : `url('${new URL(`mouse/${styleName}/Zlink.${config.Zlink || 'cur'}`, window.location.href).href}'), pointer`;
+  const beamCss = (window.currentSandboxCursorCss && window.currentSandboxCursorCss.beam) ? window.currentSandboxCursorCss.beam : `url('${new URL(`mouse/${styleName}/Zbeam.${config.Zbeam || 'cur'}`, window.location.href).href}') 16 16, text`;
+  const unavailCss = (window.currentSandboxCursorCss && window.currentSandboxCursorCss.unavail) ? window.currentSandboxCursorCss.unavail : `url('${new URL(`mouse/${styleName}/Zunavail.${config.Zunavail || 'cur'}`, window.location.href).href}'), not-allowed`;
+
+  cursorStyle.textContent = `
+    html, body, *, html *, body *, [style*="cursor"] { cursor: ${handCss} !important; }
+    a, a *, button:not(:disabled), button:not(:disabled) *, [role="button"], [role="button"] *, summary, label, input[type="checkbox"], input[type="radio"], input[type="range"], select, option { cursor: ${linkCss} !important; }
+    input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"], input[type="number"], textarea, [contenteditable="true"] { cursor: ${beamCss} !important; }
+    button:disabled, button:disabled *, [aria-disabled="true"] { cursor: ${unavailCss} !important; }
+  `;
+}
 
 let pendingPointerMove = null;
 let pointerMoveRaf = 0;
@@ -21,6 +55,15 @@ function postPointerEvent(eventType, e) {
 }
 
 window.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'CHANGE_MOUSE_STYLE') {
+     const { styleName, config, cursorCss } = event.data;
+     window.currentSandboxMouseStyleName = styleName;
+     if (config) window.currentSandboxMouseConfig = config;
+     if (cursorCss) window.currentSandboxCursorCss = cursorCss;
+     applySandboxCursorStyle();
+     return;
+  }
+
   if (event.data && event.data.resourceMap) {
     window.resourceMap = event.data.resourceMap;
   }
@@ -232,9 +275,7 @@ window.addEventListener('message', function(event) {
     `;
     document.head.appendChild(baseStyle);
 
-    const cursorStyle = document.createElement('style');
-    cursorStyle.textContent = typeof CURSOR_STYLE !== 'undefined' ? CURSOR_STYLE : '';
-    document.head.appendChild(cursorStyle);
+    applySandboxCursorStyle();
 
     const storagePolyfill = document.createElement('script');
     storagePolyfill.textContent = `
@@ -349,10 +390,12 @@ window.addEventListener('message', function(event) {
 
     // 稍微延迟触发 load 事件，确保内联脚本有时间绑定监听器
     setTimeout(() => {
+      applySandboxCursorStyle();
       window.dispatchEvent(new Event('DOMContentLoaded'));
       window.dispatchEvent(new Event('load'));
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
+          applySandboxCursorStyle();
           window.parent.postMessage({ type: 'WP_RENDERED' }, '*');
         });
       });

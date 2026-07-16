@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   const DUAL_COLUMN_LYRIC_SONG_IDS = new Set([
-    12, 21, 22, 23, 24, 26, 31, 35, 36, 37, 38, 40, 43, 44, 45, 46,48,50,54,55,56,58,62,66,75,76,77,78,79,84,85,86,87,92,96,98,100,32,109,115,116,117,118,119
+    12, 21, 22, 23, 24, 26, 31, 35, 36, 37, 38, 40, 43, 44, 45, 46,48,50,54,55,56,58,62,66,75,76,77,78,79,84,85,86,87,92,96,98,100,32,109,115,116,117,118,119,102
   ]);
 
   // music-player.js
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ================= 配置区 =================
-  const GITHUB_BASE = 'https://ghproxy.net/https://raw.githubusercontent.com/shichen1234/music/main/';
+  const GITHUB_BASE = 'https://ghfast.top/https://raw.githubusercontent.com/shichen1234/music/main/';
   const PROXY_BASE = ''; 
   const COVER_IMAGE = 'logo/icon.gif';
   
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 41, filename: "41--冬眠--司南.mp3" },
     { id: 42, filename: "42--老男孩--筷子兄弟.mp3" },
     { id: 43, filename: "43--Free Loop--Daniel powter.mp3" },
-    { id: 44, filename: "44--Psyphone--Maroon 5.mp3" },
+    { id: 44, filename: "44--Payphone--Maroon 5.mp3" },
     { id: 45, filename: "45--On My Own--Ashes Remain.mp3" },
     { id: 46, filename: "46--We Are the World--U.S.A. For Africa.mp3" },
     { id: 47, filename: "47--紫荆花盛开--梁咏琪、李荣浩.mp3" },
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { id: 99, filename: "99--我不曾忘记--最好的那年.mp3" },
       { id: 100, filename: "100--Monsters--Katie Sky.mp3" },
       { id: 101, filename: "101--Fall Rain--JULY.mp3" },
-      { id: 102, filename: "102--我们俩--郭顶.mp3" },
+      { id: 102, filename: "102--光るなら--Goose house.mp3" },
       { id: 103, filename: "103--负重一万斤长大--太一.mp3" },
       { id: 104, filename: "104--蒲公英的约定--周杰伦.mp3" },
       { id: 105, filename: "105--M01--梶浦由記.mp3" },  

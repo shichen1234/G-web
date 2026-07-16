@@ -87,8 +87,8 @@ position: absolute;
   order: 9999; /* 确保它永远在视觉最后（虽然我们主要靠DOM顺序） */
 }
 /* 1. 基础指针设置：全局兜底 */
-html, body, * {
-  cursor: url('mouse/Zhand.cur'), auto !important;
+html, body, *, #bgWebFrame, #quickPanel, #quickPanel *, #quickPanelright, #quickPanelright *, #quickPanelright.collapsedright, #quickPanelright.collapsedright * {
+  cursor: var(--g-cursor-hand, url('mouse/xiaoshou/Zhand.cur'), auto) !important;
 }
 
 /* 2. 可点击状态：全元素覆盖 (小手样式) */
@@ -97,6 +97,10 @@ a,
 a *,
 button:not(:disabled), 
 button:not(:disabled) *,
+#aiSwitch,
+#aiSwitch *,
+#aiSwitch svg,
+#aiSwitch path,
 .wallpaper-btn, 
 .add-wallpaper, 
 .add-wallpaper span,
@@ -145,10 +149,10 @@ button:not(:disabled) *,
 .cmd-item selected,
 .cmd-item.selected div span               /* 关闭叉号 */
 {
-  cursor: url('mouse/Zlink.cur'), pointer !important;
+  cursor: var(--g-cursor-link, url('mouse/xiaoshou/Zlink.cur'), pointer) !important;
 }
 
-/* 3. 输入框专用：确保所有输入框在悬停时显示 Zlink.cur */
+/* 3. 输入框专用：确保所有输入框在悬停时显示 Zlink.cur / Zbeam.cur */
 /* 3. 输入框专用：覆盖所有输入框 */
 input[type="text"], 
 input[type="date"],
@@ -160,22 +164,23 @@ input[type="file"],
 #birthdayDateInput {
   /* 👇 修改了这里 */
   /* 解释：url('路径') x坐标 y坐标, 后备样式 */
-  cursor: url('mouse/Zbeam.png') 16 16, text !important;
+  cursor: var(--g-cursor-beam, url('mouse/xiaoshou/Zbeam.cur') 16 16, text) !important;
 }
 
 /* 4. 搜索按钮及内部图标的禁用状态 (禁止样式) */
 button:disabled, 
 button:disabled *, 
 #searchBtn:disabled,
+#searchBtn:disabled *,
 #searchBtn:disabled svg,
 #searchBtn:disabled path {
-  cursor: url('mouse/Zunavail.cur'), not-allowed !important;
+  cursor: var(--g-cursor-unavail, url('mouse/xiaoshou/Zunavail.cur'), not-allowed) !important;
   pointer-events: auto !important; 
 }
 
 /* 5. 针对右键菜单特定的样式 */
 .context-menu, .submenu {
-    cursor: url('mouse/Zhand.cur'), auto !important;
+    cursor: var(--g-cursor-hand, url('mouse/xiaoshou/Zhand.cur'), auto) !important;
 }
 .menu-list li span, .submenu li span {
     cursor: inherit !important;
@@ -332,14 +337,17 @@ button:disabled *,
 .wp-right-panel {
   flex: 1;
   padding: 20px 30px;
-  overflow-y: auto; /* 允许内部滚动 */
+  overflow: hidden !important; /* 内部滚动全权交给 wallpaper-grid */
   background: #fff;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 /* 调整原来的开关区域边距 */
 .parallax-option {
   margin-bottom: 5px;
   padding-left: 0;
+  flex-shrink: 0;
 }
 
 /* 调整壁纸网格 */
@@ -347,12 +355,15 @@ button:disabled *,
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); /* 稍微调大一点 */
   gap: 16px;
-  padding-bottom: 40px;
+  padding-bottom: 20px;
+  flex: 1 !important;
+  overflow-y: auto !important; /* 卡片网格单独滚动 */
+  width: 100%;
 }
 
 /* 修复：确保滚动条美观 */
-.wp-right-panel::-webkit-scrollbar { width: 6px; }
-.wp-right-panel::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+.wallpaper-grid::-webkit-scrollbar, .wp-right-panel::-webkit-scrollbar { width: 6px; }
+.wallpaper-grid::-webkit-scrollbar-thumb, .wp-right-panel::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
 .wallpaper-grid img {
   width: 100%;
   height: 80px;
@@ -1089,6 +1100,7 @@ form input[type="text"]:focus {
   width: 100vw; height: 100vh;
   object-fit: cover;
   z-index: -1;
+  pointer-events: none !important;
   
   /* 初始缩放 */
   transform: scale(1.05); 
@@ -1713,7 +1725,7 @@ input:checked + .slider:before {
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.1);
   color: white;
-  cursor: pointer;
+  cursor: var(--g-cursor-link, url('mouse/xiaoshou/Zlink.cur'), pointer) !important;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1943,6 +1955,18 @@ transition: transform 0.2s ease;
     visibility 0.25s; 
     
   pointer-events: none; /* 隐藏时禁止点击 */
+}
+
+/* English locale context menu responsive width overrides */
+.lang-en .context-menu {
+  width: auto;
+  min-width: 220px;
+  max-width: 320px;
+}
+.lang-en .submenu {
+  width: auto;
+  min-width: 180px;
+  max-width: 280px;
 }
 
 /* 隐形桥梁：防止鼠标从主菜单移向子菜单时中断 */
@@ -2194,15 +2218,15 @@ input[type="range"]#volumeSlider::-moz-range-track {
 #volumeSlider, 
 .volume-label, 
 #volumeValue {
-  cursor: url('mouse/Zlink.cur'), pointer !important;
+  cursor: var(--g-cursor-link, url('mouse/xiaoshou/Zlink.cur'), pointer) !important;
 }
 
 /* 针对滑动条滑块的兼容性处理 */
 input[type="range"]#volumeSlider::-webkit-slider-thumb {
-  cursor: url('mouse/Zlink.cur'), pointer !important;
+  cursor: var(--g-cursor-link, url('mouse/xiaoshou/Zlink.cur'), pointer) !important;
 }
 input[type="range"]#volumeSlider::-moz-range-thumb {
-  cursor: url('mouse/Zlink.cur'), pointer !important;
+  cursor: var(--g-cursor-link, url('mouse/xiaoshou/Zlink.cur'), pointer) !important;
 }
 /* ========== 禅模式优化样式 ========== */
 .zen-hidden {

@@ -147,14 +147,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnContra) {
         btnContra.addEventListener('click', () => {
             initNES('contra-canvas', 'roms/contra.nes');
-            btnContra.innerText = "运行中";
+            btnContra.innerText = gwT("nes_running", "运行中");
             btnContra.disabled  = true;
         });
     }
     if (btnMario) {
         btnMario.addEventListener('click', () => {
             initNES('mario-canvas', 'roms/mario.nes');
-            btnMario.innerText = "运行中";
+            btnMario.innerText = gwT("nes_running", "运行中");
             btnMario.disabled  = true;
         });
     }

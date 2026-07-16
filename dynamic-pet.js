@@ -30,7 +30,7 @@ class DynamicPet {
             attack2: { src: 'action/Attack2-effect.png', frames: 3 }
         };
         this.oneShotStates = new Set(['win', 'attack1', 'attack2', 'death']);
-        this.clickBubbleMessages = [
+        this.clickBubbleMessages = gwList('pet_click_messages', [
             '有什么事吗？',
             '今天也一起加油！',
             '你已经做得很不错啦。',
@@ -43,15 +43,15 @@ class DynamicPet {
             '有什么开心的事，随时可以跟我分享。',
             '多喝水，照顾好自己喔。',
             '记得按时吃饭，别饿着肚子呀。'
-        ];
-        this.hideBubbleMessages = [
+        ]);
+        this.hideBubbleMessages = gwList('pet_hide_messages', [
             '我先离开一会儿，需要时再叫我！',
             '我去旁边待命啦，随时回来。',
             '我先悄悄下线一小会儿，保证随叫随到。',
             '需要我的时候，再点一下就好。',
             '我去摸会儿鱼，等你需要我的时候再闪亮登场！',
             '我去云端散个步，你想我了就叫我回来。'
-        ];
+        ]);
 
         this.currentState = 'idle';
         this.currentFrame = 0;
@@ -246,7 +246,7 @@ class DynamicPet {
             onFinish: () => {
                 this.isInteracting = false;
                 this.setState('idle', true);
-                this.showBubble('我回来啦，我们继续吧~', true, true);
+                this.showBubble(gwT('pet_back_bubble', '我回来啦，我们继续吧~'), true, true);
             }
         });
     }
@@ -419,32 +419,48 @@ class DynamicPet {
     }
 
     toPetVoice(message) {
-        const directReplies = new Map([
-            ['小猫先躲起来啦～', '我先退场一下，马上回来！'],
-            ['小猫回来啦喵～', '我回来啦，我们继续吧~'],
-            ['喵喵！！（你好！！）', '嘿，你好！今天也一起加油！'],
-            ['喵~', '嘿，我在！'],
-            ['喵呜~', '嘿嘿，我在这儿！'],
-            ['喵喵喵？', '怎么啦？我听着呢！'],
-            ['喵呜呜……有点晕了喵～', '哎呀，有点晕了，我缓一缓！']
-        ]);
+        let raw = String(message || '').trim();
 
-        const raw = String(message || '').trim();
+        if (window.GwebI18n && GwebI18n.locale === 'en') {
+            const directReplies = new Map([
+                ['小猫先躲起来啦～', gwT('pet_direct_hide', '我先退场一下，马上回来！')],
+                ['小猫回来啦喵～', gwT('pet_back_bubble', '我回来啦，我们继续吧~')],
+                ['喵喵！！（你好！！）', gwT('pet_direct_hello', '嘿，你好！今天也一起加油！')],
+                ['喵~', gwT('pet_direct_here', '嘿，我在！')],
+                ['喵呜~', gwT('pet_direct_here_2', '嘿嘿，我在这儿！')],
+                ['喵喵喵？', gwT('pet_direct_listening', '怎么啦？我听着呢！')],
+                ['喵呜呜……有点晕了喵～', gwT('pet_direct_dizzy', '哎呀，有点晕了，我缓一缓！')]
+            ]);
+            if (directReplies.has(raw)) {
+                return directReplies.get(raw);
+            }
+            return GwebI18n.translate(raw);
+        }
+
+        const directReplies = new Map([
+            ['小猫先躲起来啦～', gwT('pet_direct_hide', '我先退场一下，马上回来！')],
+            ['小猫回来啦喵～', gwT('pet_back_bubble', '我回来啦，我们继续吧~')],
+            ['喵喵！！（你好！！）', gwT('pet_direct_hello', '嘿，你好！今天也一起加油！')],
+            ['喵~', gwT('pet_direct_here', '嘿，我在！')],
+            ['喵呜~', gwT('pet_direct_here_2', '嘿嘿，我在这儿！')],
+            ['喵喵喵？', gwT('pet_direct_listening', '怎么啦？我听着呢！')],
+            ['喵呜呜……有点晕了喵～', gwT('pet_direct_dizzy', '哎呀，有点晕了，我缓一缓！')]
+        ]);
         if (directReplies.has(raw)) return directReplies.get(raw);
 
         let text = raw
-            .replace(/猫娘糯米/g, '小助手')
-            .replace(/猫猫/g, '我')
-            .replace(/小猫咪/g, '我')
-            .replace(/小猫/g, '我')
-            .replace(/猫咪/g, '我')
-            .replace(/猫粮/g, '能量补给')
-            .replace(/猫罐头/g, '能量罐头')
-            .replace(/小鱼干/g, '小零食')
-            .replace(/摸猫/g, '休息一下')
-            .replace(/种猫草/g, '种点绿植')
-            .replace(/喵呜呜/g, '哎呀')
-            .replace(/喵呜/g, '嘿')
+            .replace(/猫娘糯米/g, gwT('pet_replace_assistant', '小助手'))
+            .replace(/猫猫/g, gwT('pet_replace_me', '我'))
+            .replace(/小猫咪/g, gwT('pet_replace_me', '我'))
+            .replace(/小猫/g, gwT('pet_replace_me', '我'))
+            .replace(/猫咪/g, gwT('pet_replace_me', '我'))
+            .replace(/猫粮/g, gwT('pet_replace_energy', '能量补给'))
+            .replace(/猫罐头/g, gwT('pet_replace_energy_can', '能量罐头'))
+            .replace(/小鱼干/g, gwT('pet_replace_snack', '小零食'))
+            .replace(/摸猫/g, gwT('pet_replace_break', '休息一下'))
+            .replace(/种猫草/g, gwT('pet_replace_plant', '种点绿植'))
+            .replace(/喵呜呜/g, gwT('pet_replace_oh', '哎呀'))
+            .replace(/喵呜/g, gwT('pet_replace_hey', '嘿'))
             .replace(/喵/g, '')
             .replace(/😿|😽|🐱|🐾/g, '')
             .replace(/\s+/g, ' ')
@@ -454,7 +470,7 @@ class DynamicPet {
         text = text.replace(/([，,。！？!?.])\1+/g, '$1');
         text = text.replace(/^[，,。！？!?.～~]+/, '');
         if (!text || /^[，,。！？!?.～~（）()]+$/.test(text)) {
-            return '嘿，我在！今天也要精神满满！';
+            return gwT('pet_fallback_here', '嘿，我在！今天也要精神满满！');
         }
         return text;
     }

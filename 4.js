@@ -177,11 +177,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (isAiMode) {
         aiSwitch.classList.add("active");
         searchContainer.classList.add("ai-mode");
-        if (typeof showBubble === "function") showBubble("AI 模式开启喵！有问题尽管问豆包～");
+        if (typeof showBubble === "function") showBubble(gwT("ai_mode_on_bubble", "AI 模式开启喵！有问题尽管问豆包～"));
       } else {
         aiSwitch.classList.remove("active");
         searchContainer.classList.remove("ai-mode");
-        if (typeof showBubble === "function") showBubble("回到普通搜索模式啦喵～");
+        if (typeof showBubble === "function") showBubble(gwT("ai_mode_off_bubble", "回到普通搜索模式啦喵～"));
       }
       localStorage.setItem("isAiMode", isAiMode);
     });
@@ -368,15 +368,15 @@ if (inputCtxMenu) {
         const selectedText = window.getSelection().toString();
         if (selectedText) {
             navigator.clipboard.writeText(selectedText);
-            if (typeof showBubble === 'function') showBubble("已复制到剪贴板喵！📄");
+            if (typeof showBubble === 'function') showBubble(gwT("copy_clipboard_bubble", "已复制到剪贴板喵！📄"));
         } else {
             document.execCommand('copy');
-            if (typeof showBubble === 'function') showBubble("已复制喵！📄");
+            if (typeof showBubble === 'function') showBubble(gwT("copy_bubble", "已复制喵！📄"));
         }
         break;
       case 'cut':
         document.execCommand('cut');
-        if (typeof showBubble === 'function') showBubble("已剪切喵！✂️");
+        if (typeof showBubble === 'function') showBubble(gwT("cut_bubble", "已剪切喵！✂️"));
         break;
       case 'paste':
         try {
@@ -387,9 +387,9 @@ if (inputCtxMenu) {
           } else {
             inputEl.value += text;
           }
-          if (typeof showBubble === 'function') showBubble("粘贴成功喵！📋");
+          if (typeof showBubble === 'function') showBubble(gwT("paste_success_bubble", "粘贴成功喵！📋"));
         } catch (err) {
-            if (typeof showBubble === 'function') showBubble("浏览器限制，请用 Ctrl+V 粘贴喵~");
+            if (typeof showBubble === 'function') showBubble(gwT("paste_blocked_bubble", "浏览器限制，请用 Ctrl+V 粘贴喵~"));
         }
         break;
       case 'select-all':
@@ -448,12 +448,12 @@ if (mainCtxMenu) {
 case 'about':
         if (typeof showBubble === 'function') {
            // 1. 把所有文案放在一个数组里
-           const aboutMessages = [
+           const aboutMessages = gwList("about_messages", [
             "喵？作者藏在屏幕的某个角落里睡觉呢，把鼠标移过去找找看～",
             "偷偷告诉你，把鼠标移到角落里晃一晃，或许会有神奇的发现喵！✨",
             "这种事情都要问我嘛？自己去角落里翻翻看，找到了算你厉害喵～",
             "作者太害羞躲起来啦！快去屏幕边缘把他“抓”出来喵！🐾"
-           ];
+           ]);
            
            // 2. 随机抽取其中一条
            const randomMsg = aboutMessages[Math.floor(Math.random() * aboutMessages.length)];
@@ -465,7 +465,7 @@ case 'about':
         case 'fullscreen':
         if (!document.fullscreenElement) {
           document.documentElement.requestFullscreen();
-          if (typeof showBubble === 'function') showBubble("沉浸模式开启喵！🖥️");
+          if (typeof showBubble === 'function') showBubble(gwT("fullscreen_enter_bubble", "沉浸模式开启喵！🖥️"));
         } else {
           if (document.exitFullscreen) {
             document.exitFullscreen();
@@ -473,6 +473,7 @@ case 'about':
         }
         break;
         // ... 之前的 case ...
+
       
       // 新增：鼠标拖尾处理
       case 'trail-particle':
@@ -484,11 +485,22 @@ case 'about':
       case 'trail-sparkle':
         if (window.changeTrailStyle) window.changeTrailStyle('sparkle');
         break;
-        case 'trail-laser':
+      case 'trail-laser':
         if (window.changeTrailStyle) window.changeTrailStyle('laser');
         break;
       case 'trail-off':
         if (window.changeTrailStyle) window.changeTrailStyle('off');
+        break;
+
+      case 'mouse-xiaoshou':
+      case 'mouse-MC':
+      case 'mouse-furina':
+      case 'mouse-Breeze Snow HD':
+      case 'mouse-Minimalist':
+        const styleName = action.substring(6); // 'xiaoshou', 'MC', etc.
+        if (typeof window.changeMouseStyle === 'function') {
+            window.changeMouseStyle(styleName);
+        }
         break;
         
       // ... 原来的 case (zen, reload, about 等) ...
@@ -502,10 +514,10 @@ case 'about':
 
     if (document.fullscreenElement) {
       // 当前是全屏状态 -> 显示“退出全屏”
-      fullscreenLi.textContent = "🖥️ 退出全屏";
+      fullscreenLi.textContent = gwT("context_exit_fullscreen", "🖥️ 退出全屏");
     } else {
       // 当前不是全屏 -> 显示“切换全屏”
-      fullscreenLi.textContent = "🖥️ 切换全屏";
+      fullscreenLi.textContent = gwT("context_fullscreen", "🖥️ 切换全屏");
     }
   });
 /* ============================================================
@@ -633,13 +645,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (isEditing) {
         exitEditMode(true); 
-        if (typeof showBubble === 'function') showBubble("布局已保存，下次也是这样喵～💾");
+        if (typeof showBubble === 'function') showBubble(gwT("layout_saved_bubble", "布局已保存，下次也是这样喵～💾"));
       } else {
         panel.classList.add('edit-mode');
         container.querySelectorAll('.draggable-widget').forEach(w => {
           w.setAttribute('draggable', 'true');
         });
-        if (typeof showBubble === 'function') showBubble("开始调整布局吧！调整完再点齿轮保存哦～🛠️");
+        if (typeof showBubble === 'function') showBubble(gwT("layout_edit_bubble", "开始调整布局吧！调整完再点齿轮保存哦～🛠️"));
       }
     });
   }
@@ -774,8 +786,8 @@ function openLeftPanel() {
     { 
       id: 'toggle-cat', 
       icon: '🥰', 
-      title: '桌面助手', 
-      desc: '召唤或隐藏你的专属桌面助手，她可以在页面上移动并为你提供提示 (快捷键Alt+C关闭/开启)', 
+      title: gwT('cmd_toggle_cat_title', '桌面助手'),
+      desc: gwT('cmd_toggle_cat_desc', '召唤或隐藏你的专属桌面助手，她可以在页面上移动并为你提供提示 (快捷键Alt+C关闭/开启)'),
       action: () => {
         const event = new KeyboardEvent('keydown', { code: 'KeyC', altKey: true, bubbles: true });
         document.dispatchEvent(event);
@@ -785,8 +797,8 @@ function openLeftPanel() {
     { 
       id: 'engine', 
       icon: '🌐', 
-      title: '切换搜索引擎', 
-      desc: '切换搜索引擎 (Bing/Google/百度/搜狗)', 
+      title: gwT('cmd_engine_title', '切换搜索引擎'),
+      desc: gwT('cmd_engine_desc', '切换搜索引擎 (Bing/Google/百度/搜狗)'),
       action: () => document.getElementById('engineSwitch').click() 
     },
 
@@ -794,19 +806,19 @@ function openLeftPanel() {
     { 
       id: 'fullscreen', 
       icon: '🖥️', 
-      title: '全屏', 
-      desc: '切换全屏模式(右键菜单)', 
+      title: gwT('cmd_fullscreen_title', '全屏'),
+      desc: gwT('cmd_fullscreen_desc', '切换全屏模式(右键菜单)'),
       action: () => {
         if (!document.fullscreenElement) {
           document.documentElement.requestFullscreen();
-          if (typeof showBubble === 'function') showBubble("沉浸模式开启喵！🖥️");
+          if (typeof showBubble === 'function') showBubble(gwT("fullscreen_enter_bubble", "沉浸模式开启喵！🖥️"));
         } else {
           if (document.exitFullscreen) document.exitFullscreen();
         }
       }
     },
-    { id: 'zen', icon: '🍃', title: '禅模式', desc: '隐藏所有UI，仅留壁纸(右键菜单)', action: () => toggleZenMode() },
-    { id: 'wall', icon: '🖼️', title: '更换壁纸', desc: '更换壁纸 / 上传动态壁纸(右键菜单)', action: () => {
+    { id: 'zen', icon: '🍃', title: gwT('cmd_zen_title', '禅模式'), desc: gwT('cmd_zen_desc', '隐藏所有UI，仅留壁纸(右键菜单)'), action: () => toggleZenMode() },
+    { id: 'wall', icon: '🖼️', title: gwT('cmd_wallpaper_title', '更换壁纸'), desc: gwT('cmd_wallpaper_desc', '更换壁纸 / 上传动态壁纸(右键菜单)'), action: () => {
     // ✅ 直接获取弹窗元素并显示
     const wpModal = document.getElementById('wallpaperModal');
     if (wpModal) {
@@ -816,8 +828,8 @@ function openLeftPanel() {
     }
   } 
 },
-        { id: 'refresh', icon: '🔄', title: '刷新页面', desc: '刷新当前页面(右键菜单)', action: () => location.reload() },
-    { id: 'trail', icon: '✨', title: '切换鼠标拖尾', desc: '切换鼠标拖尾特效 (光球/线条/极光等)(右键菜单)', action: () => {
+        { id: 'refresh', icon: '🔄', title: gwT('cmd_refresh_title', '刷新页面'), desc: gwT('cmd_refresh_desc', '刷新当前页面(右键菜单)'), action: () => location.reload() },
+    { id: 'trail', icon: '✨', title: gwT('cmd_trail_title', '切换鼠标拖尾'), desc: gwT('cmd_trail_desc', '切换鼠标拖尾特效 (光球/线条/极光等)(右键菜单)'), action: () => {
          const styles = ['off', 'particle', 'line', 'sparkle', 'laser'];
          let current = localStorage.getItem('trailStyle') || 'particle';
          let nextIdx = (styles.indexOf(current) + 1) % styles.length;
@@ -826,28 +838,28 @@ function openLeftPanel() {
     { 
       id: 'about', 
       icon: '👨‍💻', 
-      title: '关于作者', 
-      desc: '关于作者 (右键菜单)', 
+      title: gwT('cmd_about_title', '关于作者'),
+      desc: gwT('cmd_about_desc', '关于作者 (右键菜单)'),
       action: () => {
-         const msgs = [
+         const msgs = gwList("about_messages", [
           "喵？作者藏在屏幕的某个角落里睡觉呢，把鼠标移过去找找看～",
           "偷偷告诉你，把鼠标移到角落里晃一晃，或许会有神奇的发现喵！✨",
           "这种事情都要问我嘛？自己去角落里翻翻看，找到了算你厉害喵～",
           "作者太害羞躲起来啦！快去屏幕边缘把他“抓”出来喵！🐾"
-         ];
+         ]);
          if (typeof showBubble === 'function') showBubble(msgs[Math.floor(Math.random() * msgs.length)]);
       }
     },
-    { id: 'ai', icon: '🧠', title: 'AI搜索', desc: '切换 AI 搜索模式 (豆包)', action: () => document.getElementById('aiSwitch').click() },
+    { id: 'ai', icon: '🧠', title: gwT('cmd_ai_search_title', 'AI搜索'), desc: gwT('cmd_ai_search_desc', '切换 AI 搜索模式 (豆包)'), action: () => document.getElementById('aiSwitch').click() },
 
     // 🔥 修复：这里改为调用 openLeftPanel()
-    { id: 'app', icon: '🪟', title: '快捷应用栏', desc: '打开快捷应用，可拖动改变位置，最下面可自定义添加网站 (左侧快捷栏)', action: () => openLeftPanel() },
+    { id: 'app', icon: '🪟', title: gwT('cmd_app_bar_title', '快捷应用栏'), desc: gwT('cmd_app_bar_desc', '打开快捷应用，可拖动改变位置，最下面可自定义添加网站 (左侧快捷栏)'), action: () => openLeftPanel() },
 // --- 组件功能介绍 (自动定位版) ---
 { 
       id: 'music', 
       icon: '🎵', 
-      title: '音乐播放器', 
-      desc: '打开右侧面板查看内置的本地音乐播放器 (右侧面板)', 
+      title: gwT('cmd_music_title', '音乐播放器'),
+      desc: gwT('cmd_music_desc', '打开右侧面板查看内置的本地音乐播放器 (右侧面板)'),
       action: () => {
         openRightPanel();
         setTimeout(() => {
@@ -860,11 +872,11 @@ function openLeftPanel() {
 { 
       id: 'ai-assistant', 
       icon: '🐱', 
-      title: 'AI 聊天喵', 
-      desc: '哼，既然你求我了，那就勉强帮你一下吧喵！ (右侧面板)', 
+      title: gwT('cmd_ai_chat_title', 'AI 聊天喵'),
+      desc: gwT('cmd_ai_chat_desc', '哼，既然你求我了，那就勉强帮你一下吧喵！ (右侧面板)'),
       action: () => {
         openRightPanel();
-        const tsundereMsgs = ["干嘛？没事别随便点我喵！💢", "想让我画画？先说好，不满意不许抱怨喵！", "哼，真是拿你没办法喵～"];
+        const tsundereMsgs = gwList("ai_chat_command_messages", ["干嘛？没事别随便点我喵！💢", "想让我画画？先说好，不满意不许抱怨喵！", "哼，真是拿你没办法喵～"]);
         const randomMsg = tsundereMsgs[Math.floor(Math.random() * tsundereMsgs.length)];
         setTimeout(() => {
           // 这里的 ID 必须对应 index.html 中的 AI 聊天区域
@@ -876,8 +888,8 @@ function openLeftPanel() {
     },    { 
       id: 'todo', 
       icon: '📝', 
-      title: '备忘录', 
-      desc: '记录待办事项 (右侧面板)', 
+      title: gwT('cmd_todo_title', '备忘录'),
+      desc: gwT('cmd_todo_desc', '记录待办事项 (右侧面板)'),
       action: () => {
         openRightPanel();
         setTimeout(() => {
@@ -889,8 +901,8 @@ function openLeftPanel() {
     { 
       id: 'calc', 
       icon: '🧮', 
-      title: '计算器', 
-      desc: '简单的数值计算 (右侧面板)', 
+      title: gwT('cmd_calc_title', '计算器'),
+      desc: gwT('cmd_calc_desc', '简单的数值计算 (右侧面板)'),
       action: () => {
         openRightPanel();
         setTimeout(() => {
@@ -903,8 +915,8 @@ function openLeftPanel() {
     { 
       id: 'birthday', 
       icon: '🎂', 
-      title: '记录生日', 
-      desc: '记录生日 (右侧面板)', 
+      title: gwT('cmd_birthday_title', '记录生日'),
+      desc: gwT('cmd_birthday_desc', '记录生日 (右侧面板)'),
       action: () => {
         openRightPanel();
         setTimeout(() => {
@@ -916,8 +928,8 @@ function openLeftPanel() {
 { 
       id: 'dino', 
       icon: '🎮', 
-      title: '游戏中心', 
-      desc: '摸鱼休闲小游戏 (右侧面板)', 
+      title: gwT('cmd_game_center_title', '游戏中心'),
+      desc: gwT('cmd_game_center_desc', '摸鱼休闲小游戏 (右侧面板)'),
       action: () => {
         openRightPanel();
         setTimeout(() => {
@@ -929,8 +941,8 @@ function openLeftPanel() {
     },    { 
       id: 'calendar', 
       icon: '📅', 
-      title: '日历', 
-      desc: '查看农历与节日 (右侧面板)', 
+      title: gwT('cmd_calendar_title', '日历'),
+      desc: gwT('cmd_calendar_desc', '查看农历与节日 (右侧面板)'),
       action: () => {
         openRightPanel();
         setTimeout(() => {
@@ -942,8 +954,8 @@ function openLeftPanel() {
     { 
       id: 'fortune', 
       icon: '🎐', 
-      title: '每日一签', 
-      desc: '抽取今日运势 (右侧面板)', 
+      title: gwT('cmd_fortune_title', '每日一签'),
+      desc: gwT('cmd_fortune_desc', '抽取今日运势 (右侧面板)'),
       action: () => {
         openRightPanel();
         setTimeout(() => {
@@ -954,8 +966,8 @@ function openLeftPanel() {
     },    { 
       id: 'music-hint', 
       icon: '🎵', 
-      title: '音乐组件', 
-      desc: '它很害羞，只有听到浏览器播放歌声时，才会从右下角探出头来...', 
+      title: gwT('cmd_music_widget_title', '音乐组件'),
+      desc: gwT('cmd_music_widget_desc', '它很害羞，只有听到浏览器播放歌声时，才会从右下角探出头来...'),
       action: () => {} // 什么都不做，executeCommand 会自动关闭菜单
     },
 
@@ -963,8 +975,8 @@ function openLeftPanel() {
     { 
       id: 'about-hint', 
       icon: '👨‍💻', 
-      title: '关于作者', 
-      desc: '作者正在屏幕的某个边缘角落里发呆呢... (试着把鼠标移过去找找？)', 
+      title: gwT('cmd_about_hint_title', '关于作者'),
+      desc: gwT('cmd_about_hint_desc', '作者正在屏幕的某个边缘角落里发呆呢... (试着把鼠标移过去找找？)'),
       action: () => {} // 什么都不做，executeCommand 会自动关闭菜单
     }
   ];
@@ -1022,7 +1034,7 @@ function openLeftPanel() {
       li.className = 'cmd-item';
       li.style.justifyContent = 'center';
       li.style.opacity = '0.5';
-      li.textContent = 'No matching commands';
+      li.textContent = gwT('no_matching_commands', 'No matching commands');
       cmdList.appendChild(li);
       return;
     }
@@ -1075,8 +1087,8 @@ function openLeftPanel() {
         <div style="display:flex; align-items:center; gap:10px;">
           <span style="font-size:18px;">${type === 'Bilibili' ? '📺' : '🌏'}</span>
           <div style="display:flex; flex-direction:column;">
-            <span style="font-weight:bold; color:#eee;">Search ${type}</span>
-            <span style="font-size:12px; color:#aaa;">Searching for: "${query}"</span>
+            <span style="font-weight:bold; color:#eee;">${gwT('cmd_search_type', 'Search {type}', { type })}</span>
+            <span style="font-size:12px; color:#aaa;">${gwT('cmd_search_query', 'Searching for: "{query}"', { query })}</span>
           </div>
         </div>
         <span class="cmd-key">Enter</span>
@@ -1151,3 +1163,651 @@ function openLeftPanel() {
     if (e.target === cmdOverlay) closeCmdPalette();
   });
 });
+
+// ============================================================
+// 🖱️ 鼠标自定义样式系统 (自动持久化与动态 CSS 注入)
+// 支持 .cur 静态光标 与 .ani 动态光标
+// ============================================================
+const CURSOR_CONFIGS = {
+  'xiaoshou': { Zhand: 'cur', Zlink: 'cur', Zbeam: 'cur', Zunavail: 'cur' },
+  'MC': { Zhand: 'cur', Zlink: 'cur', Zbeam: 'cur', Zunavail: 'cur' },
+  'furina': { Zhand: 'ani', Zlink: 'ani', Zbeam: 'ani', Zunavail: 'ani' },
+  'Breeze Snow HD': { Zhand: 'cur', Zlink: 'cur', Zbeam: 'cur', Zunavail: 'cur' },
+  'Minimalist': { Zhand: 'cur', Zlink: 'cur', Zbeam: 'cur', Zunavail: 'cur' }
+};
+
+const CURSOR_ROLES = {
+  Zhand:    { varName: '--g-cursor-hand',    fallback: 'auto' },
+  Zlink:    { varName: '--g-cursor-link',    fallback: 'pointer' },
+  Zbeam:    { varName: '--g-cursor-beam',    fallback: 'text', hotspot: '16 16' },
+  Zunavail: { varName: '--g-cursor-unavail', fallback: 'not-allowed' }
+};
+
+let _cursorGeneration = 0;
+let _cursorObjectUrls = [];
+
+let _currentCursorRole = 'Zhand';
+let _mousePosition = { x: -100, y: -100 };
+
+let _activeCursorRoleUrls = { Zhand: '', Zlink: '', Zbeam: '', Zunavail: '' };
+let _activeCursorRoleFrames = { Zhand: null, Zlink: null, Zbeam: null, Zunavail: null };
+let _activeCursorRoleFramesIndex = { Zhand: 0, Zlink: 0, Zbeam: 0, Zunavail: 0 };
+let _floatingAnimTimers = { Zhand: null, Zlink: null, Zbeam: null, Zunavail: null };
+let _floatingListenersBound = false;
+
+function _resetCursorSystem() {
+  Object.keys(_floatingAnimTimers).forEach(role => {
+    if (_floatingAnimTimers[role]) {
+      clearTimeout(_floatingAnimTimers[role]);
+      _floatingAnimTimers[role] = null;
+    }
+  });
+
+  _cursorObjectUrls.forEach(url => URL.revokeObjectURL(url));
+  _cursorObjectUrls = [];
+
+  _activeCursorRoleUrls = { Zhand: '', Zlink: '', Zbeam: '', Zunavail: '' };
+  _activeCursorRoleFrames = { Zhand: null, Zlink: null, Zbeam: null, Zunavail: null };
+  _activeCursorRoleFramesIndex = { Zhand: 0, Zlink: 0, Zbeam: 0, Zunavail: 0 };
+  _currentCursorRole = 'Zhand';
+}
+
+function _ensureFloatingCursorElement() {
+  let el = document.getElementById('gweb-floating-cursor');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'gweb-floating-cursor';
+    el.innerHTML = `
+      <div id="gweb-role-Zhand" style="position:absolute; top:0; left:0; width:100%; height:100%; display:block;"></div>
+      <div id="gweb-role-Zlink" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none;"></div>
+      <div id="gweb-role-Zbeam" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none;"></div>
+      <div id="gweb-role-Zunavail" style="position:absolute; top:0; left:0; width:100%; height:100%; display:none;"></div>
+    `;
+    document.body.appendChild(el);
+  } else {
+    Object.keys(CURSOR_ROLES).forEach(role => {
+      const roleEl = document.getElementById('gweb-role-' + role);
+      if (roleEl) roleEl.style.display = (role === _currentCursorRole) ? 'block' : 'none';
+    });
+  }
+  return el;
+}
+
+const FLOATING_CURSOR_STYLE_ID = 'gweb-floating-cursor-style';
+function _ensureFloatingCursorStyle() {
+  let styleEl = document.getElementById(FLOATING_CURSOR_STYLE_ID);
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = FLOATING_CURSOR_STYLE_ID;
+    document.head.appendChild(styleEl);
+  }
+  styleEl.innerHTML = `
+    #gweb-floating-cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 32px;
+      height: 32px;
+      z-index: 100000000 !important;
+      pointer-events: none !important;
+      transform: translate3d(-100px, -100px, 0);
+      will-change: transform;
+      display: none;
+    }
+  `;
+}
+
+function _updateFloatingCursorPos() {
+  const el = document.getElementById('gweb-floating-cursor');
+  if (!el) return;
+  let offsetX = 0;
+  let offsetY = 0;
+  if (_currentCursorRole === 'Zbeam') {
+    offsetX = 16;
+    offsetY = 16;
+  }
+  el.style.transform = `translate3d(${_mousePosition.x - offsetX}px, ${_mousePosition.y - offsetY}px, 0)`;
+}
+
+function _fallbackFloatingRole(role, url) {
+  const container = document.getElementById('gweb-role-' + role);
+  if (container) {
+    container.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.position = 'absolute';
+    img.style.top = '0';
+    img.style.left = '0';
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.visibility = 'visible';
+    img.style.pointerEvents = 'none';
+    container.appendChild(img);
+    container.style.display = (_currentCursorRole === role) ? 'block' : 'none';
+  }
+  _activeCursorRoleUrls[role] = url;
+}
+
+function _startRoleAnimation(role) {
+  const frames = _activeCursorRoleFrames[role];
+  if (!frames || frames.length === 0) return;
+
+  let index = _activeCursorRoleFramesIndex[role] || 0;
+
+  function tick() {
+    _activeCursorRoleFramesIndex[role] = index;
+
+    const prevIndex = (index - 1 + frames.length) % frames.length;
+    if (frames[prevIndex].imgEl) frames[prevIndex].imgEl.style.visibility = 'hidden';
+    if (frames[index].imgEl) frames[index].imgEl.style.visibility = 'visible';
+
+    const nextIndex = (index + 1) % frames.length;
+    const duration = frames[index].duration;
+    index = nextIndex;
+
+    _floatingAnimTimers[role] = setTimeout(tick, duration);
+  }
+
+  tick();
+}
+
+function _stopRoleAnimation(role) {
+  if (_floatingAnimTimers[role]) {
+    clearTimeout(_floatingAnimTimers[role]);
+    _floatingAnimTimers[role] = null;
+  }
+}
+
+function _setCursorRole(role) {
+  _stopRoleAnimation(_currentCursorRole);
+  _currentCursorRole = role;
+
+  Object.keys(CURSOR_ROLES).forEach(r => {
+    const el = document.getElementById('gweb-role-' + r);
+    if (el) el.style.display = (r === role) ? 'block' : 'none';
+  });
+
+  _startRoleAnimation(_currentCursorRole);
+  _updateFloatingCursorPos();
+}
+
+function _updateCursorRole(target) {
+  if (!target) {
+    if (_currentCursorRole !== 'Zhand') _setCursorRole('Zhand');
+    return;
+  }
+  const isLink = target.closest('a, button, [role="button"], .wallpaper-btn, .add-wallpaper, .wp-tab, #closeTipPopup, #volumeSlider, #volunIcon, .calc-btn, .openBtn, .openBtnright, #engineSwitch, #suggestionList li, .menu-list li, .submenu li, .iconSettings, #biliIcon, #extraIcon, .del-todo-btn, #drawFortuneBtn, #saveBirthdayBtn, #addTodoBtn, #todoList li, #goSurprise, .reset-link, .liquid-slider, .wallpaper-grid img, .video-tile, .lazy-video-thumb, .switch, .slider, #closeModal, #cmdTrigger, .cmd-item');
+  const isInput = target.closest('input[type="text"], input[type="date"], input[type="file"], #searchInput, #todoInput, #newIconName, #newIconUrl, #birthdayDateInput');
+  const isDisabled = target.closest('button:disabled, #searchBtn:disabled');
+
+  let nextRole = 'Zhand';
+  if (isDisabled) nextRole = 'Zunavail';
+  else if (isLink) nextRole = 'Zlink';
+  else if (isInput) nextRole = 'Zbeam';
+
+  if (nextRole !== _currentCursorRole) {
+    _setCursorRole(nextRole);
+  }
+}
+
+function _onMouseMove(e) {
+  _mousePosition.x = e.clientX;
+  _mousePosition.y = e.clientY;
+  _updateFloatingCursorPos();
+  _updateCursorRole(e.target);
+}
+
+function _onMouseOver(e) {
+  _updateCursorRole(e.target);
+}
+
+function _onMouseLeave() {
+  const el = document.getElementById('gweb-floating-cursor');
+  if (el) el.style.display = 'none';
+}
+
+function _onMouseEnter() {
+  const animEnabled = localStorage.getItem('mouseAnimEnabled') !== 'false';
+  if (!animEnabled) return;
+  const el = document.getElementById('gweb-floating-cursor');
+  if (el) el.style.display = 'block';
+}
+
+function _toggleFloatingCursorListeners(enable) {
+  if (enable && !_floatingListenersBound) {
+    document.addEventListener('mousemove', _onMouseMove);
+    document.addEventListener('mouseover', _onMouseOver);
+    document.addEventListener('mouseleave', _onMouseLeave);
+    document.addEventListener('mouseenter', _onMouseEnter);
+    window.addEventListener('blur', _onMouseLeave);
+    window.addEventListener('focus', _onMouseEnter);
+    _floatingListenersBound = true;
+  } else if (!enable && _floatingListenersBound) {
+    document.removeEventListener('mousemove', _onMouseMove);
+    document.removeEventListener('mouseover', _onMouseOver);
+    document.removeEventListener('mouseleave', _onMouseLeave);
+    document.removeEventListener('mouseenter', _onMouseEnter);
+    window.removeEventListener('blur', _onMouseLeave);
+    window.removeEventListener('focus', _onMouseEnter);
+    _floatingListenersBound = false;
+  }
+}
+
+function _buildCursorValue(url, hotspot, fallback) {
+  const absUrl = (url.startsWith('blob:') || url.startsWith('data:') || url.startsWith('http:') || url.startsWith('https:') || url.startsWith('file:')) ? url : new URL(url, window.location.href).href;
+  return `url('${absUrl}')${hotspot ? ' ' + hotspot : ''}, ${fallback}`;
+}
+
+async function parseAniCursor(fileUrl) {
+  const resp = await fetch(fileUrl);
+  const buffer = await resp.arrayBuffer();
+  const dv = new DataView(buffer);
+  const bytes = new Uint8Array(buffer);
+
+  function fourCC(offset) {
+    return String.fromCharCode(bytes[offset], bytes[offset + 1], bytes[offset + 2], bytes[offset + 3]);
+  }
+
+  if (fourCC(0) !== 'RIFF' || fourCC(8) !== 'ACON') {
+    throw new Error('并非合法的 .ani / RIFF ACON 文件: ' + fileUrl);
+  }
+
+  let offset = 12;
+  let header = null;
+  let rate = null;
+  let seq = null;
+  const frameChunks = [];
+
+  while (offset < buffer.byteLength) {
+    const chunkId = fourCC(offset);
+    const chunkSize = dv.getUint32(offset + 4, true);
+    const dataStart = offset + 8;
+
+    if (chunkId === 'anih') {
+      header = {
+        frames: dv.getUint32(dataStart + 4, true),
+        steps: dv.getUint32(dataStart + 8, true),
+        displayRate: dv.getUint32(dataStart + 16, true)
+      };
+    } else if (chunkId === 'rate') {
+      rate = [];
+      for (let i = 0; i < chunkSize / 4; i++) rate.push(dv.getUint32(dataStart + i * 4, true));
+    } else if (chunkId === 'seq ') {
+      seq = [];
+      for (let i = 0; i < chunkSize / 4; i++) seq.push(dv.getUint32(dataStart + i * 4, true));
+    } else if (chunkId === 'LIST' && fourCC(dataStart) === 'fram') {
+      let sub = dataStart + 4;
+      const listEnd = dataStart + chunkSize;
+      while (sub < listEnd) {
+        const subId = fourCC(sub);
+        const subSize = dv.getUint32(sub + 4, true);
+        if (subId === 'icon') {
+          frameChunks.push(bytes.slice(sub + 8, sub + 8 + subSize));
+        }
+        sub += 8 + subSize + (subSize % 2);
+      }
+    }
+
+    offset = dataStart + chunkSize + (chunkSize % 2);
+  }
+
+  if (!header || frameChunks.length === 0) {
+    throw new Error('.ani 文件解析失败，未找到帧数据: ' + fileUrl);
+  }
+
+  const jiffyToMs = (j) => Math.max(16, (j / 60) * 1000);
+  const playOrder = (seq && seq.length) ? seq : frameChunks.map((_, i) => i);
+  const durations = (rate && rate.length === playOrder.length)
+    ? rate.map(jiffyToMs)
+    : playOrder.map(() => jiffyToMs(header.displayRate || 6));
+
+  return playOrder.map((frameIndex, i) => {
+    const blob = new Blob([frameChunks[frameIndex]], { type: 'image/x-icon' });
+    const url = URL.createObjectURL(blob);
+    _cursorObjectUrls.push(url);
+    return { url, duration: durations[i] };
+  });
+}
+
+/** 根据角色设置光标：.cur 直接同步赋值，.ani 异步解析后根据模式渲染 */
+async function _applyCursorRole(role, folder, ext, myGen, isFurina) {
+  const { varName, fallback, hotspot } = CURSOR_ROLES[role];
+  const fileUrl = `mouse/${folder}/${role}.${ext}`;
+
+  if (isFurina) {
+    // --------------------------------------------------
+    // 芙宁娜专属：悬浮 HTML 鼠标模式 (彻底零闪烁，多状态不重叠)
+    // --------------------------------------------------
+    document.documentElement.style.setProperty(varName, 'none');
+    const container = document.getElementById('gweb-role-' + role);
+    if (container) container.innerHTML = '';
+
+    if (ext === 'ani') {
+      try {
+        const frames = await parseAniCursor(fileUrl);
+        if (myGen !== _cursorGeneration) {
+          frames.forEach(f => URL.revokeObjectURL(f.url));
+          return;
+        }
+
+        if (container) {
+          frames.forEach((frame, idx) => {
+            const img = document.createElement('img');
+            img.src = frame.url;
+            img.style.position = 'absolute';
+            img.style.top = '0';
+            img.style.left = '0';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.visibility = idx === 0 ? 'visible' : 'hidden';
+            img.style.pointerEvents = 'none';
+            container.appendChild(img);
+            frame.imgEl = img;
+          });
+          container.style.display = (_currentCursorRole === role) ? 'block' : 'none';
+        }
+
+        _activeCursorRoleFrames[role] = frames;
+        
+        if (_currentCursorRole === role) {
+          _startRoleAnimation(role);
+        }
+      } catch (err) {
+        console.error('[芙宁娜光标] .ani 解析失败，回退为静态:', err);
+        _fallbackFloatingRole(role, fallback);
+      }
+    } else {
+      _fallbackFloatingRole(role, fileUrl);
+    }
+  } else {
+    // --------------------------------------------------
+    // 其他鼠标样式：原生静态指针模式（删除动态帧循环以彻底根治闪烁）
+    // --------------------------------------------------
+    if (ext === 'ani') {
+      try {
+        const frames = await parseAniCursor(fileUrl);
+        if (myGen !== _cursorGeneration) {
+          frames.forEach(f => URL.revokeObjectURL(f.url));
+          return;
+        }
+        document.documentElement.style.setProperty(varName, _buildCursorValue(frames[0].url, hotspot, fallback));
+        try { sendMouseStyleToIframe(localStorage.getItem('mouseStyle') || 'xiaoshou'); } catch(e){}
+      } catch (err) {
+        console.error('[原生光标] .ani 解析失败:', err);
+        if (myGen === _cursorGeneration) {
+          document.documentElement.style.setProperty(varName, fallback);
+          try { sendMouseStyleToIframe(localStorage.getItem('mouseStyle') || 'xiaoshou'); } catch(e){}
+        }
+      }
+    } else {
+      document.documentElement.style.setProperty(varName, _buildCursorValue(fileUrl, hotspot, fallback));
+      try { sendMouseStyleToIframe(localStorage.getItem('mouseStyle') || 'xiaoshou'); } catch(e){}
+    }
+  }
+}
+
+window.changeMouseStyle = function(styleName) {
+  const config = CURSOR_CONFIGS[styleName] || CURSOR_CONFIGS['xiaoshou'];
+  const folder = styleName;
+
+  localStorage.setItem('mouseStyle', styleName);
+  try {
+    sendMouseStyleToIframe(styleName);
+  } catch (err) {}
+
+  // 1. 清理上一代鼠标动画、Blobs等
+  const myGen = ++_cursorGeneration;
+  _resetCursorSystem();
+
+  const isFurina = styleName === 'furina';
+  if (isFurina) {
+    document.documentElement.style.setProperty('--g-cursor-hand', 'none');
+    document.documentElement.style.setProperty('--g-cursor-link', 'none');
+    document.documentElement.style.setProperty('--g-cursor-beam', 'none');
+    document.documentElement.style.setProperty('--g-cursor-unavail', 'none');
+  }
+
+  // 2. 确保悬浮 DOM 结构与样式表存在
+  _ensureFloatingCursorStyle();
+  const floatingEl = _ensureFloatingCursorElement();
+
+  // 3. 启用/禁用悬浮模式与监听器
+  if (isFurina) {
+    floatingEl.style.display = 'block';
+    _toggleFloatingCursorListeners(true);
+  } else {
+    floatingEl.style.display = 'none';
+    _toggleFloatingCursorListeners(false);
+  }
+
+  // 4. 分别为 4 个角色应用光标
+  Object.keys(CURSOR_ROLES).forEach(role => {
+    _applyCursorRole(role, folder, config[role], myGen, isFurina);
+  });
+
+  // 5. 注入 CSS 覆盖样式
+  let styleEl = document.getElementById('dynamic-mouse-style');
+  if (!styleEl) {
+    styleEl = document.createElement('style');
+    styleEl.id = 'dynamic-mouse-style';
+    document.head.appendChild(styleEl);
+  }
+
+  if (isFurina) {
+    // 芙宁娜样式下：彻底强力隐藏全局及所有具体高权重交互元素、边缘面板、沙盒区域的系统默认指针
+    styleEl.innerHTML = `
+      html, body, *,
+      html *, body *,
+      a, a *, button, button *, [role="button"], [role="button"] *, summary, label,
+      input, select, option, textarea, [contenteditable="true"],
+      .wallpaper-btn, .add-wallpaper, .add-wallpaper *, .wp-tab, .wp-tab *, #closeTipPopup, #volumeSlider, #volumeSlider *, #volunIcon, .calc-btn, .openBtn, .openBtnright, #engineSwitch, #engineSwitch *, #suggestionList li, .menu-list li, .submenu li, .iconSettings, .iconSettings *, #biliIcon, #extraIcon, #dinoCanvas, .del-todo-btn, #drawFortuneBtn, #saveBirthdayBtn, #addTodoBtn, #todoList li, #todoList li *, #goSurprise, .reset-link, .liquid-slider, .wallpaper-grid img, .video-tile, .lazy-video-thumb, .lazy-video-thumb *, .switch, .slider, .slider::before, #closeModal, #cmdTrigger, .cmd-item, .cmd-item *, #searchInput, #todoInput, #newIconName, #newIconUrl, #birthdayDateInput, button:disabled, button:disabled *, #searchBtn:disabled, #searchBtn:disabled *, #bgWebFrame, #quickPanel, #quickPanel *, #quickPanelright, #quickPanelright *, #quickPanelright.collapsedright, #quickPanelright.collapsedright *, #dynamic-mouse-style ~ *, [style*="cursor"] {
+        cursor: none !important;
+      }
+    `;
+  } else {
+    // 其它样式还原原本的原生系统指针样式，并覆盖所有边缘/面板/具体元素
+    styleEl.innerHTML = `
+      html, body, *,
+      html *, body *,
+      #bgWebFrame, #quickPanel, #quickPanel *, #quickPanelright, #quickPanelright *, #quickPanelright.collapsedright, #quickPanelright.collapsedright *, [style*="cursor"] {
+        cursor: var(--g-cursor-hand) !important;
+      }
+      a, 
+      a *,
+      button:not(:disabled), 
+      button:not(:disabled) *,
+      .wallpaper-btn, 
+      .add-wallpaper, 
+      .add-wallpaper span,
+      .add-wallpaper div,
+      .wp-tab.active,
+      .wp-tab,
+      .wp-tab span,
+      #closeTipPopup,
+      #volumeSlider,
+      #volumeSlider input,
+      #volunIcon,
+      .wp-tab.active span,
+      .calc-btn, 
+      .openBtn, 
+      .openBtnright,
+      #engineSwitch,
+      #engineSwitch img,
+      #suggestionList li,
+      .menu-list li,
+      .submenu li,
+      .iconSettings,
+      .iconSettings img,
+      #biliIcon,
+      #extraIcon,
+      #dinoCanvas,
+      .del-todo-btn,
+      #drawFortuneBtn,
+      #saveBirthdayBtn,
+      #addTodoBtn,
+      #todoList li,         
+      #todoList li span,    
+      #goSurprise,
+      .reset-link,
+      .liquid-slider,
+      .wallpaper-grid img,
+      .video-tile,
+      .lazy-video-thumb,
+      .lazy-video-thumb img,
+      .switch,
+      .slider,
+      .slider:before,
+      #closeModal,
+      #cmdTrigger,
+      .cmd-item,
+      .cmd-item selected,
+      .cmd-item.selected div span {
+        cursor: var(--g-cursor-link) !important;
+      }
+      input[type="text"], 
+      input[type="date"],
+      input[type="file"],
+      #searchInput,
+      #todoInput,
+      #newIconName,
+      #newIconUrl,
+      #birthdayDateInput {
+        cursor: var(--g-cursor-beam) !important;
+      }
+      button:disabled, 
+      button:disabled *, 
+      #searchBtn:disabled,
+      #searchBtn:disabled svg,
+      #searchBtn:disabled path {
+        cursor: var(--g-cursor-unavail) !important;
+      }
+      .context-menu, .submenu {
+        cursor: var(--g-cursor-hand) !important;
+      }
+      .menu-list li span, .submenu li span {
+        cursor: inherit !important;
+      }
+    `;
+  }
+
+  // UI Highlight
+  updateMouseMenuUI(styleName);
+
+  // Show bubble notification
+  if (typeof showBubble === 'function') {
+    showBubble(gwT("mouse_style_changed_bubble", `鼠标样式已切换为：${styleName} 喵！✨`, { name: styleName }));
+  }
+};
+
+function updateMouseMenuUI(styleName) {
+  const submenu = document.getElementById('mouseStyleSubmenu');
+  if (!submenu) return;
+  const items = submenu.querySelectorAll('li[data-action^="mouse-"]');
+  items.forEach(item => {
+    const action = item.getAttribute('data-action');
+    const name = action.substring(6);
+    if (name === styleName) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+}
+
+// 初始化加载保存的样式
+document.addEventListener('DOMContentLoaded', () => {
+  const savedStyle = localStorage.getItem('mouseStyle') || 'xiaoshou';
+  
+  // 延迟少许以确保 i18n 翻译和 showBubble 函数就绪，并且不弹出开机气泡提示
+  setTimeout(() => {
+    const originalShowBubble = window.showBubble;
+    window.showBubble = null;
+    try {
+      window.changeMouseStyle(savedStyle);
+    } catch(e) {
+      console.error(e);
+    }
+    window.showBubble = originalShowBubble;
+  }, 100);
+
+  // 网页壁纸 iframe 加载完毕时同步发送鼠标样式
+  const iframe = document.getElementById('bgWebFrame');
+  if (iframe) {
+    iframe.addEventListener('load', () => {
+      const activeStyle = localStorage.getItem('mouseStyle') || 'xiaoshou';
+      sendMouseStyleToIframe(activeStyle);
+    });
+  }
+});
+
+function sendMouseStyleToIframe(styleName) {
+  const iframe = document.getElementById('bgWebFrame');
+  if (iframe && iframe.contentWindow) {
+    const config = CURSOR_CONFIGS[styleName] || CURSOR_CONFIGS['xiaoshou'];
+    const handCss = document.documentElement.style.getPropertyValue('--g-cursor-hand');
+    const linkCss = document.documentElement.style.getPropertyValue('--g-cursor-link');
+    const beamCss = document.documentElement.style.getPropertyValue('--g-cursor-beam');
+    const unavailCss = document.documentElement.style.getPropertyValue('--g-cursor-unavail');
+
+    iframe.contentWindow.postMessage({
+      type: 'CHANGE_MOUSE_STYLE',
+      styleName,
+      config,
+      cursorCss: {
+        hand: handCss,
+        link: linkCss,
+        beam: beamCss,
+        unavail: unavailCss
+      }
+    }, '*');
+  }
+}
+
+// ============================================================
+// ✨ 浏览器原生系统对话框（alert/confirm/prompt/文件确认框）期间恢复电脑原生鼠标
+// ============================================================
+(function() {
+  const origAlert = window.alert;
+  const origConfirm = window.confirm;
+  const origPrompt = window.prompt;
+
+  window.setSystemCursorOverride = function(show) {
+    if (localStorage.getItem('mouseStyle') !== 'furina') return;
+    const styleEl = document.getElementById('dynamic-mouse-style');
+    const floatingEl = document.getElementById('gweb-floating-cursor');
+    if (styleEl) {
+      if (show) {
+        if (!styleEl.dataset.origCss) styleEl.dataset.origCss = styleEl.innerHTML;
+        styleEl.innerHTML = ''; // 清空 cursor: none，让电脑原生鼠标显示
+        document.documentElement.style.setProperty('--g-cursor-hand', 'auto');
+        document.documentElement.style.setProperty('--g-cursor-link', 'pointer');
+        document.documentElement.style.setProperty('--g-cursor-beam', 'text');
+        document.documentElement.style.setProperty('--g-cursor-unavail', 'not-allowed');
+        if (floatingEl) floatingEl.style.opacity = '0';
+      } else {
+        if (styleEl.dataset.origCss) {
+          styleEl.innerHTML = styleEl.dataset.origCss;
+          delete styleEl.dataset.origCss;
+        }
+        document.documentElement.style.setProperty('--g-cursor-hand', 'none');
+        document.documentElement.style.setProperty('--g-cursor-link', 'none');
+        document.documentElement.style.setProperty('--g-cursor-beam', 'none');
+        document.documentElement.style.setProperty('--g-cursor-unavail', 'none');
+        if (floatingEl) floatingEl.style.opacity = '1';
+      }
+    }
+  };
+
+  window.alert = function(...args) {
+    window.setSystemCursorOverride(true);
+    try { return origAlert.apply(this, args); } finally { window.setSystemCursorOverride(false); }
+  };
+  window.confirm = function(...args) {
+    window.setSystemCursorOverride(true);
+    try { return origConfirm.apply(this, args); } finally { window.setSystemCursorOverride(false); }
+  };
+  window.prompt = function(...args) {
+    window.setSystemCursorOverride(true);
+    try { return origPrompt.apply(this, args); } finally { window.setSystemCursorOverride(false); }
+  };
+})();

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
   <meta charset="UTF-8" />
   <meta name="referrer" content="no-referrer">
@@ -14,15 +14,15 @@
 <body>
   <!-- 可把额外图标图片放到和 index.html 同目录，示例文件名 2025102523114053.png -->
   <a href="https://www.youtube.com/@shichenshi12324" target="_blank">
-  <img id="extraIcon" src="logo/2025102523114053.png" alt="youtube" title="作者油管主页" data-i18n-title="social_youtube_title" style="user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;" /></a>
+  <img id="extraIcon" src="logo/2025102523114053.png" alt="youtube" title="作者油管主页" style="user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;" /></a>
   <a href="https://space.bilibili.com/702430325" target="_blank">
-  <img id="biliIcon" src="logo/2025102514322810.png" alt="bilibili" title="作者B站主页" data-i18n-title="social_bilibili_title" style="user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;"/>
-</a>
-<img id="bgImage" src="wallpapers/poster.jpg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-2;display:block;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;" />
+  <img id="biliIcon" src="logo/2025102514322810.png" alt="bilibili" title="作者B站主页" style="user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;"/>
+ </a>
+<img id="bgImage" src="wallpapers/poster.jpg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-2;display:block;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;pointer-events:none;" />
 <canvas id="liquidCanvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; display: none;"></canvas>
 <video id="bgVideo" muted loop poster="wallpapers/poster.jpg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:-1;display:none;pointer-events: none;user-select:none;-webkit-user-select:none;" disablePictureInPicture controlsList="nodownload">
   <!-- The 'src' will be set by JavaScript -->
-  <span data-i18n="video_unsupported">Your browser does not support the video tag.</span>
+  Your browser does not support the video tag.
 </video>
 <!-- 🌐 网页壁纸沙盒 iframe -->
 <iframe
@@ -42,9 +42,9 @@
 "></div>
   <!-- ✅ 新增问候语和北京时间显示 -->
    
-  <div id="greetingMessage" data-i18n="greeting_loading" style="text-shadow: 0 3px 15px rgba(0,0,0,0.7);">问候加载中...</div>
-  <div id="beijingTime" data-i18n="beijing_time_loading" style="text-shadow: 0 3px 15px rgba(0,0,0,0.7);">北京时间加载中...</div>
-  <div id="weekDay" data-i18n="weekday_loading" style="text-shadow: 0 3px 15px rgba(0,0,0,0.7);">星期加载中...</div>
+  <div id="greetingMessage" style="text-shadow: 0 3px 15px rgba(0,0,0,0.7);">问候加载中...</div>
+  <div id="beijingTime" style="text-shadow: 0 3px 15px rgba(0,0,0,0.7);">北京时间加载中...</div>
+  <div id="weekDay" style="text-shadow: 0 3px 15px rgba(0,0,0,0.7);">星期加载中...</div>
 <div id="catSpeechBubble">
   <div class="bubble-tail"></div>
    <span class="bubble-text"></span>
@@ -52,18 +52,18 @@
   <!-- 天气组件 -->
 <div class="top-left-bar">
   <div id="weather" class="hover-box">
-    <div id="weather-text" data-i18n="weather_loading" style="text-shadow: 0 3px 15px rgba(0,0,0,0.7);">正在获取天气...</div>
+    <div id="weather-text" style="text-shadow: 0 3px 15px rgba(0,0,0,0.7);">正在获取天气...</div>
   </div>
 
-  <img id="cmdTrigger" src="images/tishi.png" alt="指令" title="功能菜单" data-i18n-alt="cmd_icon_alt" data-i18n-title="cmd_icon_title">
+  <img id="cmdTrigger" src="images/tishi.png" alt="指令" title="功能菜单">
 </div>
 <!-- 唱片元素（位于音乐组件左侧，半被覆盖） -->
 <div id="mediaWidget">
   
   <div class="cover" id="mediaCover"></div>
   <div class="meta">
-    <div class="title" id="mediaTitle" data-i18n="media_untitled">无标题</div>
-    <div class="artist" id="mediaArtist" data-i18n="media_unknown_artist">未知艺术家</div>
+    <div class="title" id="mediaTitle">无标题</div>
+    <div class="artist" id="mediaArtist">未知艺术家</div>
     <div class="music-wave" id="musicWave">
       <span></span>
       <span></span>
@@ -110,10 +110,10 @@
     <form action="https://www.bing.com/search" method="GET" target="_blank">
   <div class="search-container">
     <button type="button" id="engineSwitch">
-      <img src="logo/bing-logo-small.png" alt="搜索引擎" data-i18n-alt="search_engine_alt" class="engine-icon" draggable="false">
+      <img src="logo/bing-logo-small.png" alt="搜索引擎" class="engine-icon" draggable="false">
     </button>
-    <input type="text" id="searchInput" placeholder="搜索..." data-i18n-placeholder="search_placeholder" autocomplete="off">
-<button type="button" id="aiSwitch" title="使用豆包 AI 搜索" data-i18n-title="ai_search_title">
+    <input type="text" id="searchInput" placeholder="搜索..." autocomplete="off">
+<button type="button" id="aiSwitch" title="使用豆包 AI 搜索">
       <svg viewBox="0 0 100 100" width="26" height="26" style="overflow: visible;">
         <text x="50" y="56" class="ai-icon-text">AI</text>
       </svg>
@@ -134,30 +134,30 @@
   <div class="modal-content">
 
     <div class="modal-header">
-      <div class="modal-title" data-i18n="wallpaper_modal_title">🎨 更换壁纸</div>
+      <div class="modal-title">🎨 更换壁纸</div>
       <span id="closeModal">×</span>
     </div>
 
     <!-- ======================================================== -->
     <!-- ===== 新增：这是为您补全的“可拖动提示条”元素 ===== -->
     <!-- ======================================================== -->
-    <div id="dragHint" class="drag-hint" data-i18n="drag_hint">
+    <div id="dragHint" class="drag-hint">
       按住标题栏区域可以拖动整个面板哦😽
     </div>
 
     <div class="modal-body">
       <div class="wp-sidebar">
         <div class="wp-tab active" data-type="static">
-          <span data-i18n="wp_tab_static">🖼️ 静态壁纸</span>
+          <span>🖼️ 静态壁纸</span>
         </div>
         <div class="wp-tab" data-type="dynamic">
-          <span data-i18n="wp_tab_dynamic">🎬 动态壁纸</span>
+          <span>🎬 动态壁纸</span>
         </div>
                 <div class="wp-tab" data-type="web">
-          <span data-i18n="wp_tab_web">🌐 网页壁纸</span>
+          <span>🌐 网页壁纸</span>
         </div>
         <div class="wp-tab" data-type="custom">
-          <span data-i18n="wp_tab_custom">📂 自定义壁纸</span>
+          <span>📂 自定义壁纸</span>
         </div>
       </div>
 
@@ -171,26 +171,26 @@
                     <input type="checkbox" id="parallaxToggle">
                     <span class="slider"></span>
                 </label>
-                <span class="parallax-label" data-i18n="parallax_label">背景视差</span>
+                <span class="parallax-label">背景视差</span>
             </div>
 <div class="liquid-setting-item">
     <label class="liquid-switch">
         <input type="checkbox" id="liquidToggleBtn">
         <span class="liquid-slider"></span>
     </label>
-    <span data-i18n="liquid_label">&nbsp;&nbsp;水波特效</span>
+    <span>&nbsp;&nbsp;水波特效</span>
 </div>
     
             <!-- 中间：音量控制 -->
             <div class="volume-option" style="display: flex; align-items: center; gap: 8px;">
                 <span id="volumeIcon" style="font-size: 20px; cursor: pointer; user-select: none;">🔊</span>
-                <span class="volume-label" data-i18n="volume_label">背景声音</span>
+                <span class="volume-label">背景声音</span>
                 <input type="range" id="volumeSlider" min="0" max="100" value="100">
                 <span id="volumeValue">100%</span>
             </div>
     
             <!-- 右侧：信封按钮 -->
-            <button id="wpTipBtn" title="查看提示" data-i18n-title="wp_tip_title_attr" style="background:none; border:none; font-size: 24px; cursor: pointer; transition: transform 0.2s;">
+            <button id="wpTipBtn" title="查看提示" style="background:none; border:none; font-size: 24px; cursor: pointer; transition: transform 0.2s;">
                 📩
             </button>
         </div>
@@ -201,8 +201,8 @@
         <div id="wpTipPopup" class="envelope-popup">
           <div class="envelope-inner">
             <span id="closeTipPopup">×</span>
-            <h3 class="envelope-title" data-i18n="wp_tip_title">🐾 小猫的壁纸百科：</h3>
-<div class="envelope-content-text" data-i18n-html="wp_tip_content">
+            <h3 class="envelope-title">🐾 小猫的壁纸百科：</h3>
+<div class="envelope-content-text">
               <p style="font-size: 16px;">🌟 <strong>这里有哪些壁纸种类？</strong></p>
               <p>主人可以随心切换<strong>静态美图</strong>、<strong>丝滑视频</strong>和<strong>可以互动的网页壁纸</strong>作为背景喵！还可以自己上传<strong>自定义壁纸</strong>喵！</p>
               
@@ -234,23 +234,23 @@
 <div id="addIconModal" class="modal" aria-hidden="true">
   <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="addIconTitle">
     <span id="closeAddModal" style="cursor:pointer;font-size:20px;">×</span>
-    <h3 id="addIconTitle" data-i18n="add_shortcut_title">添加快捷方式</h3>
+    <h3 id="addIconTitle">添加快捷方式</h3>
     <div class="form-row">
-      <label for="newIconName" data-i18n="label_name">名称</label>
-      <input id="newIconName" type="text" placeholder="例如：哔哩哔哩" data-i18n-placeholder="shortcut_name_placeholder">
+      <label for="newIconName">名称</label>
+      <input id="newIconName" type="text" placeholder="例如：哔哩哔哩" data-i18n-placeholder="autogen_133">
     </div>
     <div class="form-row">
-      <label for="newIconFile" data-i18n="label_icon_optional">图标（可选）</label>
+      <label for="newIconFile">图标（可选）</label>
       <input id="newIconFile" type="file" accept="image/*">
       <div style="margin-top:8px;"><img id="newIconPreview" alt="" style="width:72px;height:72px;border-radius:8px;display:none;object-fit:cover;border:1px solid #ddd;"></div>
     </div>
     <div class="form-row">
       <label for="newIconUrl">URL</label>
-      <input id="newIconUrl" type="text" placeholder="例如：bilibili.com" data-i18n-placeholder="shortcut_url_placeholder">
+      <input id="newIconUrl" type="text" placeholder="例如：bilibili.com" data-i18n-placeholder="autogen_134">
     </div>
     <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
-      <button id="cancelNewIcon" type="button" data-i18n="button_cancel">取消</button>
-      <button id="saveNewIcon" type="button" data-i18n="button_save">保存</button>
+      <button id="cancelNewIcon" type="button">取消</button>
+      <button id="saveNewIcon" type="button">保存</button>
     </div>
   </div>
 </div>
@@ -259,9 +259,9 @@
   <button class="openBtn">▶</button>
   <div class="panel" style="position:relative;">
     <div class="icons">
-      <h3 style="color:white;"><span data-i18n="quick_apps_title">快捷应用</span><abc style="font-size:12px; color: white;" data-i18n="quick_apps_hint">（可以通过拖动改变位置）</abc></h3>
+      <h3 style="color:white;">快捷应用<abc style="font-size:12px; color: white;">（可以通过拖动改变位置）</abc></h3>
       <div class="iconWrapper addWrapper">
-        <button type="button" class="addBtn" title="添加快捷方式" data-i18n-title="add_shortcut_title_attr">+</button>
+        <button type="button" class="addBtn" title="添加快捷方式">+</button>
       </div>
     </div>
     <div id="quickPanelScrollHint" class="hidden">
@@ -274,27 +274,27 @@
 <div id="quickPanelright" class="collapsedright">
   <button class="openBtnright">◀</button>
   <div class="panelright">
-    <button id="panelSettingBtn" title="调整布局" data-i18n-title="panel_setting_title">⚙️</button>
+    <button id="panelSettingBtn" title="调整布局">⚙️</button>
     <div class="icons">
       <!-- 这里可以放置右侧面板的内容 -->
-      <h2 style="color:white; margin-top: 20px;" data-i18n-html="quick_panel_title">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;快捷面板</h2>
+      <h2 style="color:white; margin-top: 20px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;快捷面板</h2>
 <div id="birthdayWidget" class="birthday-container draggable-widget">
   <div id="birthdayPicker" class="birthday-section">
-    <h4 data-i18n="birthday_record_title">🎂 记录生日</h4>
+    <h4>🎂 记录生日</h4>
     <div class="input-group">
       <input type="date" id="birthdayDateInput">
-      <button id="saveBirthdayBtn" data-i18n="button_confirm">确定</button>
+      <button id="saveBirthdayBtn">确定</button>
     </div>
   </div>
   <div id="birthdayDisplay" class="birthday-section" style="display: none;">
     <div class="countdown-card">
-      <p class="label" data-i18n="birthday_countdown_label">距离生日还有</p>
+      <p class="label">距离生日还有</p>
       <div class="days-circle">
         <span id="daysNumber">--</span>
-        <small data-i18n="day_unit">天</small>
+        <small>天</small>
       </div>
-      <button id="resetBirthdayBtn" class="reset-link" data-i18n="reset_date">重置日期</button>
-      <div id="surpriseLink" data-i18n-html="birthday_surprise" style="display: none; margin-top: 10px; font-size: 12px; color: #ffeb3b; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">
+      <button id="resetBirthdayBtn" class="reset-link">重置日期</button>
+      <div id="surpriseLink" style="display: none; margin-top: 10px; font-size: 12px; color: #ffeb3b; text-shadow: 2px 2px 4px rgba(0,0,0,0.7);">
         小猫为你准备了一个小惊喜，<span id="goSurprise" style="text-decoration: underline; cursor: pointer; font-weight: bold;">去看看</span>
       </div>
     </div>
@@ -354,7 +354,7 @@
             pointer-events: auto; 
             backdrop-filter: blur(4px); 
             border: 1px solid rgba(255,255,255,0.3);">
-            <span data-i18n="back">返回</span>
+            返回
         </span>
     </div>
 </div>
@@ -371,8 +371,8 @@
             <img src="logo/icon.png" alt="cover">
         </div>
         <div class="music-info">
-            <h4 id="localMusicTitle" data-i18n="music_select_song">选择歌曲播放</h4>
-            <span id="localMusicArtist" data-i18n="music_artist_empty">--</span>
+            <h4 id="localMusicTitle">选择歌曲播放</h4>
+            <span id="localMusicArtist">--</span>
         </div>
     </div>
     
@@ -392,11 +392,11 @@
 
     <!-- 4. 控制按钮 -->
     <div class="music-controls">
-      <button id="prevSongBtn" title="上一首" data-i18n-title="music_prev_title">⏮️</button>
-      <button id="playPauseBtn" title="播放/暂停" data-i18n-title="music_play_pause_title">▶️</button>
-      <button id="nextSongBtn" title="下一首" data-i18n-title="music_next_title">⏭️</button>
-      <button id="stopSongBtn" title="停止" data-i18n-title="music_stop_title">⏹️</button>
-      <button id="togglePlaylistBtn" title="播放列表" data-i18n-title="music_playlist_title">📂</button>
+      <button id="prevSongBtn" title="上一首">⏮️</button>
+      <button id="playPauseBtn" title="播放/暂停">▶️</button>
+      <button id="nextSongBtn" title="下一首">⏭️</button>
+      <button id="stopSongBtn" title="停止">⏹️</button>
+      <button id="togglePlaylistBtn" title="播放列表">📂</button>
     </div>
     
     <!-- 5. 播放列表 (默认隐藏) -->
@@ -409,9 +409,9 @@
 <div id="aiChatWidget" class="birthday-container draggable-widget" style="margin: 0 15px 15px 15px; width: 435px;">
   <div class="birthday-section" style="display: flex; flex-direction: column; height: 320px;">
     <h4 style="margin-top: 0; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-      <span data-i18n="ai_chat_title">😺 AI 聊天喵</span>
+      😺 AI 聊天喵
       <button id="clearChatBtn" style="background: none; border: none; color: rgb(255, 255, 255); font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: color 0.2s, background 0.2s;">
-        <span data-i18n="clear_chat">清除记录</span>
+        清除记录
       </button>
     </h4>
 
@@ -421,9 +421,9 @@
     </div>
 
     <div class="input-group" style="display: flex; gap: 8px; align-items: center;">
-      <button id="imgModeBtn" title="切换图片生成模式" data-i18n-title="image_mode_title" style="flex-shrink: 0; width: 36px; height: 36px; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.25); border-radius: 20px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: background 10s, border-color 10s; color: white;">🖼️</button>
+      <button id="imgModeBtn" title="切换图片生成模式" style="flex-shrink: 0; width: 36px; height: 36px; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.25); border-radius: 20px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: background 10s, border-color 10s; color: white;">🖼️</button>
       <input type="text" id="chatInput" placeholder="输入你想说的话..." data-i18n-placeholder="chat_input_placeholder" autocomplete="off" style="flex: 1; padding: 10px; border-radius: 6px; border: none; background: rgba(255,255,255,0.15); color: white; font-size: 13px; outline: none;">
-      <button id="chatSendBtn" data-i18n="button_send" style="height: 33px; background: #0b74de; color: white; border: none; border-radius: 6px; padding: 0 18px; cursor: pointer; font-weight: bold; transition: background 0.2s;">发送</button>
+      <button id="chatSendBtn" style="height: 33px; background: #0b74de; color: white; border: none; border-radius: 6px; padding: 0 18px; cursor: pointer; font-weight: bold; transition: background 0.2s;">发送</button>
     </div>
   </div>
 </div>
@@ -432,9 +432,9 @@
   
   <div id="todoWidget" class="birthday-container" style="flex: 1; margin: 0; display: flex; flex-direction: column;">
     <div class="birthday-section" style="flex: 1; display: flex; flex-direction: column;">
-      <h4 data-i18n="todo_title">📝 备忘录</h4>
+      <h4>📝 备忘录</h4>
       <div class="input-group">
-        <input type="text" id="todoInput" placeholder="记录事项..." data-i18n-placeholder="todo_placeholder" style="width: 100%;">
+        <input type="text" id="todoInput" placeholder="记录事项..." data-i18n-placeholder="autogen_159" style="width: 100%;">
         <button id="addTodoBtn" style="white-space: nowrap;">+</button>
       </div>
       <ul id="todoList" style="list-style: none; padding: 0; margin-top: 10px; flex: 1; overflow-y: auto; max-height: 220px;">
@@ -444,7 +444,7 @@
 
   <div id="calcWidget" class="birthday-container" style="flex: 1; margin: 0;">
     <div class="birthday-section">
-      <h4 data-i18n="calc_title">🧮 计算器</h4>
+      <h4>🧮 计算器</h4>
 <input type="text" id="calcDisplay" style="width:100%; background:rgba(0,0,0,0.3); border:none; color:white; font-size:18px; text-align:right; padding:8px; box-sizing:border-box; border-radius:6px; margin-bottom:8px;">      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:4px;">
         <button class="calc-btn op" data-val="C" style="color:#ff6b6b;">C</button>
         <button class="calc-btn op" data-val="/">÷</button>
@@ -471,12 +471,12 @@
 <div id="fortuneWidget" class="birthday-container draggable-widget flip-container" style="margin: 0 15px 15px 15px; width: 440px; height: 140px; perspective: 1000px;">
   <div class="flipper">
     <div class="front birthday-section" style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-      <h4 data-i18n="fortune_title">🎐 每日猫咪灵签</h4>
-      <button id="drawFortuneBtn" data-i18n="draw_fortune" style="margin-top:15px; background:#0b74de; color:white; border:none; padding:8px 20px; border-radius:20px; cursor:pointer;">✨ 抽取今日运势</button>
+      <h4>🎐 每日猫咪灵签</h4>
+      <button id="drawFortuneBtn" style="margin-top:15px; background:#0b74de; color:white; border:none; padding:8px 20px; border-radius:20px; cursor:pointer;">✨ 抽取今日运势</button>
     </div>
     <div class="back birthday-section" style="height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-      <div id="fortuneTitle" data-i18n="fortune_default_title" style="font-size:28px; font-weight:bold; color:#ffeb3b;">大吉</div>
-      <div id="fortuneText" data-i18n="fortune_default_text" style="margin-top:8px; opacity:0.9; font-size:14px;">宜：写代码 | 忌：修Bug</div>
+      <div id="fortuneTitle" style="font-size:28px; font-weight:bold; color:#ffeb3b;">大吉</div>
+      <div id="fortuneText" style="margin-top:8px; opacity:0.9; font-size:14px;">宜：写代码 | 忌：修Bug</div>
     </div>
   </div>
 </div>
@@ -487,75 +487,75 @@
     <div style="position: absolute; top:0; left:0;  background: rgba(0,0,0,0.3); z-index: 0; border-radius: 16px; "></div>
     
     <div style="position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column;">
-      <h4 style="margin: 0 0 15px 0; color: white; text-shadow: 2px 2px 4px #000; font-size: 16px; text-align: center;" data-i18n="game_center_title">🎮 游戏中心</h4>
+      <h4 style="margin: 0 0 15px 0; color: white; text-shadow: 2px 2px 4px #000; font-size: 16px; text-align: center;">🎮 游戏中心</h4>
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; flex: 1;">
-  <button class="game-entry-btn" data-target="contra" data-i18n="game_contra">🔫 魂斗罗30命S弹版</button>
-  <button class="game-entry-btn" data-target="mario" data-i18n="game_mario">🍄 超级玛丽</button>
-  <button class="game-entry-btn" data-target="snake" data-i18n="game_snake">🐍 贪吃蛇</button>
-  <button class="game-entry-btn" data-target="memory" data-i18n="game_memory">🃏 记忆翻牌</button>
+  <button class="game-entry-btn" data-target="contra">🔫 魂斗罗30命S弹版</button>
+  <button class="game-entry-btn" data-target="mario">🍄 超级玛丽</button>
+  <button class="game-entry-btn" data-target="snake">🐍 贪吃蛇</button>
+  <button class="game-entry-btn" data-target="memory">🃏 记忆翻牌</button>
 </div>
     </div>
   </div>
 
   <div id="contraView" class="birthday-section" style="display: none; position: relative; margin: -14px; border-radius: 16px; padding: 15px; background-image: url('images/hundouluo.png'); background-size: cover; background-position: center; background-blend-mode: multiply; background-color: rgba(0, 0, 0, 0);">
-<button class="back-lobby-btn" data-target="lobby" data-i18n="back_lobby">⬅ 返回大厅</button>    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: relative; z-index: 1;">
-      <h4 style="margin: 0; font-size: 14px; color: #fff; text-shadow: 1px 1px 2px black;" data-i18n="contra_title">🔫 魂斗罗30命S弹版 (Contra)</h4>
-      <button id="nes-mute-contra" title="游戏声音" data-i18n-title="nes_sound_title" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 4px; padding: 2px 7px; cursor: pointer; font-size: 13px; margin-right: 6px; margin-top: 4px;">🔊</button><button id="load-contra" data-i18n="load_game" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 12px; margin-right: 100px; margin-top: 4px;">点击载入</button>
+<button class="back-lobby-btn" data-target="lobby">⬅ 返回大厅</button>    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: relative; z-index: 1;">
+      <h4 style="margin: 0; font-size: 14px; color: #fff; text-shadow: 1px 1px 2px black;">🔫 魂斗罗30命S弹版 (Contra)</h4>
+      <button id="nes-mute-contra" title="游戏声音" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 4px; padding: 2px 7px; cursor: pointer; font-size: 13px; margin-right: 6px; margin-top: 4px;">🔊</button><button id="load-contra" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 12px; margin-right: 100px; margin-top: 4px;">点击载入</button>
     </div>
     <canvas id="contra-canvas" width="256" height="240" style="width: 100%; background: #000; border-radius: 8px; image-rendering: pixelated; position: relative; z-index: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.5);"></canvas>
     <div style="font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 8px; line-height: 1.4; position: relative; z-index: 1; text-shadow: 1px 1px 1px black;">
-      <span data-i18n="contra_controls">操作：WASD移动 | J射击 | K跳跃 | Shift选择 | 回车开始</span>
+      操作：WASD移动 | J射击 | K跳跃 | Shift选择 | 回车开始
     </div>
   </div>
 
   <div id="marioView" class="birthday-section" style="display: none;margin: -15px; position: relative; border-radius: 16px; padding: 15px; background-image: url('images/chaojimali.png'); background-size: cover; background-position: center; background-blend-mode: multiply; background-color: rgba(0, 0, 0, 0);">
-<button class="back-lobby-btn" data-target="lobby" data-i18n="back_lobby">⬅ 返回大厅</button>    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: relative; z-index: 1;">
-      <h4 style="margin: 0; font-size: 14px; color: #fff; text-shadow: 1px 1px 2px black;" data-i18n="mario_title">🍄 超级玛丽 (Mario)</h4>
-      <button id="nes-mute-mario" title="游戏声音" data-i18n-title="nes_sound_title" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(0,0,0,0.3); color: #000; border-radius: 4px; padding: 2px 7px; cursor: pointer; font-size: 13px; margin-right: 6px; margin-top: 4px;">🔊</button><button id="load-mario" data-i18n="load_game" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(0 0 0 / 40%); color: rgb(0, 0, 0); border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 12px; margin-right: 100px; margin-top: 4px;">点击载入</button>
+<button class="back-lobby-btn" data-target="lobby">⬅ 返回大厅</button>    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: relative; z-index: 1;">
+      <h4 style="margin: 0; font-size: 14px; color: #fff; text-shadow: 1px 1px 2px black;">🍄 超级玛丽 (Mario)</h4>
+      <button id="nes-mute-mario" title="游戏声音" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(0,0,0,0.3); color: #000; border-radius: 4px; padding: 2px 7px; cursor: pointer; font-size: 13px; margin-right: 6px; margin-top: 4px;">🔊</button><button id="load-mario" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(0 0 0 / 40%); color: rgb(0, 0, 0); border-radius: 4px; padding: 2px 8px; cursor: pointer; font-size: 12px; margin-right: 100px; margin-top: 4px;">点击载入</button>
     </div>
     <canvas id="mario-canvas" width="256" height="240" style="width: 100%; background: #000; border-radius: 8px; image-rendering: pixelated; position: relative; z-index: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.5);"></canvas>
     <div style="font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 8px; line-height: 1.4; position: relative; z-index: 1; text-shadow: 1px 1px 1px black;">
-      <span data-i18n="mario_controls">操作：WASD移动 | J加速/火球 | K跳跃 | Shift选择 | 回车开始</span>
+      操作：WASD移动 | J加速/火球 | K跳跃 | Shift选择 | 回车开始
     </div>
   </div>
 
   <div id="snakeView" class="birthday-section" style="display: none; position: relative; height: 200px; margin: -17px; border-radius: 16px; padding: 15px; background: linear-gradient(135deg, #134E5E, #71B280);">
-<button class="back-lobby-btn" data-target="lobby" data-i18n="back_lobby">⬅ 返回大厅</button>    <div style="text-align: center;">
-      <h4 style="text-shadow: 1px 1px 2px black; margin: 0 0 10px 0; font-size: 14px; color: white;" data-i18n="snake_title">🐍 贪吃蛇大作战</h4>
+<button class="back-lobby-btn" data-target="lobby">⬅ 返回大厅</button>    <div style="text-align: center;">
+      <h4 style="text-shadow: 1px 1px 2px black; margin: 0 0 10px 0; font-size: 14px; color: white;">🐍 贪吃蛇大作战</h4>
       <canvas id="snakeCanvas" width="600" height="150" style="width: 100%; height: 120px; margin-top: 30px; border-radius: 8px; background: rgba(0,0,0,0.4); cursor: pointer; display: block; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);"></canvas>
       <div style="font-size: 13px; margin-top: 8px; display: flex; align-items: center; justify-content: space-between; color: rgba(255,255,255,0.9); font-weight: bold;">
-        <span style="opacity: 0.8; font-size: 12px; font-weight: normal;" data-i18n="snake_controls">🎮 WASD / 方向键控制</span>
+        <span style="opacity: 0.8; font-size: 12px; font-weight: normal;">🎮 WASD / 方向键控制</span>
         <div style="display: flex; gap: 15px;">
-          <span style="color: #69f0ae;"><span data-i18n="score_label">得分:</span> <span id="currentSnakeScore">0</span></span>
-          <span style="opacity: 0.6;"><span data-i18n="high_score_label">最高:</span> <span id="snakeHighScore">0</span></span>
+          <span style="color: #69f0ae;">得分: <span id="currentSnakeScore">0</span></span>
+          <span style="opacity: 0.6;">最高: <span id="snakeHighScore">0</span></span>
         </div>
       </div>
     </div>
   </div>
 <div id="memoryView" class="birthday-section" style="display: none; position: relative; margin: -17px; border-radius: 16px; padding: 15px;   background-image: url('images/fanpai.png') !important;
  min-height: 300px;">
-  <button class="back-lobby-btn" data-target="lobby" data-i18n="back_lobby">⬅ 返回大厅</button>
+  <button class="back-lobby-btn" data-target="lobby">⬅ 返回大厅</button>
 
   <div class="memory-ui-container">
-    <h4 style="margin: 0 0 15px 0; font-size: 16px; color: white; text-align: left; padding-left: 5px;" data-i18n="memory_title">🃏 记忆翻牌</h4>
+    <h4 style="margin: 0 0 15px 0; font-size: 16px; color: white; text-align: left; padding-left: 5px;">🃏 记忆翻牌</h4>
     
     <div class="memory-controls">
       <div class="diff-group">
-        <button class="memory-diff-btn active" data-pairs="9" data-i18n="difficulty_easy">简单</button>
-        <button class="memory-diff-btn" data-pairs="12" data-i18n="difficulty_medium">中等</button>
-        <button class="memory-diff-btn" data-pairs="15" data-i18n="difficulty_hard">困难</button>
+        <button class="memory-diff-btn active" data-pairs="9">简单</button>
+        <button class="memory-diff-btn" data-pairs="12">中等</button>
+        <button class="memory-diff-btn" data-pairs="15">困难</button>
       </div>
-      <button id="memoryRestartBtn" class="memory-icon-btn" title="重新开始" data-i18n-title="restart_title">🔄</button>
+      <button id="memoryRestartBtn" class="memory-icon-btn" title="重新开始">🔄</button>
     </div>
 
     <div class="memory-stats">
-      <span><span data-i18n="memory_flips">翻牌:</span> <strong id="memoryFlips">0</strong></span>
-      <span><span data-i18n="memory_matches">匹配:</span> <strong id="memoryMatches">0</strong>/<strong id="memoryTotal">9</strong></span>
+      <span>翻牌: <strong id="memoryFlips">0</strong></span>
+      <span>匹配: <strong id="memoryMatches">0</strong>/<strong id="memoryTotal">9</strong></span>
       <span>⏱ <strong id="memoryTimer">00:00</strong></span>
     </div>
 
     <div id="memoryBestRow" class="memory-best">
-      <span data-i18n="memory_record">🏆 记录:</span> <span id="bestFlips9">--</span> | <span id="bestFlips12">--</span> | <span id="bestFlips15">--</span>
+      🏆 记录: <span id="bestFlips9">--</span> | <span id="bestFlips12">--</span> | <span id="bestFlips15">--</span>
     </div>
 
     <div id="memoryBoard" class="memory-grid"></div>
@@ -572,13 +572,13 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
       <h4 id="calMonthYear" style="margin:0; font-size: 16px;">2025年 12月</h4>
       <div style="display: flex; gap: 8px;">
-        <button id="toToday" title="回到今天" data-i18n-title="today_title" data-i18n="today_button" style="background:rgba(255,255,255,0.1); border:none; color:white; cursor:pointer; padding: 4px 8px; border-radius: 4px; font-weight:bold;">今天</button>
+        <button id="toToday" title="回到今天" style="background:rgba(255,255,255,0.1); border:none; color:white; cursor:pointer; padding: 4px 8px; border-radius: 4px; font-weight:bold;">今天</button>
         <button id="prevMonth" style="background:rgba(255,255,255,0.1); border:none; color:white; cursor:pointer; padding: 4px 8px; border-radius: 4px;">◀</button>
         <button id="nextMonth" style="background:rgba(255,255,255,0.1); border:none; color:white; cursor:pointer; padding: 4px 8px; border-radius: 4px;">▶</button>
       </div>
     </div>
     <div style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 14px; opacity: 0.7; margin-bottom: 8px; text-shadow: 2px black; font-weight: bolder;">
-      <span style="color:#ff6b6b" data-i18n="cal_week_sun">日</span><span data-i18n="cal_week_mon">一</span><span data-i18n="cal_week_tue">二</span><span data-i18n="cal_week_wed">三</span><span data-i18n="cal_week_thu">四</span><span data-i18n="cal_week_fri">五</span><span style="color:#ff6b6b" data-i18n="cal_week_sat">六</span>
+      <span style="color:#ff6b6b">日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span style="color:#ff6b6b">六</span>
     </div>
     <div id="calGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 13px;">
       </div>
@@ -592,68 +592,80 @@
 <div id="customContextMenu" class="context-menu">
   <ul class="menu-list">
     <li data-action="fullscreen">
-      <span data-i18n="context_fullscreen">🖥️ 切换全屏</span>
+      <span>🖥️ 切换全屏</span>
     </li>
     <li class="separator"></li>
     <li data-action="reload">
-      <span data-i18n="context_reload">🔄 刷新页面</span>
+      <span>🔄 刷新页面</span>
     </li>
      <li class="separator"></li>
     <li data-action="wallpaper">
-      <span data-i18n="context_wallpaper">🖼️ 更换壁纸</span>
+      <span>🖼️ 更换壁纸</span>
     </li>
      <li class="separator"></li>
     <li class="has-submenu">
-  <span data-i18n="context_mouse_trail">✨ 鼠标拖尾</span>
+      <span data-i18n="context_mouse_style">🖱️ 鼠标样式</span>
+      <span class="arrow">▶</span>
+      <ul class="submenu" id="mouseStyleSubmenu">
+        <li data-action="mouse-xiaoshou">👋 小手鼠标</li>
+        <li class="separator"></li>
+        <li data-action="mouse-MC">🗡️ MC指针</li>
+        <li class="separator"></li>
+        <li data-action="mouse-furina">🐬 芙宁娜</li>
+        <li class="separator"></li>
+        <li data-action="mouse-Breeze Snow HD">☃️ 微风雪</li>
+        <li class="separator"></li>
+        <li data-action="mouse-Minimalist">🔲 极简之美</li>
+      </ul>
+    </li>
+     <li class="separator"></li>
+    <li class="has-submenu">
+  <span>✨ 鼠标拖尾</span>
   <span class="arrow">▶</span>
   <ul class="submenu">
-    <li data-action="trail-particle" data-i18n="trail_particle">⚪ 珍珠泡沫</li>
+    <li data-action="trail-particle">⚪ 珍珠泡沫</li>
       <li class="separator"></li>
-    <li data-action="trail-line" data-i18n="trail_line">➖ 彩虹流光</li>
+    <li data-action="trail-line">➖ 彩虹流光</li>
       <li class="separator"></li>
-    <li data-action="trail-sparkle" data-i18n="trail_sparkle">✨ 闪烁星尘</li>
+    <li data-action="trail-sparkle">✨ 闪烁星尘</li>
     <li class="separator"></li>
-    <li data-action="trail-laser" data-i18n="trail_laser">⚡️ 极光射线</li>
+    <li data-action="trail-laser">⚡️ 极光射线</li>
     <li class="separator"></li>
-    <li data-action="trail-off" style="color:#ff6b6b" data-i18n="trail_off">🚫 关闭特效</li>
+    <li data-action="trail-off" style="color:#ff6b6b">🚫 关闭特效</li>
     <li class="separator"></li>
     <li id="memeToggleItem" data-action="trail-meme" class="meme-toggle-item">
       <span id="memeCheckIcon" class="meme-check-icon">☐</span>
-      <span data-i18n="meme_click">表情包点击</span>
+      <span>表情包点击</span>
     </li>
   </ul>
 </li>
          <li class="separator"></li>
     <li data-action="zen">
-      <span data-i18n="context_zen">🍃 禅模式 (显/隐UI)</span>
-    </li>
-         <li class="separator"></li>
-    <li data-action="language">
-      <span data-i18n="context_language">🌐 切换语言</span>
+      <span>🍃 禅模式 (显/隐UI)</span>
     </li>
          <li class="separator"></li>
     <li data-action="about">
-      <span data-i18n="context_about">🐱 关于作者</span>
+      <span>🐱 关于作者</span>
     </li>
   </ul>
 </div>
 <div id="inputContextMenu" class="context-menu">
   <ul class="menu-list">
-    <li data-action="copy" data-i18n="input_copy">📄 复制</li>
+    <li data-action="copy">📄 复制</li>
         <li class="separator"></li>
-    <li data-action="cut" data-i18n="input_cut">✂️ 剪切</li>
+    <li data-action="cut">✂️ 剪切</li>
         <li class="separator"></li>
-    <li data-action="paste" data-i18n="input_paste">📋 粘贴</li>
+    <li data-action="paste">📋 粘贴</li>
     <li class="separator"></li>
-    <li data-action="select-all" data-i18n="input_select_all">🔲 全选</li>
+    <li data-action="select-all">🔲 全选</li>
   </ul>
 </div>
 <div id="cmdPaletteOverlay" class="cmd-overlay">
   <div class="cmd-box">
     <div class="cmd-header">
       <span class="cmd-icon">></span>
-      <input type="text" id="cmdInput" placeholder="搜索..." data-i18n-placeholder="search_placeholder" style="font-size: 16px; font-style: italic;" autocomplete="off">
-      <span class="cmd-hint" data-i18n="cmd_hint_close">点击ESC关闭</span>
+      <input type="text" id="cmdInput" placeholder="搜索..." data-i18n-placeholder="autogen_131" style="font-size: 16px; font-style: italic;" autocomplete="off">
+      <span class="cmd-hint" data-i18n="autogen_103">点击ESC关闭</span>
     </div>
     <ul id="cmdList" class="cmd-list">
       </ul>
@@ -687,24 +699,24 @@
     <img src="cat/maozhua.png" class="decor-paw" alt="paw">
     
     <div class="welcome-header" style="margin-bottom: 20px;">
-      <h2 style="font-size: 22px; color: #ffffff !important; text-shadow: none !important;" data-i18n="welcome_title">🎉 欢迎使用 G-web！</h2>
+      <h2 style="font-size: 22px; color: #ffffff !important; text-shadow: none !important;">🎉 欢迎使用 G-web！</h2>
     </div>
     
     <div class="welcome-body" style="font-size: 14px; color: #ffffff; line-height: 1.6;">
-      <p style="margin-bottom: 15px;" data-i18n="welcome_intro">为了确保最佳体验，请完成以下基础配置：</p>
+      <p style="margin-bottom: 15px;">为了确保最佳体验，请完成以下基础配置：</p>
 
       <div style="background: transparent; border-radius: 8px; padding: 12px 15px; margin-bottom: 20px; border: 1px solid #eaeaea;">
         <div style="margin-bottom: 10px;">
-          <strong style="color: #ffffff; font-weight: 600;" data-i18n="welcome_gpu_title">1. 启用图形加速</strong><br>
-          <span style="font-size: 13px; color: #ffffff;" data-i18n="welcome_gpu_desc">设置 → 系统与性能 → 开启“图形加速”</span>
+          <strong style="color: #ffffff; font-weight: 600;">1. 启用图形加速</strong><br>
+          <span style="font-size: 13px; color: #ffffff;">设置 → 系统与性能 → 开启“图形加速”</span>
         </div>
         <div>
-          <strong style="color: #ffffff; font-weight: 600;" data-i18n="welcome_edge_title">2. 关闭 Edge 悬浮条</strong><br>
-          <span style="font-size: 13px; color: #ffffff;" data-i18n="welcome_edge_desc">设置 → 外观 → 上下文菜单 → 关闭“视频快速操作”</span>
+          <strong style="color: #ffffff; font-weight: 600;">2. 关闭 Edge 悬浮条</strong><br>
+          <span style="font-size: 13px; color: #ffffff;">设置 → 外观 → 上下文菜单 → 关闭“视频快速操作”</span>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; color: #ffffff; font-size: 13px;" data-i18n-html="welcome_features">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; color: #ffffff; font-size: 13px;">
         <div>🤖 <strong>内置 AI</strong> 与经典怀旧游戏</div>
         <div>🔍 建议缩放 <strong>90%</strong></div>
         <div>鼠标 <strong>右键</strong> 个性化</div>
@@ -713,10 +725,10 @@
     </div>
 
     <div style="text-align: center; margin-top: 20px;">
-      <button id="closeWelcomeBtn" data-i18n="enter_explore" style="width: 30%; padding: 10px; background: transparent !important; color: #ffffff !important; border: 1px solid #ccc !important; border-radius: 20px; cursor: pointer; font-weight: bold; box-shadow: none !important; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)';" onmouseout="this.style.background='transparent';">进入探索</button>
+      <button id="closeWelcomeBtn" style="width: 30%; padding: 10px; background: transparent !important; color: #ffffff !important; border: 1px solid #ccc !important; border-radius: 20px; cursor: pointer; font-weight: bold; box-shadow: none !important; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)';" onmouseout="this.style.background='transparent';">进入探索</button>
     </div>
     
-    <a href="#" id="copyrightLink" class="copyright-link-reset" data-i18n="disclaimer_link">📜 免责声明</a>
+    <a href="#" id="copyrightLink" class="copyright-link-reset">📜 免责声明</a>
   </div>
 </div><!-- 版权声明弹窗 -->
 <div id="copyrightModal" class="copyright-modal">
@@ -724,10 +736,10 @@
     <button class="copyright-close" id="copyrightClose">×</button>
     
     <div class="copyright-header">
-      <h2 data-i18n="copyright_title">📜 版权声明</h2>
+      <h2>📜 版权声明</h2>
     </div>
     
-    <div class="copyright-body" data-i18n-html="copyright_body">
+    <div class="copyright-body">
       <p><strong>扩展中壁纸均来自于 Wallpaper Engine 创意工坊、致美化和 Pinterest</strong>，著作权归原作者所有。本扩展仅作个人非商业推荐，若您是原作者并希望调整内容，请随时联系我。</p>
       
       <p style="margin-top: 15px;">本扩展内壁纸经过裁剪处理，仅供个人欣赏与非商业用途，严禁用于盈利、二次销售、平台搬运、AI训练等行为。</p>
@@ -737,12 +749,12 @@
   </div>
 </div>
 <div id="zenTimeWidget">
-  <div id="zenDate" data-i18n="zen_date_sample">2024年01月01日</div>
+  <div id="zenDate">2024年01月01日</div>
   <div id="zenTime">&nbsp;1&nbsp;2:&nbsp;0&nbsp;0&nbsp;</div>
   <div id="zenInfo">
-    <span id="zenWeekDay" data-i18n="zen_week_sample">星期一</span>
+    <span id="zenWeekDay">星期一</span>
     <span>&nbsp;|&nbsp;</span>
-    <span id="zenWeather" data-i18n="zen_weather_sample">晴 25℃</span>
+    <span id="zenWeather">晴 25℃</span>
   </div>
 </div>
 <div id="zenLyricsWidget">
@@ -750,16 +762,16 @@
 </div>
 
 <!-- 禅模式快捷键提示按钮 & 弹窗 -->
-<button id="zenHintBtn" title="音乐快捷键提示" aria-label="禅模式快捷键提示" data-i18n-title="zen_hint_title" data-i18n-aria-label="zen_hint_aria">?</button>
+<button id="zenHintBtn" title="音乐快捷键提示" aria-label="禅模式快捷键提示">?</button>
 <div id="zenHintPopup" role="tooltip" aria-hidden="true" style="transition: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);">
-  <div class="zen-hint-row"><kbd>Space</kbd><span data-i18n="zen_hint_play">播放 / 暂停</span></div>
-  <div class="zen-hint-row"><kbd>←</kbd><span data-i18n="zen_hint_prev">上一首</span></div>
-  <div class="zen-hint-row"><kbd>→</kbd><span data-i18n="zen_hint_next">下一首</span></div>
+  <div class="zen-hint-row"><kbd>Space</kbd><span>播放 / 暂停</span></div>
+  <div class="zen-hint-row"><kbd>←</kbd><span>上一首</span></div>
+  <div class="zen-hint-row"><kbd>→</kbd><span>下一首</span></div>
   <div class="zen-hint-divider"></div>
-  <div class="zen-hint-tip" data-i18n="zen_hint_tip">只能够控制右侧面板的音乐播放器组件的音乐，无法控制外部网页的音乐</div>
+  <div class="zen-hint-tip">只能够控制右侧面板的音乐播放器组件的音乐，无法控制外部网页的音乐</div>
 </div>
-<script src="i18n.js"></script>
 <script src="config.js"></script>
+<script src="i18n.js"></script>
 <script src="lunar.js"></script>
  <script src="main.js"></script>
  <script src="2.js"></script>
@@ -771,10 +783,10 @@
 
 <!-- 禅模式糯米关怀通知 -->
 <div id="zenCareNotif">
-  <img id="zenCareAvatar" src="images/head2.png" alt="糯米" data-i18n-alt="zen_care_name">
+  <img id="zenCareAvatar" src="images/head2.png" alt="糯米">
   <div id="zenCareBody">
-    <span id="zenCareName" data-i18n="zen_care_name">糯米</span>
-    <span id="zenCareText" data-i18n="zen_care_text">记得喝水哦喵～</span>
+    <span id="zenCareName">糯米</span>
+    <span id="zenCareText">记得喝水哦喵～</span>
   </div>
 </div>
 <script src="lib/jsnes.min.js"></script>

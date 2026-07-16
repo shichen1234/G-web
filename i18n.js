@@ -3,106 +3,186 @@
 
   const LOCALES = ['zh_CN', 'en'];
   const STORAGE_KEY = 'gweb_locale';
+  const LIST_SEPARATOR = '|||';
+  const ATTRS = ['title', 'placeholder', 'alt', 'aria-label', 'value'];
+  const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'NOSCRIPT']);
 
-  function normalizeLocale(value) {
-    const lang = String(value || '').replace('-', '_').toLowerCase();
-    return lang.startsWith('zh') ? 'zh_CN' : 'en';
+  function runtimeUrl(path) {
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
+      return chrome.runtime.getURL(path);
+    }
+    return path;
   }
 
-  function browserLocale() {
+  function loadJson(path) {
     try {
-      if (window.chrome && chrome.i18n && chrome.i18n.getUILanguage) {
-        return normalizeLocale(chrome.i18n.getUILanguage());
-      }
-    } catch (e) {}
-    return normalizeLocale(navigator.language || navigator.userLanguage || 'zh_CN');
-  }
-
-  function selectedLocale() {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return LOCALES.includes(saved) ? saved : browserLocale();
-  }
-
-  function readLocaleFile(locale) {
-    try {
-      const url = chrome.runtime.getURL(`_locales/${locale}/messages.json`);
       const xhr = new XMLHttpRequest();
-      xhr.open('GET', url, false);
-      xhr.overrideMimeType('application/json; charset=utf-8');
+      xhr.open('GET', runtimeUrl(path), false);
       xhr.send(null);
-      if (xhr.status >= 200 && xhr.status < 300) {
-        return JSON.parse(xhr.responseText);
-      }
-    } catch (e) {}
+      if (xhr.status >= 200 && xhr.status < 300) return JSON.parse(xhr.responseText);
+    } catch (_) {}
     return {};
   }
 
-  const locale = selectedLocale();
-  const fallbackMessages = readLocaleFile('zh_CN');
-  const activeMessages = locale === 'zh_CN'
-    ? fallbackMessages
-    : Object.assign({}, fallbackMessages, readLocaleFile(locale));
+  function preferredLocale() {
+    const navLang = (navigator.language || '').toLowerCase();
+    return navLang.startsWith('en') ? 'en' : 'zh_CN';
+  }
 
-  function rawMessage(key) {
-    const entry = activeMessages[key] || fallbackMessages[key];
+  const locale = preferredLocale();
+  document.documentElement.classList.add('lang-' + locale);
+  const zhMessages = loadJson('_locales/zh_CN/messages.json');
+  const activeMessages = loadJson(`_locales/${locale}/messages.json`);
+
+  function rawMessage(messages, key) {
+    const entry = messages && messages[key];
     return entry && typeof entry.message === 'string' ? entry.message : '';
   }
 
-  function replaceParams(message, params) {
-    if (!params) return message;
-    return message.replace(/\{(\w+)\}/g, (match, name) => (
-      Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
+  function format(text, params) {
+    if (!params) return text;
+    return String(text).replace(/\{(\w+)\}/g, (_, name) => (
+      params[name] !== undefined ? String(params[name]) : `{${name}}`
     ));
   }
 
-  function t(key, params, fallback = '') {
-    const msg = rawMessage(key);
-    return replaceParams(msg || fallback || key, params);
+  function splitList(text) {
+    return String(text || '').split(LIST_SEPARATOR).filter(Boolean);
   }
 
-  function list(baseKey, fallback = []) {
-    const items = [];
-    for (let i = 1; i <= 80; i++) {
-      const msg = rawMessage(`${baseKey}_${i}`);
-      if (!msg) break;
-      items.push(msg);
-    }
-    return items.length ? items : fallback;
+  function t(key, fallback, params) {
+    const message = rawMessage(activeMessages, key) || rawMessage(zhMessages, key) || fallback || key;
+    return format(message, params);
   }
 
-  function pick(baseKey, fallback = []) {
-    const items = list(baseKey, fallback);
-    return items[Math.floor(Math.random() * items.length)];
+  function list(key, fallback) {
+    const message = rawMessage(activeMessages, key) || rawMessage(zhMessages, key);
+    if (message) return splitList(message);
+    return Array.isArray(fallback) ? fallback.slice() : [];
   }
 
-  function setText(el, key) {
-    const value = rawMessage(key);
-    if (value) el.textContent = value;
+  const exactMap = new Map();
+  const phraseMap = [];
+
+  Object.keys(zhMessages || {}).forEach(key => {
+    const zh = rawMessage(zhMessages, key);
+    const active = rawMessage(activeMessages, key);
+    if (!zh || !active || zh === active) return;
+
+    const zhParts = splitList(zh);
+    const activeParts = splitList(active);
+    const pairs = zhParts.length > 1 && zhParts.length === activeParts.length
+      ? zhParts.map((source, i) => [source, activeParts[i]])
+      : [[zh, active]];
+
+    pairs.forEach(([source, target]) => {
+      if (!source || !target || source === target) return;
+      exactMap.set(source.trim(), target);
+      if (source.trim().length >= 2) phraseMap.push([source.trim(), target]);
+    });
+  });
+
+  phraseMap.sort((a, b) => b[0].length - a[0].length);
+
+  function translateText(value) {
+    if (locale === 'zh_CN' || typeof value !== 'string' || !/[\u4e00-\u9fff]/.test(value)) return value;
+    const leading = value.match(/^\s*/)[0];
+    const trailing = value.match(/\s*$/)[0];
+    const core = value.trim();
+    if (exactMap.has(core)) return `${leading}${exactMap.get(core)}${trailing}`;
+
+    let translated = value;
+    phraseMap.forEach(([source, target]) => {
+      if (translated.includes(source)) translated = translated.split(source).join(target);
+    });
+    return translated;
   }
 
-  function setHtml(el, key) {
-    const value = rawMessage(key);
-    if (value) el.innerHTML = value;
-  }
-
-  function setAttr(el, attr, key) {
-    const value = rawMessage(key);
-    if (value) el.setAttribute(attr, value);
-  }
-
-  function apply(root = document) {
+  function applyDataAttrs(root) {
     if (!root || !root.querySelectorAll) return;
-    root.querySelectorAll('[data-i18n]').forEach(el => setText(el, el.dataset.i18n));
-    root.querySelectorAll('[data-i18n-html]').forEach(el => setHtml(el, el.dataset.i18nHtml));
-    root.querySelectorAll('[data-i18n-placeholder]').forEach(el => setAttr(el, 'placeholder', el.dataset.i18nPlaceholder));
-    root.querySelectorAll('[data-i18n-title]').forEach(el => setAttr(el, 'title', el.dataset.i18nTitle));
-    root.querySelectorAll('[data-i18n-alt]').forEach(el => setAttr(el, 'alt', el.dataset.i18nAlt));
-    root.querySelectorAll('[data-i18n-aria-label]').forEach(el => setAttr(el, 'aria-label', el.dataset.i18nAriaLabel));
+    root.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n, el.textContent); });
+    root.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml, el.innerHTML); });
+    root.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder, el.placeholder); });
+    root.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.dataset.i18nTitle, el.title); });
+    root.querySelectorAll('[data-i18n-alt]').forEach(el => { el.alt = t(el.dataset.i18nAlt, el.alt); });
+    root.querySelectorAll('[data-i18n-aria-label]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel, el.getAttribute('aria-label'))); });
+  }
+
+  function translateAttributes(el) {
+    if (!el || el.nodeType !== Node.ELEMENT_NODE || SKIP_TAGS.has(el.tagName)) return;
+    ATTRS.forEach(attr => {
+      if (!el.hasAttribute(attr)) return;
+      const oldValue = el.getAttribute(attr);
+      const newValue = translateText(oldValue);
+      if (newValue !== oldValue) el.setAttribute(attr, newValue);
+    });
+  }
+
+  function translateNode(node) {
+    if (!node) return;
+    if (node.nodeType === Node.TEXT_NODE) {
+      const parent = node.parentElement;
+      if (!parent || SKIP_TAGS.has(parent.tagName)) return;
+      const translated = translateText(node.nodeValue);
+      if (translated !== node.nodeValue) node.nodeValue = translated;
+      return;
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE || SKIP_TAGS.has(node.tagName)) return;
+    translateAttributes(node);
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+      acceptNode(textNode) {
+        const parent = textNode.parentElement;
+        return parent && !SKIP_TAGS.has(parent.tagName)
+          ? NodeFilter.FILTER_ACCEPT
+          : NodeFilter.FILTER_REJECT;
+      }
+    });
+    let current;
+    while ((current = walker.nextNode())) translateNode(current);
+  }
+
+  let applying = false;
+  function apply(root = document) {
+    if (applying) return;
+    applying = true;
+    try {
+      applyDataAttrs(root);
+      if (root === document) {
+        translateNode(document.body);
+      } else {
+        translateNode(root);
+      }
+    } finally {
+      applying = false;
+    }
+  }
+
+  function installObserver() {
+    const observer = new MutationObserver(records => {
+      if (applying || locale === 'zh_CN') return;
+      applying = true;
+      try {
+        records.forEach(record => {
+          if (record.type === 'characterData') translateNode(record.target);
+          if (record.type === 'attributes') translateAttributes(record.target);
+          record.addedNodes && record.addedNodes.forEach(translateNode);
+        });
+      } finally {
+        applying = false;
+      }
+    });
+    observer.observe(document.documentElement, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ATTRS
+    });
   }
 
   function setLocale(nextLocale) {
-    const normalized = normalizeLocale(nextLocale);
-    localStorage.setItem(STORAGE_KEY, normalized);
+    if (!LOCALES.includes(nextLocale)) return;
+    localStorage.setItem(STORAGE_KEY, nextLocale);
     location.reload();
   }
 
@@ -110,26 +190,44 @@
     setLocale(locale === 'zh_CN' ? 'en' : 'zh_CN');
   }
 
-  document.documentElement.lang = locale === 'zh_CN' ? 'zh-CN' : 'en';
-
-  window.GwebI18n = {
-    locale,
-    isZh: locale === 'zh_CN',
-    t,
-    list,
-    pick,
-    apply,
-    setLocale,
-    toggleLocale
+  const nativeAlert = window.alert;
+  window.alert = function (message) {
+    return nativeAlert.call(window, translateText(String(message)));
+  };
+  const nativeConfirm = window.confirm;
+  window.confirm = function (message) {
+    return nativeConfirm.call(window, translateText(String(message)));
   };
 
-  window.gwT = (key, fallback, params) => t(key, params, fallback);
-  window.gwList = (key, fallback) => list(key, fallback);
-  window.gwPick = (key, fallback) => pick(key, fallback);
+  const canvasProto = window.CanvasRenderingContext2D && window.CanvasRenderingContext2D.prototype;
+  if (canvasProto && canvasProto.fillText) {
+    const nativeFillText = canvasProto.fillText;
+    canvasProto.fillText = function (text, ...args) {
+      return nativeFillText.call(this, translateText(String(text)), ...args);
+    };
+    const nativeStrokeText = canvasProto.strokeText;
+    if (nativeStrokeText) {
+      canvasProto.strokeText = function (text, ...args) {
+        return nativeStrokeText.call(this, translateText(String(text)), ...args);
+      };
+    }
+  }
+
+  window.GwebI18n = { locale, t, list, translate: translateText, apply, setLocale, toggleLocale };
+  window.gwT = t;
+  window.gwList = list;
+  window.gwPick = function (key, fallback) {
+    const arr = list(key, fallback);
+    return arr[Math.floor(Math.random() * arr.length)] || '';
+  };
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => apply(document));
+    document.addEventListener('DOMContentLoaded', () => {
+      apply(document);
+      installObserver();
+    });
   } else {
     apply(document);
+    installObserver();
   }
 })();
