@@ -1,4 +1,4 @@
-const CURSOR_STYLE = `
+﻿const CURSOR_STYLE = `
 html, body, *, html *, body *, [style*="cursor"] { cursor: url('mouse/xiaoshou/Zhand.cur'), auto !important; }
 a, a *, button:not(:disabled), button:not(:disabled) *, [role="button"], [role="button"] *, summary, label, input[type="checkbox"], input[type="radio"], input[type="range"], select, option { cursor: url('mouse/xiaoshou/Zlink.cur'), pointer !important; }
 input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"], input[type="number"], textarea, [contenteditable="true"] { cursor: url('mouse/xiaoshou/Zbeam.cur') 16 16, text !important; }
@@ -12,10 +12,40 @@ function applySandboxCursorStyle() {
     cursorStyle.id = 'dynamic-cursor-style';
     document.head.appendChild(cursorStyle);
   }
-  const styleName = window.currentSandboxMouseStyleName || 'xiaoshou';
-  const config = window.currentSandboxMouseConfig || { Zhand: 'cur', Zlink: 'cur', Zbeam: 'cur', Zunavail: 'cur' };
+  
+  // 🔧 核心修复：尝试从全局变量获取，没有则从 localStorage 恢复
+  let styleName = window.currentSandboxMouseStyleName;
+  let cursorCss = window.currentSandboxCursorCss;
+  
+  if (!styleName) {
+    try {
+      styleName = localStorage.getItem('sandbox_mouse_style_name') || 'xiaoshou';
+      const cssStr = localStorage.getItem('sandbox_cursor_css');
+      cursorCss = cssStr ? JSON.parse(cssStr) : {};
+    } catch (e) {
+      styleName = 'xiaoshou';
+      cursorCss = {};
+    }
+    window.currentSandboxMouseStyleName = styleName;
+    window.currentSandboxCursorCss = cursorCss;
+  }
+  
+  // ============================================================
+  // 🔧 核心修复：彻底清理所有元素的inline cursor属性
+  // ============================================================
+  const allElements = document.querySelectorAll('*');
+  allElements.forEach(el => {
+    if (el.style.cursor) {
+      el.style.removeProperty('cursor');
+    }
+  });
+  
+  // 也清理文档元素和body的inline样式
+  document.documentElement.style.removeProperty('cursor');
+  if (document.body) document.body.style.removeProperty('cursor');
 
   if (styleName === 'furina') {
+    // 芙宁娜模式：彻底隐藏所有系统鼠标
     cursorStyle.textContent = `
       html, body, *, html *, body *,
       a, a *, button, button *, [role="button"], [role="button"] *, summary, label, input, select, option, textarea, [contenteditable="true"],
@@ -23,21 +53,87 @@ function applySandboxCursorStyle() {
         cursor: none !important;
       }
     `;
-    return;
+    // 强制作用到文档根元素
+    document.documentElement.style.setProperty('cursor', 'none', 'important');
+    if (document.body) document.body.style.setProperty('cursor', 'none', 'important');
+    console.log('[sandbox] Cursor style applied (furina):', styleName);
+  } else {
+    // 其他四个样式：使用.cur文件
+    const handCss = cursorCss.hand || `auto`;
+    const linkCss = cursorCss.link || `pointer`;
+    const beamCss = cursorCss.beam || `text`;
+    const unavailCss = cursorCss.unavail || `not-allowed`;
+
+    cursorStyle.textContent = `
+      html, body, *, html *, body *, [style*="cursor"] { 
+        cursor: ${handCss} !important; 
+      }
+      a, a *, 
+      button:not(:disabled), button:not(:disabled) *, 
+      [role="button"], [role="button"] *, 
+      summary, label, 
+      input[type="checkbox"], input[type="radio"], input[type="range"], 
+      select, option { 
+        cursor: ${linkCss} !important; 
+      }
+      input[type="text"], input[type="search"], input[type="email"], input[type="password"], 
+      input[type="url"], input[type="number"], 
+      textarea, [contenteditable="true"] { 
+        cursor: ${beamCss} !important; 
+      }
+      button:disabled, button:disabled *, [aria-disabled="true"] { 
+        cursor: ${unavailCss} !important; 
+      }
+    `;
+    console.log('[sandbox] Cursor style applied (non-furina):', styleName, 'with URLs:', cursorCss);
+  }
+  
+  // 🔧 核心修复：强制浏览器重新计算样式
+  // 这通过修改DOM来触发重排，但不实际改变任何东西
+  if (document.documentElement.offsetHeight) {
+    // 访问offsetHeight会触发强制同步布局
+  }
+  
+  // 让所有内联样式元素触发样式重新计算
+  allElements.forEach(el => {
+    if (el.style.length > 0 || el.classList.length > 0) {
+      // 通过读取和重写一个不相关的属性来强制重新计算
+      const temp = el.style.transition;
+      el.style.transition = temp;
+    }
+  });
+}
+
+// ============================================================
+function handleCursorStyleMessage(event) {
+  if (!event.data || event.data.type !== 'CHANGE_MOUSE_STYLE') return;
+  const { styleName } = event.data;
+
+  // 必须保存styleName到全局变量和localStorage，以防沙盒重载
+  window.currentSandboxMouseStyleName = styleName;
+  if (event.data.config) window.currentSandboxMouseConfig = event.data.config;
+  if (event.data.cursorCss) window.currentSandboxCursorCss = event.data.cursorCss;
+
+  // 保存到 localStorage 以便沙盒重载后恢复
+  try {
+    localStorage.setItem('sandbox_mouse_style_name', styleName);
+    localStorage.setItem('sandbox_cursor_css', JSON.stringify(event.data.cursorCss || {}));
+  } catch (e) {
+    console.warn('[sandbox] Failed to save to localStorage:', e);
   }
 
-  const handCss = (window.currentSandboxCursorCss && window.currentSandboxCursorCss.hand) ? window.currentSandboxCursorCss.hand : `url('${new URL(`mouse/${styleName}/Zhand.${config.Zhand || 'cur'}`, window.location.href).href}'), auto`;
-  const linkCss = (window.currentSandboxCursorCss && window.currentSandboxCursorCss.link) ? window.currentSandboxCursorCss.link : `url('${new URL(`mouse/${styleName}/Zlink.${config.Zlink || 'cur'}`, window.location.href).href}'), pointer`;
-  const beamCss = (window.currentSandboxCursorCss && window.currentSandboxCursorCss.beam) ? window.currentSandboxCursorCss.beam : `url('${new URL(`mouse/${styleName}/Zbeam.${config.Zbeam || 'cur'}`, window.location.href).href}') 16 16, text`;
-  const unavailCss = (window.currentSandboxCursorCss && window.currentSandboxCursorCss.unavail) ? window.currentSandboxCursorCss.unavail : `url('${new URL(`mouse/${styleName}/Zunavail.${config.Zunavail || 'cur'}`, window.location.href).href}'), not-allowed`;
-
-  cursorStyle.textContent = `
-    html, body, *, html *, body *, [style*="cursor"] { cursor: ${handCss} !important; }
-    a, a *, button:not(:disabled), button:not(:disabled) *, [role="button"], [role="button"] *, summary, label, input[type="checkbox"], input[type="radio"], input[type="range"], select, option { cursor: ${linkCss} !important; }
-    input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"], input[type="number"], textarea, [contenteditable="true"] { cursor: ${beamCss} !important; }
-    button:disabled, button:disabled *, [aria-disabled="true"] { cursor: ${unavailCss} !important; }
-  `;
+  applySandboxCursorStyle();
+  console.log('[sandbox] CHANGE_MOUSE_STYLE received:', styleName);
 }
+
+function bindCursorStyleListener() {
+  // 先移除（如果存在）再添加，避免同一个函数引用被重复注册
+  window.removeEventListener('message', handleCursorStyleMessage);
+  window.addEventListener('message', handleCursorStyleMessage);
+}
+
+// 脚本刚加载、壁纸内容还没写入前，也需要先绑定一次
+bindCursorStyleListener();
 
 let pendingPointerMove = null;
 let pointerMoveRaf = 0;
@@ -55,13 +151,11 @@ function postPointerEvent(eventType, e) {
 }
 
 window.addEventListener('message', function(event) {
+  // CHANGE_MOUSE_STYLE 统一交给 handleCursorStyleMessage 处理（见上方），
+  // 这里直接跳过，避免 document.write 之前这个监听器还存活的短暂窗口期内
+  // 两个监听器同时触发导致重复执行。
   if (event.data && event.data.type === 'CHANGE_MOUSE_STYLE') {
-     const { styleName, config, cursorCss } = event.data;
-     window.currentSandboxMouseStyleName = styleName;
-     if (config) window.currentSandboxMouseConfig = config;
-     if (cursorCss) window.currentSandboxCursorCss = cursorCss;
-     applySandboxCursorStyle();
-     return;
+    return;
   }
 
   if (event.data && event.data.resourceMap) {
@@ -250,6 +344,14 @@ window.addEventListener('message', function(event) {
     document.write(finalHtml);
     document.close();
   } catch (e) {}
+
+  // 🔧 核心修复：document.open()/write()/close() 已经把 window 上原有的
+  // message 监听器（包括这次事件正在执行的这个监听器自身）全部清空了。
+  // 必须在这里立刻重新绑定一次鼠标样式监听器，否则壁纸加载完成后，
+  // 用户在菜单里切换鼠标样式时，父页面发出的 CHANGE_MOUSE_STYLE 消息
+  // 将不会被任何监听器接收到，沙盒里显示的鼠标永远停在切换前的样式，
+  // 直到刷新整个页面重新执行 sandbox.js 顶层代码为止。
+  bindCursorStyleListener();
 
   const injectCustomAssets = () => {
     const baseStyle = document.createElement('style');
@@ -448,5 +550,12 @@ renderer.domElement.style.pointerEvents = 'auto'; // 如果有 three.js canvas
 
 window.addEventListener('load', function() {
   console.log('[sandbox] ready');
+  
+  // 🔧 核心修复：沙盒加载完成时，尝试恢复保存的鼠标样式
+  // 这对于沙盒重载或初始加载都很重要
+  setTimeout(() => {
+    applySandboxCursorStyle();
+  }, 50);
+  
   window.parent.postMessage({ type: 'SANDBOX_READY' }, '*');
 });

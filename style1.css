@@ -895,9 +895,7 @@ form input[type="text"]:focus {
     .wallpaper-change-wrapper:hover .wallpaper-btn {
       opacity: 1;
     }
-    #videoUpload {
-      display: none;
-    }#suggestionList {
+    #suggestionList {
       list-style: none;
       padding: 0;
       margin: 8px auto 0 auto;
@@ -2090,7 +2088,8 @@ transition: transform 0.2s ease;
   top: 15px; 
   left: 50%;
   transform: translateX(-50%);
-  width: 300px;
+  width: 420px;
+  max-width: 90%;
   font-size: 16px;
   display: flex;
   flex-direction: column;

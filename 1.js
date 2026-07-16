@@ -627,7 +627,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const modal = document.getElementById("wallpaperModal");
   const grid = document.querySelector(".wallpaper-grid");
   const closeBtn = document.getElementById("closeModal");
-  const videoUpload = document.getElementById("videoUpload");
   const bgImage = document.getElementById("bgImage");
 
   // Get sidebar tabs
@@ -714,7 +713,13 @@ async function renderWallpapers(type) {
         if (statusBar) {
           statusBar.style.display = 'flex';
           const pathText = document.getElementById('customFolderPathText');
-          if (pathText) pathText.textContent = '当前本地绝对/选定目录：' + (window._customWallpaperFolderPath || '已选择壁纸文件夹');
+          const label = typeof window.gwT === 'function'
+            ? window.gwT('custom_folder_path_label', '当前选择的文件夹为：')
+            : '当前选择的文件夹为：';
+          const placeholder = typeof window.gwT === 'function'
+            ? window.gwT('custom_folder_not_selected', '已选择壁纸文件夹')
+            : '已选择壁纸文件夹';
+          if (pathText) pathText.textContent = label + (window._customWallpaperFolderPath || placeholder);
         }
         renderCustomFolderCards();
       }
@@ -752,10 +757,10 @@ function _ensureCustomFolderStatusBar() {
     statusBar.innerHTML = `
       <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; flex: 1; margin-right: 12px;">
         <span style="font-size: 18px; flex-shrink: 0;">📁</span>
-        <span style="font-size: 14px; color: #222; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 1px rgba(255,255,255,0.9);" id="customFolderPathText">当前绝对/选定目录：...</span>
+        <span style="font-size: 14px; color: #222; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 1px rgba(255,255,255,0.9);" id="customFolderPathText">当前选择的文件夹为：...</span>
       </div>
       <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
-        <button id="refreshFolderBtn" style="
+        <button id="refreshFolderBtn" data-i18n="custom_folder_rescan_button" style="
           background: #34a853;
           color: white;
           border: none;
@@ -767,8 +772,8 @@ function _ensureCustomFolderStatusBar() {
           white-space: nowrap;
           box-shadow: 0 4px 12px rgba(52, 168, 83, 0.3);
           transition: all 0.2s ease;
-        " title="扫描重新探测文件夹内新增的壁纸">🔄 重新探测</button>
-        <button id="changeFolderBtn" style="
+        " data-i18n-title="custom_folder_rescan_title" title="扫描重新探测文件夹内新增的壁纸">🔄 重新探测</button>
+        <button id="changeFolderBtn" data-i18n="change_folder_path_button" style="
           background: #0b74de;
           color: white;
           border: none;
@@ -873,7 +878,9 @@ function renderCustomFolderCards() {
       box-shadow: 0 2px 6px rgba(0,0,0,0.25);
       pointer-events: none;
     `;
-    badge.textContent = fileItem.isStatic ? "静态" : "动态";
+    badge.textContent = fileItem.isStatic
+      ? (typeof window.gwT === 'function' ? window.gwT('custom_folder_static_label', '静态') : '静态')
+      : (typeof window.gwT === 'function' ? window.gwT('custom_folder_dynamic_label', '动态') : '动态');
 
     const nameLabel = document.createElement("div");
     nameLabel.style.cssText = `
@@ -899,21 +906,20 @@ function renderCustomFolderCards() {
     tile.appendChild(thumbBox);
 
     thumbBox.addEventListener("click", async () => {
-      const modal = document.getElementById("wallpaperModal");
       const blobToUse = fileItem.blob || fileItem;
       try {
         await setBackgroundFromBlob(blobToUse);
-        if (typeof window.cleanupUnusedWallpapers === 'function') {
-          window.cleanupUnusedWallpapers().catch(() => {});
-        }
+        // 🔧 修复：应用自定义文件夹壁纸后不再自动调用 cleanupUnusedWallpapers()。
+        // 该函数会把 IndexedDB 里除当前壁纸/每日壁纸/自定义文件夹记录之外的所有
+        // 缓存条目（包括 static_N、wallpaper_N、webwp_N 等已下载的静态/动态/网页壁纸）
+        // 全部删除，导致"更换壁纸"面板里原本已下载好的壁纸缓存状态（绿点）被清空。
+        // 如需清理空间，请改为提供一个用户手动触发的"清理未使用壁纸"入口。
       } catch (e) {
         console.error('[G-web] 设置选择的壁纸失败:', e);
       }
 
-      if (modal) {
-        modal.classList.remove("show");
-        setTimeout(() => { modal.style.display = "none"; }, 350);
-      }
+      // 🔧 修复：应用后不再自动关闭"更换壁纸"面板，和静态/动态壁纸库的行为保持一致，
+      // 方便用户在自定义文件夹里连续切换、对比多张壁纸，满意后自己点右上角 × 关闭即可。
 
       localStorage.setItem("wallpaperType", "upload");
       localStorage.setItem("currentWallpaperKey", "bgVideo");
@@ -942,7 +948,10 @@ function renderCustomPage() {
     // Hint text
     const hint = document.createElement('div');
     hint.style.cssText = "width:100%; color:#999; font-size:14px; text-align:center; line-height: 1.6;";
-    hint.innerHTML = "💡 点击上方按钮选择包含图片或视频 (MP4) 的本地文件夹<br>系统将自动扫描并分类展示文件夹内所有的静态与动态壁纸";
+    const hintText = typeof window.gwT === 'function'
+      ? window.gwT('custom_folder_hint', '💡 点击上方按钮选择包含图片或视频 (MP4) 的本地文件夹<br>系统将自动扫描并分类展示文件夹内所有的静态与动态壁纸')
+      : '💡 点击上方按钮选择包含图片或视频 (MP4) 的本地文件夹<br>系统将自动扫描并分类展示文件夹内所有的静态与动态壁纸';
+    hint.innerHTML = hintText;
     grid.appendChild(hint);
   }
 // 1. Render static wallpapers (🎉 Newly upgraded: supports online download + gear management)
@@ -1429,7 +1438,10 @@ function renderDynamicWallpapers() {
 function renderAddButton() {
     const addBox = document.createElement("div");
     addBox.className = "add-wallpaper";
-    addBox.innerHTML = `<span>+</span><div style="font-size:16px;margin-top:5px;font-weight:bold;">点击选择壁纸文件夹</div>`;
+    const selectText = typeof window.gwT === 'function'
+      ? window.gwT('custom_folder_select_button', '点击选择壁纸文件夹')
+      : '点击选择壁纸文件夹';
+    addBox.innerHTML = `<span>+</span><div style="font-size:16px;margin-top:5px;font-weight:bold;">${selectText}</div>`;
     addBox.style.flexDirection = "column";
     addBox.addEventListener("click", () => {
       if (typeof window.triggerFolderSelection === 'function') {

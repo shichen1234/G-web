@@ -829,6 +829,21 @@ function openLeftPanel() {
   } 
 },
         { id: 'refresh', icon: '🔄', title: gwT('cmd_refresh_title', '刷新页面'), desc: gwT('cmd_refresh_desc', '刷新当前页面(右键菜单)'), action: () => location.reload() },
+    { 
+      id: 'mouse', 
+      icon: '🖱️', 
+      title: gwT('cmd_mouse_title', '切换鼠标样式'),
+      desc: gwT('cmd_mouse_desc', '循环切换鼠标样式 (小手鼠标 / MC指针 / 芙宁娜 / 微风雪 / 极简之美)'),
+      action: () => {
+         const styles = ['xiaoshou', 'MC', 'furina', 'Breeze Snow HD', 'Minimalist'];
+         let current = localStorage.getItem('mouseStyle') || 'xiaoshou';
+         let nextIdx = (styles.indexOf(current) + 1) % styles.length;
+         if (typeof window.changeMouseStyle === 'function') {
+             window.changeMouseStyle(styles[nextIdx]);
+         }
+      }
+    },
+
     { id: 'trail', icon: '✨', title: gwT('cmd_trail_title', '切换鼠标拖尾'), desc: gwT('cmd_trail_desc', '切换鼠标拖尾特效 (光球/线条/极光等)(右键菜单)'), action: () => {
          const styles = ['off', 'particle', 'line', 'sparkle', 'laser'];
          let current = localStorage.getItem('trailStyle') || 'particle';
@@ -1530,18 +1545,14 @@ async function _applyCursorRole(role, folder, ext, myGen, isFurina) {
           frames.forEach(f => URL.revokeObjectURL(f.url));
           return;
         }
-        document.documentElement.style.setProperty(varName, _buildCursorValue(frames[0].url, hotspot, fallback));
-        try { sendMouseStyleToIframe(localStorage.getItem('mouseStyle') || 'xiaoshou'); } catch(e){}
-      } catch (err) {
+        document.documentElement.style.setProperty(varName, _buildCursorValue(frames[0].url, hotspot, fallback));      } catch (err) {
         console.error('[原生光标] .ani 解析失败:', err);
         if (myGen === _cursorGeneration) {
           document.documentElement.style.setProperty(varName, fallback);
-          try { sendMouseStyleToIframe(localStorage.getItem('mouseStyle') || 'xiaoshou'); } catch(e){}
         }
       }
     } else {
       document.documentElement.style.setProperty(varName, _buildCursorValue(fileUrl, hotspot, fallback));
-      try { sendMouseStyleToIframe(localStorage.getItem('mouseStyle') || 'xiaoshou'); } catch(e){}
     }
   }
 }
@@ -1551,20 +1562,30 @@ window.changeMouseStyle = function(styleName) {
   const folder = styleName;
 
   localStorage.setItem('mouseStyle', styleName);
-  try {
-    sendMouseStyleToIframe(styleName);
-  } catch (err) {}
 
-  // 1. 清理上一代鼠标动画、Blobs等
+  // 1. 彻底清理上一代鼠标动画、Blobs、监听器等
   const myGen = ++_cursorGeneration;
+  
+  // 停止所有浮动光标相关的动画和监听
+  _toggleFloatingCursorListeners(false);
   _resetCursorSystem();
 
   const isFurina = styleName === 'furina';
+  
+  // ============================================================
+  // 🔧 核心修复：完整的模式切换逻辑
+  // ============================================================
+  
   if (isFurina) {
+    // 切换到芙宁娜模式：隐藏系统鼠标，显示浮动光标
+    // 2.1 隐藏系统鼠标（CSS变量设为none）
     document.documentElement.style.setProperty('--g-cursor-hand', 'none');
     document.documentElement.style.setProperty('--g-cursor-link', 'none');
     document.documentElement.style.setProperty('--g-cursor-beam', 'none');
     document.documentElement.style.setProperty('--g-cursor-unavail', 'none');
+  } else {
+    // 切换到其他四个样式：显示系统鼠标（用.cur文件替换）
+    // 会在后面通过_applyCursorRole设置CSS变量
   }
 
   // 2. 确保悬浮 DOM 结构与样式表存在
@@ -1574,10 +1595,14 @@ window.changeMouseStyle = function(styleName) {
   // 3. 启用/禁用悬浮模式与监听器
   if (isFurina) {
     floatingEl.style.display = 'block';
+    floatingEl.style.opacity = '1';
     _toggleFloatingCursorListeners(true);
+    console.log('[Mouse] Switched to furina mode - floating cursor enabled');
   } else {
     floatingEl.style.display = 'none';
+    floatingEl.style.opacity = '0';
     _toggleFloatingCursorListeners(false);
+    console.log('[Mouse] Switched to normal mode - system cursor restored');
   }
 
   // 4. 分别为 4 个角色应用光标
@@ -1690,12 +1715,47 @@ window.changeMouseStyle = function(styleName) {
     `;
   }
 
+  const MOUSE_STYLE_DISPLAY_NAMES = {
+    zh_CN: {
+      xiaoshou: '小手鼠标',
+      MC: 'MC指针',
+      furina: '芙宁娜',
+      'Breeze Snow HD': '微风雪',
+      Minimalist: '极简之美'
+    },
+    en: {
+      xiaoshou: 'Small Hand Cursor',
+      MC: 'MC Pointer',
+      furina: 'Furina',
+      'Breeze Snow HD': 'Breeze Snow HD',
+      Minimalist: 'Minimalist'
+    }
+  };
+
+  function getMouseStyleDisplayName(name) {
+    const locale = window.GwebI18n && window.GwebI18n.locale ? window.GwebI18n.locale : 'zh_CN';
+    const labels = MOUSE_STYLE_DISPLAY_NAMES[locale] || MOUSE_STYLE_DISPLAY_NAMES.zh_CN;
+    return labels[name] || name;
+  }
+
   // UI Highlight
   updateMouseMenuUI(styleName);
 
+  // 🔧 核心修复：使用更长的异步延迟确保DOM重排和iframe就绪
+  // 给浏览器充足的机会来应用CSS样式，并确保iframe可以接收消息
+  setTimeout(() => {
+    try {
+      sendMouseStyleToIframe(styleName);
+      console.log('[Mouse] Sent style update to iframe:', styleName);
+    } catch (err) {
+      console.error('[Mouse] Error sending style to iframe:', err);
+    }
+  }, 50);
+
   // Show bubble notification
   if (typeof showBubble === 'function') {
-    showBubble(gwT("mouse_style_changed_bubble", `鼠标样式已切换为：${styleName} 喵！✨`, { name: styleName }));
+    const displayName = getMouseStyleDisplayName(styleName);
+    showBubble(gwT("mouse_style_changed_bubble", `鼠标样式已切换为：${displayName} 喵！✨`, { name: displayName }));
   }
 };
 
@@ -1733,36 +1793,112 @@ document.addEventListener('DOMContentLoaded', () => {
   // 网页壁纸 iframe 加载完毕时同步发送鼠标样式
   const iframe = document.getElementById('bgWebFrame');
   if (iframe) {
-    iframe.addEventListener('load', () => {
-      const activeStyle = localStorage.getItem('mouseStyle') || 'xiaoshou';
-      sendMouseStyleToIframe(activeStyle);
-    });
+    // 🔧 核心修复：更强大的 iframe 监听器处理
+    // 1. 先检查 iframe 是否已经加载（如果已加载直接发送）
+    function tryInitializeIframeStyle() {
+      try {
+        if (iframe.contentWindow && iframe.contentWindow.document && iframe.contentWindow.document.readyState) {
+          const activeStyle = localStorage.getItem('mouseStyle') || 'xiaoshou';
+          console.log('[Mouse] iframe already loaded, sending style:', activeStyle);
+          sendMouseStyleToIframe(activeStyle);
+        }
+      } catch (e) {
+        console.log('[Mouse] iframe not yet accessible, waiting for load event');
+      }
+    }
+    
+    // 2. 立即尝试初始化
+    tryInitializeIframeStyle();
+    
+    // 3. 也监听 load 事件以处理动态加载的情况
+    let loadListenerAttached = false;
+    if (!loadListenerAttached) {
+      iframe.addEventListener('load', () => {
+        const activeStyle = localStorage.getItem('mouseStyle') || 'xiaoshou';
+        console.log('[Mouse] iframe load event fired, sending style:', activeStyle);
+        sendMouseStyleToIframe(activeStyle);
+      });
+      loadListenerAttached = true;
+    }
   }
+
+  // 🔧 核心修复：监听来自沙盒的 WP_RENDERED 消息，在网页壁纸加载完成后重新发送鼠标样式
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'WP_RENDERED') {
+      // 网页壁纸已渲染完成，重新发送鼠标样式以确保沙盒内容显示正确
+      setTimeout(() => {
+        const activeStyle = localStorage.getItem('mouseStyle') || 'xiaoshou';
+        console.log('[Mouse] Web wallpaper rendered, resending mouse style:', activeStyle);
+        sendMouseStyleToIframe(activeStyle);
+      }, 50);
+    }
+  }, false);
 });
 
-function sendMouseStyleToIframe(styleName) {
+function sendMouseStyleToIframe(styleName, retryCount = 0, maxRetries = 5) {
   const iframe = document.getElementById('bgWebFrame');
-  if (iframe && iframe.contentWindow) {
-    const config = CURSOR_CONFIGS[styleName] || CURSOR_CONFIGS['xiaoshou'];
-    const handCss = document.documentElement.style.getPropertyValue('--g-cursor-hand');
-    const linkCss = document.documentElement.style.getPropertyValue('--g-cursor-link');
-    const beamCss = document.documentElement.style.getPropertyValue('--g-cursor-beam');
-    const unavailCss = document.documentElement.style.getPropertyValue('--g-cursor-unavail');
+  if (!iframe) {
+    console.warn('[Mouse] iframe element not found');
+    return;
+  }
 
-    iframe.contentWindow.postMessage({
+  // 检查 iframe 是否已加载和可访问
+  let contentWindow;
+  try {
+    contentWindow = iframe.contentWindow;
+    if (!contentWindow) {
+      throw new Error('contentWindow is null');
+    }
+  } catch (e) {
+    // 如果无法访问，说明 iframe 还在加载或跨域问题
+    if (retryCount < maxRetries) {
+      console.log(`[Mouse] Retrying to send style to iframe (attempt ${retryCount + 1}/${maxRetries})`);
+      setTimeout(() => {
+        sendMouseStyleToIframe(styleName, retryCount + 1, maxRetries);
+      }, 50);
+    } else {
+      console.error('[Mouse] Failed to access iframe contentWindow after max retries');
+    }
+    return;
+  }
+
+  const config = CURSOR_CONFIGS[styleName] || CURSOR_CONFIGS['xiaoshou'];
+  
+  // 🌟 核心修复1：同步获取扩展的绝对根路径 (消除异步获取 CSS 变量带来的时差)
+  const extBaseUrl = window.location.href.split('?')[0].split('#')[0].replace(/[^/]*$/, '');
+  
+  let cursorCss = {};
+  if (styleName === 'furina') {
+    // 芙宁娜在沙盒里全部隐藏
+    cursorCss = { hand: 'none', link: 'none', beam: 'none', unavail: 'none' };
+  } else {
+    // 🌟 核心修复2：强制构建绝对路径，无视沙盒的 URL 欺骗
+    cursorCss = {
+      hand: `url('${extBaseUrl}mouse/${styleName}/Zhand.${config.Zhand}'), auto`,
+      link: `url('${extBaseUrl}mouse/${styleName}/Zlink.${config.Zlink}'), pointer`,
+      beam: `url('${extBaseUrl}mouse/${styleName}/Zbeam.${config.Zbeam}') 16 16, text`,
+      unavail: `url('${extBaseUrl}mouse/${styleName}/Zunavail.${config.Zunavail}'), not-allowed`
+    };
+  }
+
+  console.log('[Mouse] Sending style to iframe:', { styleName, URLs: cursorCss });
+
+  try {
+    contentWindow.postMessage({
       type: 'CHANGE_MOUSE_STYLE',
       styleName,
       config,
-      cursorCss: {
-        hand: handCss,
-        link: linkCss,
-        beam: beamCss,
-        unavail: unavailCss
-      }
+      cursorCss
     }, '*');
+  } catch (err) {
+    console.error('[Mouse] Error sending message to iframe:', err);
+    if (retryCount < maxRetries) {
+      setTimeout(() => {
+        sendMouseStyleToIframe(styleName, retryCount + 1, maxRetries);
+      }, 50);
+    }
   }
 }
-
 // ============================================================
 // ✨ 浏览器原生系统对话框（alert/confirm/prompt/文件确认框）期间恢复电脑原生鼠标
 // ============================================================

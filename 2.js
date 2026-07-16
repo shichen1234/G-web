@@ -1137,52 +1137,11 @@ window.addEventListener("DOMContentLoaded", () => {
   }
   }, 0);
 });
-document.getElementById("videoUpload").addEventListener("change", async function(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const modal = document.getElementById("wallpaperModal");
-
-  // 使用统一 helper 来设置背景并管理临时 URL
-  try {
-    await setBackgroundFromBlob(file);
-    if (typeof window.cleanupUnusedWallpapers === 'function') {
-      window.cleanupUnusedWallpapers().catch(() => {});
-    }
-  } catch (e) {
-    console.error('[G-web] 设置上传壁纸失败:', e);
-  }
-
-  modal.classList.remove("show");
-  setTimeout(() => {
-    modal.style.display = "none";
-  }, 350); // 与 CSS 动画时间一致
-
-  // ✅ 立即标记当前壁纸类型和 Key（防止异步保存期间关闭浏览器导致状态丢失）
-  localStorage.setItem("wallpaperType", "upload");      // 标记为上传类型
-  localStorage.setItem("currentWallpaperKey", "bgVideo"); // 强制指针回到默认的自定义位置
-  localStorage.removeItem("wallpaper");                 // 清理旧的 base64 缓存
-  if (window.chrome && window.chrome.storage && window.chrome.storage.local) {
-    window.chrome.storage.local.set({ currentWallpaperKey: "bgVideo" }).catch(() => {});
-  }
-
-  // ✅ 后台异步保存到 IndexedDB（不阻塞 UI）
-  saveVideoToIndexedDB(file).then(() => {
-    console.log("[G-web] 自定义壁纸已成功保存到 IndexedDB");
-  }).catch((err) => {
-    console.error("保存失败:", err);
-    if (typeof showBubble === 'function') {
-      showBubble("壁纸保存失败，下次重启后可能丢失喵😿");
-    }
-  });
-
-  // ✅ 选择背景后弹出小猫评论
-  if (typeof showBubble === 'function') {
-    showBubble(gwT("custom_wp_success", "自定义壁纸设置成功喵！✨"));
-  }
-  // 重置 input
-  event.target.value = "";
-});
+// 🔧 清理：旧的"直接上传文件"方式（隐藏的 #videoUpload input）已被
+// "自定义壁纸文件夹"功能取代，界面上也已经没有任何按钮会触发它，
+// 原来挂在它 change 事件上的整段应用壁纸逻辑属于死代码，一并删除。
+// 对应的 <input id="videoUpload"> 元素已从 index.html 中移除，
+// #videoUpload 的 CSS 规则也已从 style1.css 中移除。
 
     const input = document.getElementById('searchInput');
     const button = document.getElementById('searchBtn');
