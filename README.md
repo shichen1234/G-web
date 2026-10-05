@@ -1,57 +1,78 @@
-# G-web：重塑您的新标签页体验 🚀
+<div align="center">
 
+# G-web 🚀
 
-G-web 是一款全能型浏览器扩展，旨在将枯燥的新标签页转化为高度个性化、交互式的仪表盘。它集成了生产力工具、娱乐功能和迷人的互动元素，专为提升您的浏览乐趣而设计。
+**Transform your boring new tab into a vibrant, highly customizable personal dashboard.**
+
+[![GitHub stars](https://img.shields.io/github/stars/shichen1234/G-web?style=flat-square)](https://github.com/shichen1234/G-web/stargazers)
+[![Edge Add-ons](https://img.shields.io/badge/Edge%20Add--ons-Install-blue?style=flat-square&logo=microsoft-edge)](https://microsoftedge.microsoft.com/addons/detail/lfbikpcfmfimdobgkopcnammkfmifinp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+
+[Installation](#-installation) • [Key Features](#-key-features) • [Preview](#-preview) • [Privacy](#-privacy) • [Feedback](#-feedback)
+
+</div>
 
 ---
 
-## 📥 安装与使用
+## 📥 Installation
 
-1. **直接获取**：[点击前往 Microsoft Edge Addons 安装](https://microsoftedge.microsoft.com/addons/detail/lfbikpcfmfimdobgkopcnammkfmifinp)
-2. **启用插件**：安装后打开新标签页即可看到 G-web。
-3. **功能菜单**：点击左上角的菜单按钮，即可访问所有内置功能。
+1. **Install Extension**: Get it directly from the [Microsoft Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/lfbikpcfmfimdobgkopcnammkfmifinp).
+2. **Launch**: Open a new tab to start using G-web instantly.
+3. **Configure**: Click the menu button in the top-left corner to access all built-in widgets and customization options.
 
 ---
 
-## 🌟 核心特性
+## 🌟 Key Features
 
-| 分类 | 功能描述 |
+| Category | Description |
 | :--- | :--- |
-| **个性化** | 支持内置图库、动态视频背景，或上传自定义素材。布局高度灵活，可自由固定组件。 |
-| **生产力** | 集成待办事项 (Todo)、日历、计算器、实时天气及生日倒计时。 |
-| **交互娱乐** | **虚拟猫伴侣**（`Alt + C` 唤醒/隐藏）、内置贪吃蛇游戏、每日运势抽签。 |
-| **媒体控制** | 自动检测浏览器播放内容，提供歌曲信息及生动的波形动画。 |
-| **万能搜索** | 统一搜索栏，集成 Bing、Google、百度、搜狗，支持实时联想与一键切换。 |
+| **Personalization** | Curated gallery, live video wallpapers, or custom asset uploads. Flexible drag-and-pin widget layouts. |
+| **Productivity** | Integrated Todo list, Calendar, Calculator, real-time Weather, and Birthday Countdown. |
+| **Interactive Pet** | **Virtual Cat Companion** (press `Alt + C` to toggle), built-in Snake game, and Daily Fortune draws. |
+| **Media Controller** | Auto-detects browser audio playback with track metadata and dynamic visualizer waveforms. |
+| **Omni-Search** | Unified search bar supporting Bing, Google, Baidu, and Sogou with live auto-complete and one-click switching. |
 
 ---
 
-## 📸 界面预览
+## 📸 Preview
 
-![主页预览 1](screenshots/1.png)
-![功能展示 2](screenshots/2.png)
-![组件细节 3](screenshots/3.png)
-![猫咪互动 4](screenshots/4.png)
-![背景设置 5](screenshots/5.png)
-![搜索终端 6](screenshots/6.png)
+<div align="center">
+  <img src="screenshots/1.png" width="48%" />
+  <img src="screenshots/2.png" width="48%" />
+  <br/>
+  <img src="screenshots/3.png" width="48%" />
+  <img src="screenshots/4.png" width="48%" />
+</div>
+
+<details>
+<summary><b>🔍 View More Screenshots</b></summary>
+<br/>
+
+<div align="center">
+  <img src="screenshots/5.png" width="48%" />
+  <img src="screenshots/6.png" width="48%" />
+</div>
+
+</details>
+
+---
+
+## 🔒 Privacy First
+
+* **Zero Data Collection**: We do not collect, track, or share any personal browsing habits.
+* **Local-Only Storage**: All settings, tasks, and credentials remain securely stored within your local browser storage.
 
 ---
 
-## 🛠 使用指南
+## 💌 Feedback & Community
 
-- **侧边栏导航**：使用左侧侧边栏快速开启待办、日历、天气等核心组件。
-- **互动小人**：随时按下 `Alt + C` 召唤你的电子助手。
-- **外观定制**：通过右键菜单或设置面板更换壁纸及调整组件位置。
-- **隐私保护**：**零数据收集**。所有偏好设置、待办事件和数据均加密存储在您的本地设备中，绝不上传云端。
+Found a bug or have a feature request?
+* **Issues**: [Open an issue on GitHub](https://github.com/shichen1234/G-web/issues)
+* **Email**: [qwer2414701603@gmail.com](mailto:qwer2414701603@gmail.com)
 
----
-
-## 💌 建议与反馈
-
-如果你有好的壁纸推荐、想听的歌曲，或者遇到了 Bug：
-- **Bilibili**: 扩展右下角
-- **Email**: [qwer2414701603@gmail.com](mailto:qwer2414701603@gmail.com)
-
-如果你喜欢这个项目，欢迎点一个 **Star** ⭐，这是对开发者最大的鼓励！
+If you find this project helpful, please consider giving it a **Star** ⭐ — it keeps the project alive and growing!
 
 ---
-*Developed with ❤️ by shichen1234*
+<div align="center">
+Developed with ❤️ by <a href="https://github.com/shichen1234">shichen1234</a>
+</div>
